@@ -1,4 +1,8 @@
-pub fn oracle(buffer: &str)->&str{
+extern crate zia2sql;
+
+pub use zia2sql::{establish_connection, setup_database, SqliteConnection};
+
+pub fn oracle<'a>(buffer: &'a str, conn: &'a SqliteConnection)->&'a str{
     let tokens = parse_line(buffer);
     buffer
 }
@@ -34,14 +38,50 @@ fn parse_letter(letter: char, parenthesis_level: &mut i8, token: &mut String, to
 
 #[cfg(test)]
 mod reductions {
-    use oracle;
+    use {oracle, establish_connection, setup_database, SqliteConnection};
     #[test]
     fn monad() {
-        assert_eq!(oracle("(not true)->"),"false");
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("(not true)->", &conn),"false");
     }
     #[test]
     fn diad() {
-        assert_eq!(oracle("(0 + 1)->"), "1");
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("(0 + 1)->", &conn), "1");
+    }
+    #[test]
+    fn lambda() {
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("((lambda x_)(_f _x))_y ->", &conn),"_f _y");
+    }
+    #[test]
+    fn wrong_variable() {
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("_x -> _y", &conn), "Error! Variable _y does not appear in the expression '_x'.");
+    }
+    #[test]
+    fn labelling_a_variable() {
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("a := _x", &conn),"Error! Cannot label variable expression '_x'.");
+        assert_eq!(oracle("a := x_", &conn),"Error! Cannot label dummy expression 'x_'.");
+    }
+    #[test]
+    fn variable_label() {
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("_x := a", &conn), "Error! Cannot use '_x' as a label.");
+        assert_eq!(oracle("x_ := a", &conn), "Error! Cannot use 'x_' as a label.");
+    }
+    #[test]
+    fn variable_reduction() {
+        let conn: SqliteConnection = establish_connection(":memory:");
+        setup_database(&conn);
+        assert_eq!(oracle("_x and false ->", &conn), "false");
     }
 }
 mod tokens {
@@ -53,5 +93,9 @@ mod tokens {
     #[test]
     fn diad() {
         assert_eq!(parse_line("(0 + 1)->"), ["0 + 1", "->"].to_vec());
+    }
+    #[test]
+    fn lambda() {
+        assert_eq!(parse_line("((lambda x_)(_f _x))_y ->"),["(lambda x_)(_f _x)", "_y", "->"].to_vec());
     }
 }
