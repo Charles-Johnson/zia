@@ -1,10 +1,17 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection};
+pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, find_application, insert_reduction2};
 
-pub fn oracle<'a>(buffer: &'a str, conn: &'a SqliteConnection)->&'a str{
-    let tokens = parse_line(buffer);
-    buffer
+pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
+    let expression_id = extract_id_from_token(&Token::Expression(buffer.to_string()), conn);
+    let application_if_found = find_application(expression_id, conn);
+    match application_if_found {None => (),
+                                Some((appl1,arg1)) => {let application_if_found = find_application(appl1, conn);
+                                                     match application_if_found {None => (),
+                                                                                 Some((appl2,arg2)) => if appl2 == REDUCTION
+                                                                                 {insert_reduction2(arg1,arg2,conn);}};}
+                               };
+    "".to_string()
 }
 
 fn parse_line(buffer: &str)->Vec<String>{
@@ -35,6 +42,62 @@ fn parse_letter(letter: char, parenthesis_level: &mut i8, token: &mut String, to
         _ => token.push(letter)
     }
 }
+
+fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
+    let mut new_tokens: Vec<Token> = [].to_vec();
+    for token in tokens {
+        if token.contains(" ") {new_tokens.push(Token::Expression(token[..].to_string()));}
+        else if token.starts_with("_") {new_tokens.push(Token::Free(token[1..].to_string()));}
+        else if token.ends_with("_") {new_tokens.push(Token::Dummy(token[..token.len()-2].to_string()));}
+        else {new_tokens.push(Token::Atom(token[..].to_string()));}
+    }
+    new_tokens
+}
+
+fn extract_id_from_atom(t: String, conn: &SqliteConnection) -> i32 {
+    let id_if_exists = id_from_label(&t,conn);
+    match id_if_exists {
+        None => assign_new_id(conn),
+        Some(id) => id
+    }
+}
+
+fn extract_id_from_expression(t: String, conn: &SqliteConnection) -> i32 {
+    let tokens: Vec<String> = parse_line(&t);
+    match tokens.len() {0|1 => panic!("Expression needs to be composed of multiple tokens"),
+                        2 => {let parsed_tokens = parse_tokens(&tokens);
+                              let applicant = extract_id_from_token(&parsed_tokens[0], conn);
+                              let argument = extract_id_from_token(&parsed_tokens[1], conn);
+                              insert_definition(applicant, argument, conn)},
+                        _ => panic!("Expression composed of more than 2 tokens has not been implemented yet")
+    }
+}
+
+fn extract_id_from_free(t: String, conn: &SqliteConnection) -> i32 {
+    assign_new_variable_id(conn)
+}
+
+fn extract_id_from_dummy(t: String, conn: &SqliteConnection) -> i32 {
+    assign_new_variable_id(conn)
+}
+
+fn extract_id_from_token(token: &Token, conn: &SqliteConnection) -> i32 {
+    match token {
+        Token::Atom(t) => extract_id_from_atom(t.to_string(), conn),
+        Token::Expression(t) => extract_id_from_expression(t.to_string(), conn),
+        Token::Free(t) => extract_id_from_free(t.to_string(), conn),
+        Token::Dummy(t) => extract_id_from_dummy(t.to_string(), conn)
+    }
+}
+
+#[derive(Debug,PartialEq,Clone)]
+enum Token {
+    Atom(String),
+    Expression(String),
+    Free(String),
+    Dummy(String),
+}
+
 
 #[cfg(test)]
 mod reductions {
@@ -79,9 +142,14 @@ mod reductions {
 }
 mod tokens {
     use parse_line;
+    use parse_tokens;
+    use Token::Atom;
+    use Token::Expression;
     #[test]
     fn monad() {
-        assert_eq!(parse_line("(not true)->"),["not true", "->"].to_vec());
+        let parsed_line = parse_line("(not true)->");
+        assert_eq!(parsed_line,["not true", "->"].to_vec());
+        assert_eq!(parse_tokens(&parsed_line),[Expression("not true".to_string()),Atom("->".to_string())].to_vec());
     }
     #[test]
     fn diad() {
