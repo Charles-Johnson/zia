@@ -5,13 +5,24 @@ pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_i
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
     let expression_id = extract_id_from_token(&Token::Expression(buffer.to_string()), conn);
     let application_if_found = find_application(expression_id, conn);
-    match application_if_found {None => (),
-                                Some((appl1,arg1)) => {let application_if_found = find_application(appl1, conn);
-                                                     match application_if_found {None => (),
-                                                                                 Some((appl2,arg2)) => if appl2 == REDUCTION
-                                                                                 {insert_reduction2(arg1,arg2,conn);}};}
-                               };
+    scan_application(expression_id, &scan_application_further, &insert_reduction3, conn);
     "".to_string()
+}
+
+fn scan_application(id: i32, f: &Fn(i32,i32,&Fn(i32,i32,i32,&SqliteConnection),&SqliteConnection), g: &Fn(i32,i32,i32,&SqliteConnection), conn: &SqliteConnection) {
+    let application_if_found = find_application(id, conn);
+    match application_if_found {None => (),
+                                Some((appl1,arg1)) => f(appl1,arg1,g,conn)};
+}
+
+fn scan_application_further(appl1:i32,arg1:i32,g:&Fn(i32,i32,i32,&SqliteConnection),conn: &SqliteConnection) {
+    let application_if_found = find_application(appl1, conn);
+    match application_if_found {None => (),
+                                Some((appl2,arg2)) => g(appl2, arg1, arg2, conn)};
+}
+
+fn insert_reduction3(appl2:i32,arg1:i32,arg2:i32, conn: &SqliteConnection) {
+    if appl2 == REDUCTION {insert_reduction2(arg1,arg2,conn);}
 }
 
 fn parse_line(buffer: &str)->Vec<String>{
@@ -105,6 +116,7 @@ mod reductions {
     #[test]
     fn monad() {
         let conn = memory_database();
+        assert_eq!(oracle("(-> b)a", &conn),"");
         assert_eq!(oracle("(not true)->", &conn),"false");
     }
     #[test]
