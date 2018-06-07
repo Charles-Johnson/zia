@@ -1,6 +1,6 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, find_application, insert_reduction2, label_of_reduction_of_id};
+pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, find_application, insert_reduction2, label_of_reduction_of_id, label_id};
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
     let expression_id = extract_id_from_token(&Token::Expression(buffer.to_string()), conn);
@@ -76,7 +76,9 @@ fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
 fn extract_id_from_atom(t: String, conn: &SqliteConnection) -> i32 {
     let id_if_exists = id_from_label(&t,conn);
     match id_if_exists {
-        None => assign_new_id(conn),
+        None => {let id = assign_new_id(conn);
+                 label_id(id, &t,conn);
+                 id},
         Some(id) => id
     }
 }
