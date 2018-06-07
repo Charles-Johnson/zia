@@ -1,28 +1,36 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, find_application, insert_reduction2};
+pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, find_application, insert_reduction2, label_of_reduction_of_id};
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
     let expression_id = extract_id_from_token(&Token::Expression(buffer.to_string()), conn);
     let application_if_found = find_application(expression_id, conn);
-    scan_application(expression_id, &scan_application_further, &insert_reduction3, conn);
-    "".to_string()
+    let mut string = String::new();
+    scan_application_further(expression_id, &scan_application, &insert_reduction3, conn, &mut string);
+    scan_application(expression_id, 0, &find_normal_form2, conn, &mut string);
+    string
 }
 
-fn scan_application(id: i32, f: &Fn(i32,i32,&Fn(i32,i32,i32,&SqliteConnection),&SqliteConnection), g: &Fn(i32,i32,i32,&SqliteConnection), conn: &SqliteConnection) {
+fn scan_application_further(id: i32, f: &Fn(i32,i32,&Fn(i32,i32,i32,&SqliteConnection,&mut String),&SqliteConnection,&mut String), g: &Fn(i32,i32,i32,&SqliteConnection,&mut String), conn: &SqliteConnection, string: &mut String) {
     let application_if_found = find_application(id, conn);
     match application_if_found {None => (),
-                                Some((appl1,arg1)) => f(appl1,arg1,g,conn)};
+                                Some((appl1,arg1)) => f(appl1,arg1,g,conn,string)};
 }
 
-fn scan_application_further(appl1:i32,arg1:i32,g:&Fn(i32,i32,i32,&SqliteConnection),conn: &SqliteConnection) {
+fn scan_application(appl1:i32,arg1:i32,g:&Fn(i32,i32,i32,&SqliteConnection,&mut String),conn: &SqliteConnection,string: &mut String) {
     let application_if_found = find_application(appl1, conn);
     match application_if_found {None => (),
-                                Some((appl2,arg2)) => g(appl2, arg1, arg2, conn)};
+                                Some((appl2,arg2)) => g(appl2, arg1, arg2, conn, string)};
 }
 
-fn insert_reduction3(appl2:i32,arg1:i32,arg2:i32, conn: &SqliteConnection) {
+fn insert_reduction3(appl2:i32,arg1:i32,arg2:i32, conn: &SqliteConnection, string: &mut String) {
     if appl2 == REDUCTION {insert_reduction2(arg1,arg2,conn);}
+}
+
+fn find_normal_form2(appl2:i32,arg1:i32,arg2:i32, conn: &SqliteConnection, string: &mut String) {
+    if arg2 == REDUCTION {let label = label_of_reduction_of_id(appl2,conn);
+                          match label {None => (),
+                                       Some(s) => *string = s};}
 }
 
 fn parse_line(buffer: &str)->Vec<String>{
@@ -117,6 +125,7 @@ mod reductions {
     fn monad() {
         let conn = memory_database();
         assert_eq!(oracle("(-> b)a", &conn),"");
+        assert_eq!(oracle("a ->", &conn),"b");
         assert_eq!(oracle("(not true)->", &conn),"false");
     }
     #[test]
