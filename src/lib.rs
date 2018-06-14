@@ -1,14 +1,17 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, find_application, insert_reduction2, label_of_reduction_of_id, label_id, find_definitions, refactor_id, select_integer, LUID};
+pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, find_application, insert_reduction2, label_of_reduction_of_id, label_id, find_definitions, refactor_id, select_integer, LUID, label_from_id, select_definition};
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
-    let application_tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
+    let mut application_tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
     application_tree.call_reduction_rule(conn);
     application_tree.call_definition(conn);
-    match application_tree.call_normal_form(conn) {None => "".to_string(),
-                                                   Some(s) => s}
-    
+    let mut string = String::new();
+    match application_tree.call_normal_form(conn) {None => (),
+                                                   Some(s) => string = s};
+    match application_tree.call_expansion(conn) {None => (),
+                                                 Some(s) => string = s};    
+    string
 }
 
 fn parse_line(buffer: &str)->Vec<String>{
@@ -52,16 +55,13 @@ fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
     new_tokens
 }
 
-
-
-
 fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ApplicationTree {
     let id_if_exists = id_from_label(&t,conn);
     match id_if_exists {
         None => {let id = assign_new_id(conn);
                  label_id(id, &t,conn);
-                 ApplicationTree{id: Some(id), applicant: None, argument: None}},
-        Some(id) => ApplicationTree{id: Some(id), applicant: None, argument: None}
+                 ApplicationTree{id, applicant: None, argument: None}},
+        Some(id) => ApplicationTree{id, applicant: None, argument: None}
     }
 }
 
@@ -72,26 +72,28 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> Applicati
                         2 => {let parsed_tokens = parse_tokens(&tokens);
                               let applicant = extract_tree_from_token(&parsed_tokens[0], conn);
                               let argument = extract_tree_from_token(&parsed_tokens[1], conn);
-                              let mut id: Option<i32>;
-                              match (applicant.id, argument.id) {(Some(app), Some(arg)) => {let definitions = find_definitions(app, arg, conn);
-                                       match definitions.len() {0 => id = Some(insert_definition(app, arg, conn)),
-                                                                1 => id = Some(definitions[0]),
-                                                                _ => panic!("There are multiple ids for the application of the same applicant and argument pair."),}}, 
-                                                              _ => id = None};
-                              ApplicationTree{id, applicant: Some(Box::new(applicant)), argument: Some(Box::new(argument))}},
+                              let mut id: i32;
+                              let app = applicant.id;
+                              let arg = argument.id;
+                              let definitions = find_definitions(app, arg, conn);
+                              match definitions.len() {0 => id = insert_definition(app, arg, conn),
+                                                       1 => id = definitions[0],
+                                                       _ => panic!("There are multiple ids for the application of the same applicant and argument pair.")
+                                                       };
+                              ApplicationTree::new_definition(id, applicant, argument)},
                         _ => panic!("Expression composed of more than 2 tokens has not been implemented yet")
     }
 }
 
 
 fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> ApplicationTree {
-    ApplicationTree{id: Some(assign_new_variable_id(conn)), applicant: None, argument: None}
+    ApplicationTree{id: assign_new_variable_id(conn), applicant: None, argument: None}
 }
 
 
 
 fn extract_tree_from_dummy(_t: String, conn: &SqliteConnection) -> ApplicationTree {
-    ApplicationTree{id: Some(assign_new_variable_id(conn)), applicant: None, argument: None}
+    ApplicationTree{id: assign_new_variable_id(conn), applicant: None, argument: None}
 }
 
 
@@ -114,7 +116,7 @@ enum Token {
 
 #[derive(Clone)]
 struct ApplicationTree {
-    id: Option<i32>,
+    id: i32,
     applicant: Option<Box<ApplicationTree>>,
     argument: Option<Box<ApplicationTree>>, 
 }
@@ -122,34 +124,98 @@ struct ApplicationTree {
 
 impl ApplicationTree {
     fn call_reduction_rule(&self, conn: &SqliteConnection) {
-        match (self.applicant.clone(), self.argument.clone()) {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone()) {(Some(app2),Some(arg2)) => if app2.id == Some(REDUCTION) {println!("the application is REDUCTION"); ApplicationTree::insert_reduction(&arg, &arg2, conn)}, _ => ()}, _ => ()};
-    }
-    fn insert_reduction(tree: &ApplicationTree, normal_form: &ApplicationTree, conn: &SqliteConnection) {
-        match (tree.id, normal_form.id) {(Some(t),Some(n)) => insert_reduction2(t,n,conn), _ => ()};
+        match (self.applicant.clone(), self.argument.clone()) {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone()) {(Some(app2),Some(arg2)) => if app2.id == REDUCTION {println!("the application is REDUCTION"); insert_reduction2(arg.id, arg2.id, conn)}, _ => ()}, _ => ()};
     }
     fn call_normal_form(&self, conn: &SqliteConnection) -> Option<String> {
         match (self.applicant.clone(), self.argument.clone()) {(Some(app),Some(arg)) => {println!("applicant and argument both exist");
-                     println!("{:?}",(app.id,arg.id)); if arg.id == Some(REDUCTION) {println!("the argument is REDUCTION"); ApplicationTree::find_normal_form(&app, conn)} else {None}}, _ => None}
+                     println!("{:?}",(app.id,arg.id)); if arg.id == REDUCTION {println!("the argument is REDUCTION"); ApplicationTree::find_normal_form(&app, conn)} else {None}}, _ => None}
     }
     fn find_normal_form(tree: &ApplicationTree, conn: &SqliteConnection) -> Option<String>{
-        match tree.id.clone() {None => None,
-                               Some(id) => label_of_reduction_of_id(id,conn)}
+        label_of_reduction_of_id(tree.id,conn)
     }
     fn call_definition(&self, conn: &SqliteConnection) {
         match (self.applicant.clone(), self.argument.clone()) 
             {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone())
-                                          {(Some(app2), Some(arg2)) => if app2.id == Some(DEFINE)
+                                          {(Some(app2), Some(arg2)) => if app2.id == DEFINE
                                               {ApplicationTree::label_application(&arg, &arg2, conn)},
                                                                   _ => ()}, 
                                  _ => ()};
     }
     fn label_application(arg: &ApplicationTree, arg2: &ApplicationTree, conn: &SqliteConnection) {
-        match (arg.id, arg2.id) {(Some(id),Some(id2)) => {let luid = select_integer(LUID, conn);
-                                                          refactor_id(id, id2, luid, conn)},
-                                 _ => panic!("id missing for one of the concepts in definition statement")}
-        println!("Not yet implemented");
+        let luid = select_integer(LUID, conn);
+        refactor_id(arg.id, arg2.id, luid, conn);
+    }
+    fn call_expansion(&mut self, conn: &SqliteConnection) -> Option<String> {
+        match (self.applicant.clone(), self.argument.clone()) 
+            {(Some(mut app), Some(arg)) => if arg.id == DEFINE 
+                                           {app.expand(conn);
+                                            match app.expand_as_token(conn)
+                                                {Token::Expression(s)|
+                                                       Token::Atom(s) => Some(s), _ => None}} else {None},
+                                      _ => None
+             }
+    }
+    fn expand(&mut self, conn: &SqliteConnection) {
+        match (self.applicant.clone(), self.argument.clone())  
+            {(Some(mut app),Some(mut arg)) => {match label_from_id(app.id, conn) 
+                                           {       None => app.expand(conn),
+                                            Some(_) => ()};
+                                       match label_from_id(arg.id, conn)
+                                           {       None => arg.expand(conn),
+                                            Some(_) => ()};
+                                       },
+                                 _ => {let definition = select_definition(self.id, conn);
+                                       match definition {     None => (),
+                                                         Some(def) => {self.applicant = ApplicationTree::new_leaf(def.0);
+                                                                       self.argument = ApplicationTree::new_leaf(def.1);
+                                                                       }
+                                                         };
+                                       }  
+             };
+    }
+    fn as_token(&self, conn: &SqliteConnection) -> Token {
+        match label_from_id(self.id, conn) 
+            {   None => {match (self.applicant.clone(), self.argument.clone())
+                             {(Some(app),Some(arg)) => ApplicationTree::join_tokens(app, arg, conn),
+                                                  _ => panic!("Unlabelled concept with no definition")
+                              }
+                         },    
+             Some(s) => Token::Atom(s)
+             }
+    }
+    fn expand_as_token(&self, conn: &SqliteConnection) -> Token {
+        match (self.applicant.clone(), self.argument.clone()) 
+            {(Some(app), Some(arg)) => ApplicationTree::join_tokens(app, arg, conn),
+                                  _ => self.as_token(conn)}
+    }
+    fn join_tokens(app: Box<ApplicationTree>, arg: Box<ApplicationTree>, conn: &SqliteConnection) -> Token {
+        let mut string = String::new();
+        string = ApplicationTree::add_token(app, conn, string);
+        string.push(' ');
+        string = ApplicationTree::add_token(arg, conn, string);
+        Token::Expression(string)
+    }
+    fn add_token(tree: Box<ApplicationTree>, conn: &SqliteConnection, mut string: String) -> String {
+        match tree.as_token(conn) 
+            {      Token::Atom(s) => {string.push_str(&s);},
+             Token::Expression(s) => {string.push('(');
+                                      string.push_str(&s);
+                                      string.push(')');},
+                   Token::Free(s) => {string.push('_');
+                                      string.push_str(&s);},
+                  Token::Dummy(s) => {string.push_str(&s);
+                                      string.push('_');}
+             }
+        string
+    }
+    fn new_leaf(id: i32) -> Option<Box<ApplicationTree>>{
+        Some(Box::new(ApplicationTree{id,applicant:None,argument:None}))
+    }
+    fn new_definition(id: i32, applicant: ApplicationTree, argument: ApplicationTree) -> ApplicationTree{
+        ApplicationTree{id, applicant: Some(Box::new(applicant)), argument: Some(Box::new(argument))}
     }
 }
+
 
 
 #[cfg(test)]
@@ -162,6 +228,13 @@ mod reductions {
         assert_eq!(oracle("a ->", &conn),"b");
         assert_eq!(oracle("(-> false)(not true)", &conn), "");
         assert_eq!(oracle("(not true)->", &conn),"false");
+    }
+    #[test]
+    fn chained_monads() {
+        let conn = memory_database();
+        assert_eq!(oracle("(-> false)(not true)", &conn), "");
+        assert_eq!(oracle("(-> true)(not false)", &conn), "");
+        assert_eq!(oracle("(not(not true))->", &conn), "true");
     }
     #[test]
     fn diad() {
