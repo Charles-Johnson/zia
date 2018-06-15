@@ -1,6 +1,6 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, find_application, insert_reduction2, label_of_reduction_of_id, label_id, find_definitions, refactor_id, select_integer, LUID, label_from_id, select_definition};
+pub use zia2sql::{memory_database, SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, find_application, insert_reduction3, label_of_reduction_of_id, label_id, find_definitions, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form};
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
     let mut application_tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
@@ -72,15 +72,7 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> Applicati
                         2 => {let parsed_tokens = parse_tokens(&tokens);
                               let applicant = extract_tree_from_token(&parsed_tokens[0], conn);
                               let argument = extract_tree_from_token(&parsed_tokens[1], conn);
-                              let mut id: i32;
-                              let app = applicant.id;
-                              let arg = argument.id;
-                              let definitions = find_definitions(app, arg, conn);
-                              match definitions.len() {0 => id = insert_definition(app, arg, conn),
-                                                       1 => id = definitions[0],
-                                                       _ => panic!("There are multiple ids for the application of the same applicant and argument pair.")
-                                                       };
-                              ApplicationTree::new_definition(id, applicant, argument)},
+                              ApplicationTree::new_definition(Box::new(applicant), Box::new(argument), conn)},
                         _ => panic!("Expression composed of more than 2 tokens has not been implemented yet")
     }
 }
@@ -124,14 +116,56 @@ struct ApplicationTree {
 
 impl ApplicationTree {
     fn call_reduction_rule(&self, conn: &SqliteConnection) {
-        match (self.applicant.clone(), self.argument.clone()) {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone()) {(Some(app2),Some(arg2)) => if app2.id == REDUCTION {println!("the application is REDUCTION"); insert_reduction2(arg.id, arg2.id, conn)}, _ => ()}, _ => ()};
+        match (self.applicant.clone(), self.argument.clone())
+            {(Some(app),Some(arg)) => 
+                match (app.applicant.clone(), app.argument.clone())
+                    {(Some(app2),Some(arg2)) => 
+                        if app2.id == REDUCTION
+                            {insert_reduction3(arg.id, arg2.id, conn)},
+                                           _ => ()},
+                                 _ => ()};
     }
-    fn call_normal_form(&self, conn: &SqliteConnection) -> Option<String> {
-        match (self.applicant.clone(), self.argument.clone()) {(Some(app),Some(arg)) => {println!("applicant and argument both exist");
-                     println!("{:?}",(app.id,arg.id)); if arg.id == REDUCTION {println!("the argument is REDUCTION"); ApplicationTree::find_normal_form(&app, conn)} else {None}}, _ => None}
+    fn call_normal_form(&mut self, conn: &SqliteConnection) -> Option<String> {
+        match (self.applicant.clone(), self.argument.clone())
+            {(Some(mut app),Some(arg)) => 
+                {if arg.id == REDUCTION 
+                     {app.reduce(conn);
+                      match app.as_token(conn) 
+                          {Token::Expression(s)|Token::Atom(s) => Some(s),
+                                                             _ => None}
+                      }
+                 else {None}
+                 },
+                                     _ => None
+             }
     }
-    fn find_normal_form(tree: &ApplicationTree, conn: &SqliteConnection) -> Option<String>{
+    fn find_normal_form(tree: &mut ApplicationTree, conn: &SqliteConnection) -> Option<String>{
         label_of_reduction_of_id(tree.id,conn)
+    }
+    fn reduce(&mut self, conn: &SqliteConnection) -> bool {
+        //returns true if self is mutated by this function, else false
+        let self_reduction = find_normal_form(self.id, conn);
+        match self_reduction 
+            {None => {let mut result = false;
+                      match (self.applicant.clone(), self.argument.clone()) 
+                          {(Some(mut app),Some(mut arg)) => 
+                               {let app_result = app.reduce(conn);
+                                let arg_result = arg.reduce(conn);
+                                if app_result | arg_result 
+                                    {*self = ApplicationTree::new_definition(app, arg, conn);
+                                     self.reduce(conn);
+                                     result = true;}   
+                                },                       
+                                                       _ => ()
+                           };
+                      result
+                      },
+             Some(n) => {self.id = n;
+                         self.applicant = None;
+                         self.argument = None;
+                         self.expand(conn);
+                         true}
+             } 
     }
     fn call_definition(&self, conn: &SqliteConnection) {
         match (self.applicant.clone(), self.argument.clone()) 
@@ -211,8 +245,16 @@ impl ApplicationTree {
     fn new_leaf(id: i32) -> Option<Box<ApplicationTree>>{
         Some(Box::new(ApplicationTree{id,applicant:None,argument:None}))
     }
-    fn new_definition(id: i32, applicant: ApplicationTree, argument: ApplicationTree) -> ApplicationTree{
-        ApplicationTree{id, applicant: Some(Box::new(applicant)), argument: Some(Box::new(argument))}
+    fn new_definition(applicant: Box<ApplicationTree>, argument: Box<ApplicationTree>, conn: &SqliteConnection) -> ApplicationTree{
+        let id: i32;
+        let app = applicant.id;
+        let arg = argument.id;
+        let definitions = find_definitions(app, arg, conn);
+        match definitions.len() {0 => id = insert_definition(app, arg, conn),
+                                 1 => id = definitions[0],
+                                 _ => panic!("There are multiple ids for the application of the same applicant and argument pair.")
+                                 };
+        ApplicationTree{id, applicant: Some(applicant), argument: Some(argument)}
     }
 }
 
@@ -230,11 +272,18 @@ mod reductions {
         assert_eq!(oracle("(not true)->", &conn),"false");
     }
     #[test]
-    fn chained_monads() {
+    fn nested_monads() {
         let conn = memory_database();
         assert_eq!(oracle("(-> false)(not true)", &conn), "");
         assert_eq!(oracle("(-> true)(not false)", &conn), "");
         assert_eq!(oracle("(not(not true))->", &conn), "true");
+    }
+    #[test]
+    fn chain() {
+        let conn = memory_database();
+        assert_eq!(oracle("(-> b) a", &conn),"");
+        assert_eq!(oracle("(-> c) b", &conn), "");
+        assert_eq!(oracle("a ->", &conn), "c")
     }
     #[test]
     fn diad() {
