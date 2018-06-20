@@ -116,37 +116,45 @@ impl Tree {
         let luid = select_integer(LUID, conn);
         refactor_id(arg.id, arg2.id, luid, conn);
     }
+    /// A method that checks whether the tree is an expansion statement e.g. (x :=).
+    /// If the tree is an expansion statement then the applicant is expanded one 
+    /// level and the method returns its token string.  
     pub fn call_expansion(&mut self, conn: &SqliteConnection) -> Option<String> {
         match (self.applicant.clone(), self.argument.clone()) 
             {(Some(mut app), Some(arg)) => if arg.id == DEFINE 
                                            {app.expand(conn);
                                             match app.expand_as_token(conn)
                                                 {Token::Expression(s)|
-                                                       Token::Atom(s) => Some(s), _ => None}} else {None},
+                                                       Token::Atom(s) => Some(s),
+                                                                    _ => None}
+                                            } else {None},
                                       _ => None
              }
     }
     fn expand(&mut self, conn: &SqliteConnection) {
         match (self.applicant.clone(), self.argument.clone())  
-            {(Some(mut app),Some(mut arg)) => {match label_from_id(app.id, conn) 
-                                           {       None => app.expand(conn),
-                                            Some(_) => ()};
-                                       match label_from_id(arg.id, conn)
-                                           {       None => arg.expand(conn),
-                                            Some(_) => ()};
-                                       },
-                                 _ => {let definition = select_definition(self.id, conn);
-                                       match definition {     None => (),
-                                                         Some(def) => {self.applicant = Tree::new_leaf(def.0);
-                                                                       self.argument = Tree::new_leaf(def.1);
-                                                                       }
-                                                         };
-                                       }  
+            {(Some(mut app),Some(mut arg)) => 
+                {match label_from_id(app.id, conn) 
+                     {       None => app.expand(conn),
+                          Some(_) => ()};
+                 match label_from_id(arg.id, conn)
+                     {       None => {arg.expand(conn)},
+                          Some(_) => ()};
+                 },
+                                         _ => 
+                {let definition = select_definition(self.id, conn);
+                 match definition {     None => (),
+                                   Some(def) => {self.applicant = Tree::new_leaf(def.0);
+                                                 self.argument = Tree::new_leaf(def.1);
+                                                 }
+                                   };
+                 }  
              };
     }
-    fn as_token(&self, conn: &SqliteConnection) -> Token {
+    fn as_token(&mut self, conn: &SqliteConnection) -> Token {
         match label_from_id(self.id, conn) 
-            {   None => {match (self.applicant.clone(), self.argument.clone())
+            {   None => {self.expand(conn);
+                         match (self.applicant.clone(), self.argument.clone())
                              {(Some(app),Some(arg)) => Tree::join_tokens(app, arg, conn),
                                                   _ => panic!("Unlabelled concept with no definition")
                               }
@@ -154,7 +162,7 @@ impl Tree {
              Some(s) => Token::Atom(s)
              }
     }
-    fn expand_as_token(&self, conn: &SqliteConnection) -> Token {
+    fn expand_as_token(&mut self, conn: &SqliteConnection) -> Token {
         match (self.applicant.clone(), self.argument.clone()) 
             {(Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
                                   _ => self.as_token(conn)}
@@ -166,7 +174,7 @@ impl Tree {
         string = Tree::add_token(arg, conn, string);
         Token::Expression(string)
     }
-    fn add_token(tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> String {
+    fn add_token(mut tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> String {
         match tree.as_token(conn) 
             {      Token::Atom(s) => {string.push_str(&s);},
              Token::Expression(s) => {string.push('(');

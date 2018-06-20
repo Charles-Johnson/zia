@@ -90,5 +90,11 @@ mod definitions {
         assert_eq!(oracle("(:= (repeated +))*", &conn), "");
         assert_eq!(oracle("* :=", &conn), "repeated +");
     }
+    #[test]
+    fn nested_monads() {
+        let conn = memory_database();
+        assert_eq!(oracle("(:= (++ (++ 0)))2", &conn), "");
+        assert_eq!(oracle("2 :=", &conn), "++ (++ 0)");
+    }
 }
 
