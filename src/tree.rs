@@ -1,4 +1,4 @@
-use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_of_reduction_of_id, label_id, find_definitions, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form};
+use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form};
 use super::token::{Token, parse_tokens, parse_line};
 
 #[derive(Clone)]
@@ -75,9 +75,6 @@ impl Tree {
                  },
                                      _ => None
              }
-    }
-    fn find_normal_form(tree: &mut Tree, conn: &SqliteConnection) -> Option<String>{
-        label_of_reduction_of_id(tree.id,conn)
     }
     fn reduce(&mut self, conn: &SqliteConnection) -> bool {
         //returns true if self is mutated by this function, else false
@@ -194,11 +191,10 @@ impl Tree {
         let id: i32;
         let app = applicant.id;
         let arg = argument.id;
-        let definitions = find_definitions(app, arg, conn);
-        match definitions.len() {0 => id = insert_definition(app, arg, conn),
-                                 1 => id = definitions[0],
-                                 _ => panic!("There are multiple ids for the application of the same applicant and argument pair.")
-                                 };
+        let application = find_definition(app, arg, conn);
+        match application {None => id = insert_definition(app, arg, conn),
+                           Some(def) => id = def
+                           };
         Tree{id, applicant: Some(applicant), argument: Some(argument)}
     }
 }
