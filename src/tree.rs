@@ -1,4 +1,4 @@
-use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form};
+use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, set_precedence, PRECEDENCE, unlabel};
 use super::token::{Token, parse_tokens, parse_line};
 
 #[derive(Clone)]
@@ -76,6 +76,40 @@ impl Tree {
                                      _ => None
              }
     }
+    pub fn call_definition(&self, conn: &SqliteConnection) {
+        match (self.applicant.clone(), self.argument.clone()) 
+            {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone())
+                                          {(Some(app2), Some(arg2)) => if app2.id == DEFINE
+                                               {Tree::transfer_id(arg2.id, arg.id, conn)},
+                                                                  _ => ()}, 
+                                 _ => ()};
+    }
+    /// A method that checks whether the tree is an expansion statement e.g. (x :=).
+    /// If the tree is an expansion statement then the applicant is expanded one 
+    /// level and the method returns its token string.  
+    pub fn call_expansion(&mut self, conn: &SqliteConnection) -> Option<String> {
+        match (self.applicant.clone(), self.argument.clone()) 
+            {(Some(mut app), Some(arg)) => if arg.id == DEFINE 
+                                           {app.expand(conn);
+                                            match app.expand_as_token(conn)
+                                                {Token::Expression(s)|
+                                                       Token::Atom(s) => Some(s),
+                                                                    _ => None}
+                                            } else {None},
+                                      _ => None
+             }
+    }
+    pub fn call_set_precedence(&self, conn: &SqliteConnection) {
+        match (self.applicant.clone(), self.argument.clone())
+            {(Some(app), Some(arg)) => 
+                 match (app.applicant.clone(), app.argument.clone())
+                     {(Some(app2),Some(arg2)) => 
+                          if app2.id == PRECEDENCE 
+                              {println!("Setting precedence");
+                               set_precedence(arg.id, arg2.id, conn).unwrap();},
+                                            _ => ()},
+                                  _ => ()};
+    }
     fn reduce(&mut self, conn: &SqliteConnection) -> bool {
         //returns true if self is mutated by this function, else false
         let self_reduction = find_normal_form(self.id, conn);
@@ -101,32 +135,11 @@ impl Tree {
                          true}
              } 
     }
-    pub fn call_definition(&self, conn: &SqliteConnection) {
-        match (self.applicant.clone(), self.argument.clone()) 
-            {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone())
-                                          {(Some(app2), Some(arg2)) => if app2.id == DEFINE
-                                              {Tree::label_application(&arg, &arg2, conn)},
-                                                                  _ => ()}, 
-                                 _ => ()};
-    }
-    fn label_application(arg: &Tree, arg2: &Tree, conn: &SqliteConnection) {
+    fn transfer_id(id_before: i32, id_after: i32, conn: &SqliteConnection) {
+        ///Need to delete label of arg if exists
+        unlabel(id_before,conn);
         let luid = select_integer(LUID, conn);
-        refactor_id(arg.id, arg2.id, luid, conn);
-    }
-    /// A method that checks whether the tree is an expansion statement e.g. (x :=).
-    /// If the tree is an expansion statement then the applicant is expanded one 
-    /// level and the method returns its token string.  
-    pub fn call_expansion(&mut self, conn: &SqliteConnection) -> Option<String> {
-        match (self.applicant.clone(), self.argument.clone()) 
-            {(Some(mut app), Some(arg)) => if arg.id == DEFINE 
-                                           {app.expand(conn);
-                                            match app.expand_as_token(conn)
-                                                {Token::Expression(s)|
-                                                       Token::Atom(s) => Some(s),
-                                                                    _ => None}
-                                            } else {None},
-                                      _ => None
-             }
+        refactor_id(id_before, id_after, luid, conn);
     }
     fn expand(&mut self, conn: &SqliteConnection) {
         match (self.applicant.clone(), self.argument.clone())  

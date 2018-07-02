@@ -14,6 +14,7 @@ pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
     let mut application_tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
     application_tree.call_reduction_rule(conn);
     application_tree.call_definition(conn);
+    application_tree.call_set_precedence(conn);
     let mut string = String::new();
     match application_tree.call_normal_form(conn) {None => (),
                                                    Some(s) => string = s};
@@ -78,6 +79,12 @@ mod reductions {
     fn variable_reduction() {
         let conn = memory_database();
         assert_eq!(oracle("_x and false ->", &conn), "false");
+    }
+    #[test]
+    fn set_precedence() {
+        let conn = memory_database();
+        assert_eq!(oracle("(>- b) a", &conn), "");
+        assert_eq!(oracle("((>- b) a) ->", &conn), "true");
     }
 }
 
