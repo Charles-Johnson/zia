@@ -11,15 +11,12 @@ use tree::extract_tree_from_token;
 use token::Token;
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> String{
-    let mut application_tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
-    application_tree.call_reduction_rule(conn);
-    application_tree.call_definition(conn);
-    application_tree.call_set_precedence(conn);
+    let mut tree = extract_tree_from_token(&Token::Expression(buffer.to_string()), conn);
     let mut string = String::new();
-    match application_tree.call_normal_form(conn) {None => (),
-                                                   Some(s) => string = s};
-    match application_tree.call_expansion(conn) {None => (),
-                                                 Some(s) => string = s};    
+    match tree.call(conn)
+        {Some(s) => string = s,
+         None => ()
+         };
     string
 }
 

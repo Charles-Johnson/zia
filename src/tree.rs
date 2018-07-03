@@ -52,64 +52,47 @@ pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> Tree {
 }
 
 impl Tree {
-    pub fn call_reduction_rule(&self, conn: &SqliteConnection) {
+    pub fn call(&self, conn: &SqliteConnection) -> Option<String> {
         match (self.applicant.clone(), self.argument.clone())
-            {(Some(app),Some(arg)) => 
-                match (app.applicant.clone(), app.argument.clone())
-                    {(Some(app2),Some(arg2)) => 
-                        if app2.id == REDUCTION
-                            {insert_reduction3(arg.id, arg2.id, conn)},
-                                           _ => ()},
-                                 _ => ()};
-    }
-    pub fn call_normal_form(&mut self, conn: &SqliteConnection) -> Option<String> {
-        match (self.applicant.clone(), self.argument.clone())
-            {(Some(mut app),Some(arg)) => 
-                {if arg.id == REDUCTION 
-                     {app.reduce(conn);
-                      match app.as_token(conn) 
-                          {Token::Expression(s)|Token::Atom(s) => Some(s),
-                                                             _ => None}
-                      }
-                 else {None}
-                 },
+            {(Some(mut app),Some(arg)) =>
+                  match arg.id
+                      {REDUCTION => 
+                           {app.reduce(conn);
+                            match app.as_token(conn)
+                                {Token::Expression(s)|Token::Atom(s) => Some(s),
+                                                                   _ => None}
+                            },
+                          DEFINE =>
+                           {app.expand(conn);
+                            match app.expand_as_token(conn)
+                                {Token::Expression(s)|Token::Atom(s) => Some(s),
+                                                                   _ => None}
+                            },
+                               _ => 
+                           app.call_as_applicant(&arg, conn)
+                       },
                                      _ => None
              }
     }
-    pub fn call_definition(&self, conn: &SqliteConnection) {
-        match (self.applicant.clone(), self.argument.clone()) 
-            {(Some(app),Some(arg)) => match (app.applicant.clone(), app.argument.clone())
-                                          {(Some(app2), Some(arg2)) => if app2.id == DEFINE
-                                               {Tree::transfer_id(arg2.id, arg.id, conn)},
-                                                                  _ => ()}, 
-                                 _ => ()};
-    }
-    /// A method that checks whether the tree is an expansion statement e.g. (x :=).
-    /// If the tree is an expansion statement then the applicant is expanded one 
-    /// level and the method returns its token string.  
-    pub fn call_expansion(&mut self, conn: &SqliteConnection) -> Option<String> {
-        match (self.applicant.clone(), self.argument.clone()) 
-            {(Some(mut app), Some(arg)) => if arg.id == DEFINE 
-                                           {app.expand(conn);
-                                            match app.expand_as_token(conn)
-                                                {Token::Expression(s)|
-                                                       Token::Atom(s) => Some(s),
-                                                                    _ => None}
-                                            } else {None},
-                                      _ => None
+    fn call_as_applicant(&self, arg: &Tree, conn: &SqliteConnection) -> Option<String> {
+        match (self.applicant.clone(), self.argument.clone())
+            {(Some(app2),Some(arg2)) => 
+                 match app2.id
+                     { REDUCTION =>
+                          {insert_reduction3(arg.id, arg2.id, conn);
+                           None},
+                          DEFINE => 
+                          {Tree::transfer_id(arg2.id, arg.id, conn);
+                           None},
+                      PRECEDENCE =>
+                          {set_precedence(arg.id, arg2.id, conn).unwrap();
+                           None},
+                               _ => None
+                      },
+                                   _ => None
              }
     }
-    pub fn call_set_precedence(&self, conn: &SqliteConnection) {
-        match (self.applicant.clone(), self.argument.clone())
-            {(Some(app), Some(arg)) => 
-                 match (app.applicant.clone(), app.argument.clone())
-                     {(Some(app2),Some(arg2)) => 
-                          if app2.id == PRECEDENCE 
-                              {println!("Setting precedence");
-                               set_precedence(arg.id, arg2.id, conn).unwrap();},
-                                            _ => ()},
-                                  _ => ()};
-    }
+    
     fn reduce(&mut self, conn: &SqliteConnection) -> bool {
         //returns true if self is mutated by this function, else false
         let self_reduction = find_normal_form(self.id, conn);
