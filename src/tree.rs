@@ -8,16 +8,14 @@ pub struct Tree {
     argument: Option<Box<Tree>>, 
 }
 
-fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
-    let id_if_exists = try!(id_from_label(&t,conn));
-    match id_if_exists {
-        None => {let id = try!(assign_new_id(conn));
-                 try!(label_id(id, &t,conn));
-                 Ok(Tree{id, applicant: None, argument: None})},
-        Some(id) => Ok(Tree{id, applicant: None, argument: None})
+pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> QueryResult<Tree> {
+    match token {
+        Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
+        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
+        Token::Free(t) => extract_tree_from_free(t.to_string(), conn),
+        Token::Dummy(t) => extract_tree_from_dummy(t.to_string(), conn)
     }
 }
-
 
 fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
@@ -30,6 +28,15 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> QueryResu
     }
 }
 
+fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
+    let id_if_exists = try!(id_from_label(&t,conn));
+    match id_if_exists {
+        None => {let id = try!(assign_new_id(conn));
+                 try!(label_id(id, &t,conn));
+                 Ok(Tree{id, applicant: None, argument: None})},
+        Some(id) => Ok(Tree{id, applicant: None, argument: None})
+    }
+}
 
 fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
     Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
@@ -39,16 +46,6 @@ fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> QueryResult<Tr
 
 fn extract_tree_from_dummy(_t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
     Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
-}
-
-
-pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> QueryResult<Tree> {
-    match token {
-        Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
-        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
-        Token::Free(t) => extract_tree_from_free(t.to_string(), conn),
-        Token::Dummy(t) => extract_tree_from_dummy(t.to_string(), conn)
-    }
 }
 
 impl Tree {
@@ -85,7 +82,7 @@ impl Tree {
                           {try!(Tree::transfer_id(arg2.id, arg.id, conn));
                            Ok(None)},
                       PRECEDENCE =>
-                          {set_precedence(arg.id, arg2.id, conn).unwrap();
+                          {try!(set_precedence(arg.id, arg2.id, conn));
                            Ok(None)},
                                _ => Ok(None)
                       },
@@ -126,6 +123,38 @@ impl Tree {
         Ok(())
     }
 
+    fn expand_as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
+        match (self.applicant.clone(), self.argument.clone()) 
+            {(Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
+                                  _ => self.as_token(conn)}
+    }
+
+    fn add_token(mut tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> QueryResult<String> {
+        match try!(tree.as_token(conn)) 
+            {      Token::Atom(s) => {string.push_str(&s);},
+             Token::Expression(s) => {string.push('(');
+                                      string.push_str(&s);
+                                      string.push(')');},
+                   Token::Free(s) => {string.push('_');
+                                      string.push_str(&s);},
+                  Token::Dummy(s) => {string.push_str(&s);
+                                      string.push('_');}
+             }
+        Ok(string)
+    }
+
+    fn as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
+        match try!(label_from_id(self.id, conn)) 
+            {   None => {try!(self.expand(conn));
+                         match (self.applicant.clone(), self.argument.clone())
+                             {(Some(app),Some(arg)) => Tree::join_tokens(app, arg, conn),
+                                                  _ => panic!("Unlabelled concept with no definition")
+                              }
+                         },    
+             Some(s) => Ok(Token::Atom(s))
+             }
+    }
+
     fn expand(&mut self, conn: &SqliteConnection) -> QueryResult<()> {
         match (self.applicant.clone(), self.argument.clone())  
             {(Some(mut app),Some(mut arg)) => 
@@ -148,44 +177,12 @@ impl Tree {
              } 
     }
 
-    fn as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
-        match try!(label_from_id(self.id, conn)) 
-            {   None => {try!(self.expand(conn));
-                         match (self.applicant.clone(), self.argument.clone())
-                             {(Some(app),Some(arg)) => Tree::join_tokens(app, arg, conn),
-                                                  _ => panic!("Unlabelled concept with no definition")
-                              }
-                         },    
-             Some(s) => Ok(Token::Atom(s))
-             }
-    }
-
-    fn expand_as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
-        match (self.applicant.clone(), self.argument.clone()) 
-            {(Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
-                                  _ => self.as_token(conn)}
-    }
-
     fn join_tokens(app: Box<Tree>, arg: Box<Tree>, conn: &SqliteConnection) -> QueryResult<Token> {
         let mut string = String::new();
         string = try!(Tree::add_token(app, conn, string));
         string.push(' ');
         string = try!(Tree::add_token(arg, conn, string));
         Ok(Token::Expression(string))
-    }
-
-    fn add_token(mut tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> QueryResult<String> {
-        match try!(tree.as_token(conn)) 
-            {      Token::Atom(s) => {string.push_str(&s);},
-             Token::Expression(s) => {string.push('(');
-                                      string.push_str(&s);
-                                      string.push(')');},
-                   Token::Free(s) => {string.push('_');
-                                      string.push_str(&s);},
-                  Token::Dummy(s) => {string.push_str(&s);
-                                      string.push('_');}
-             }
-        Ok(string)
     }
 
     fn new_leaf(id: i32) -> Option<Box<Tree>>{
