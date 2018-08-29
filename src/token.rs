@@ -23,8 +23,6 @@ pub fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
     let mut new_tokens: Vec<Token> = [].to_vec();
     for token in tokens {
         if token.contains(" ") {new_tokens.push(Token::Expression(token[..].to_string()));}
-        else if token.starts_with("_") {new_tokens.push(Token::Free(token[1..].to_string()));}
-        else if token.ends_with("_") {new_tokens.push(Token::Dummy(token[..token.len()-2].to_string()));}
         else {new_tokens.push(Token::Atom(token[..].to_string()));}
     }
     new_tokens
@@ -33,9 +31,7 @@ pub fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
 #[derive(Debug,PartialEq,Clone)]
 pub enum Token {
     Atom(String),
-    Expression(String),
-    Free(String),
-    Dummy(String),
+    Expression(String)
 }
 
 pub fn parse_line(buffer: &str)->Vec<String>{

@@ -51,33 +51,6 @@ mod reductions {
         assert_eq!(oracle("(0 + 1)->", &conn).unwrap(), "1");
     }
     #[test]
-    fn lambda() {
-        let (conn, _file_conn) = memory_database().unwrap();
-        assert_eq!(oracle("((lambda x_)(_f _x))_y ->", &conn).unwrap(),"_f _y");
-    }
-    #[test]
-    fn wrong_variable() {
-        let (conn, _file_conn) = memory_database().unwrap();
-        assert_eq!(oracle("_x -> _y", &conn).unwrap(), "Error! Variable _y does not appear in the expression '_x'.");
-    }
-    #[test]
-    fn labelling_a_variable() {
-        let (conn, _file_conn) = memory_database().unwrap();
-        assert_eq!(oracle("a := _x", &conn).unwrap(),"Error! Cannot label variable expression '_x'.");
-        assert_eq!(oracle("a := x_", &conn).unwrap(),"Error! Cannot label dummy expression 'x_'.");
-    }
-    #[test]
-    fn variable_label() {
-        let (conn, _file_conn) = memory_database().unwrap();
-        assert_eq!(oracle("_x := a", &conn).unwrap(), "Error! Cannot use '_x' as a label.");
-        assert_eq!(oracle("x_ := a", &conn).unwrap(), "Error! Cannot use 'x_' as a label.");
-    }
-    #[test]
-    fn variable_reduction() {
-        let (conn, _file_conn) = memory_database().unwrap();
-        assert_eq!(oracle("_x and false ->", &conn).unwrap(), "false");
-    }
-    #[test]
     fn set_precedence() {
         let (conn, _file_conn) = memory_database().unwrap();
         assert_eq!(oracle("(>- b) a", &conn).unwrap(), "");

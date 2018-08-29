@@ -1,4 +1,4 @@
-use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
+use zia2sql::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
 use super::token::{Token, parse_tokens, parse_line};
 use super::precedence::set_precedence;
 
@@ -12,9 +12,7 @@ pub struct Tree {
 pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
     match token {
         Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
-        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
-        Token::Free(t) => Ok(try!(extract_tree_from_free(t.to_string(), conn))),
-        Token::Dummy(t) => Ok(try!(extract_tree_from_dummy(t.to_string(), conn)))
+        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn)
     }
 }
 
@@ -40,16 +38,6 @@ fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree>
     }
 }
 
-fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
-    Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
-}
-
-
-
-fn extract_tree_from_dummy(_t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
-    Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
-}
-
 impl Tree {
     pub fn call(&self, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
         match (self.applicant.clone(), self.argument.clone())
@@ -58,14 +46,12 @@ impl Tree {
                       {REDUCTION => 
                            {try!(app.reduce(conn));
                             match try!(app.as_token(conn))
-                                {Token::Expression(s)|Token::Atom(s) => Ok(Some(s)),
-                                                                   _ => Ok(None)}
+                                {Token::Expression(s)|Token::Atom(s) => Ok(Some(s))}
                             },
                           DEFINE =>
                            {try!(app.expand(conn));
                             match try!(app.expand_as_token(conn))
-                                {Token::Expression(s)|Token::Atom(s) => Ok(Some(s)),
-                                                                   _ => Ok(None)}
+                                {Token::Expression(s)|Token::Atom(s) => Ok(Some(s))}
                             },
                                _ => 
                            app.call_as_applicant(&arg, conn)
@@ -136,11 +122,7 @@ impl Tree {
             {      Token::Atom(s) => {string.push_str(&s);},
              Token::Expression(s) => {string.push('(');
                                       string.push_str(&s);
-                                      string.push(')');},
-                   Token::Free(s) => {string.push('_');
-                                      string.push_str(&s);},
-                  Token::Dummy(s) => {string.push_str(&s);
-                                      string.push('_');}
+                                      string.push(')');}
              }
         Ok(string)
     }
