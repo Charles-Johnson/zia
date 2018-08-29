@@ -1,16 +1,16 @@
 extern crate zia2sql;
 
-pub use zia2sql::{memory_database, SqliteConnection, QueryResult};
+pub use zia2sql::{memory_database, SqliteConnection, ZiaResult};
 
 mod token;
-
+mod precedence;
 mod tree;
 
 use tree::extract_tree_from_token;
 
 use token::Token;
 
-pub fn oracle(buffer: &str, conn: &SqliteConnection)-> QueryResult<String> {
+pub fn oracle(buffer: &str, conn: &SqliteConnection)-> ZiaResult<String> {
     let tree = try!(extract_tree_from_token(&Token::Expression(buffer.to_string()), conn));
     let mut string = String::new();
     match try!(tree.call(conn))

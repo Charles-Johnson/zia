@@ -1,5 +1,6 @@
-use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, set_precedence, PRECEDENCE, unlabel, QueryResult};
+use zia2sql::{SqliteConnection, id_from_label, assign_new_id, assign_new_variable_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
 use super::token::{Token, parse_tokens, parse_line};
+use super::precedence::set_precedence;
 
 #[derive(Clone)]
 pub struct Tree {
@@ -8,27 +9,28 @@ pub struct Tree {
     argument: Option<Box<Tree>>, 
 }
 
-pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> QueryResult<Tree> {
+pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
     match token {
         Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
         Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
-        Token::Free(t) => extract_tree_from_free(t.to_string(), conn),
-        Token::Dummy(t) => extract_tree_from_dummy(t.to_string(), conn)
+        Token::Free(t) => Ok(try!(extract_tree_from_free(t.to_string(), conn))),
+        Token::Dummy(t) => Ok(try!(extract_tree_from_dummy(t.to_string(), conn)))
     }
 }
 
-fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
+fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
-    match tokens.len() {0|1 => panic!("Expression needs to be composed of multiple tokens"),
-                        2 => {let parsed_tokens = parse_tokens(&tokens);
-                              let applicant = try!(extract_tree_from_token(&parsed_tokens[0], conn));
-                              let argument = try!(extract_tree_from_token(&parsed_tokens[1], conn));
-                              Tree::new_definition(Box::new(applicant), Box::new(argument), conn)},
-                        _ => panic!("Expression composed of more than 2 tokens has not been implemented yet")
+    match tokens.len() 
+        {0|1 => Err(DBError::Syntax("Expression needs to be composed of multiple tokens".to_string())),
+           2 => {let parsed_tokens = parse_tokens(&tokens);
+                 let applicant = try!(extract_tree_from_token(&parsed_tokens[0], conn));
+                 let argument = try!(extract_tree_from_token(&parsed_tokens[1], conn));
+                 Ok(try!(Tree::new_definition(Box::new(applicant), Box::new(argument), conn)))},
+           _ => Err(DBError::Syntax("Expression composed of more than 2 tokens has not been implemented yet".to_string()))
     }
 }
 
-fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
+fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let id_if_exists = try!(id_from_label(&t,conn));
     match id_if_exists {
         None => {let id = try!(assign_new_id(conn));
@@ -38,18 +40,18 @@ fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> QueryResult<Tre
     }
 }
 
-fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
+fn extract_tree_from_free(_t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
     Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
 }
 
 
 
-fn extract_tree_from_dummy(_t: String, conn: &SqliteConnection) -> QueryResult<Tree> {
+fn extract_tree_from_dummy(_t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
     Ok(Tree{id: try!(assign_new_variable_id(conn)), applicant: None, argument: None})
 }
 
 impl Tree {
-    pub fn call(&self, conn: &SqliteConnection) -> QueryResult<Option<String>> {
+    pub fn call(&self, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
         match (self.applicant.clone(), self.argument.clone())
             {(Some(mut app),Some(arg)) =>
                   match arg.id
@@ -71,7 +73,7 @@ impl Tree {
                                      _ => Ok(None)
              }
     }
-    fn call_as_applicant(&self, arg: &Tree, conn: &SqliteConnection) -> QueryResult<Option<String>> {
+    fn call_as_applicant(&self, arg: &Tree, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
         match (self.applicant.clone(), self.argument.clone())
             {(Some(app2),Some(arg2)) => 
                  match app2.id
@@ -90,7 +92,7 @@ impl Tree {
              }
     }
     
-    fn reduce(&mut self, conn: &SqliteConnection) -> QueryResult<bool> {
+    fn reduce(&mut self, conn: &SqliteConnection) -> ZiaResult<bool> {
         //returns true if self is mutated by this function, else false
         let self_reduction = try!(find_normal_form(self.id, conn));
         match self_reduction 
@@ -115,7 +117,7 @@ impl Tree {
                          Ok(true)}
              } 
     }
-    fn transfer_id(id_before: i32, id_after: i32, conn: &SqliteConnection) -> QueryResult<()>{
+    fn transfer_id(id_before: i32, id_after: i32, conn: &SqliteConnection) -> ZiaResult<()>{
         ///Need to delete label of arg if exists
         try!(unlabel(id_before,conn));
         let luid = try!(select_integer(LUID, conn));
@@ -123,13 +125,13 @@ impl Tree {
         Ok(())
     }
 
-    fn expand_as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
+    fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
         match (self.applicant.clone(), self.argument.clone()) 
             {(Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
                                   _ => self.as_token(conn)}
     }
 
-    fn add_token(mut tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> QueryResult<String> {
+    fn add_token(mut tree: Box<Tree>, conn: &SqliteConnection, mut string: String) -> ZiaResult<String> {
         match try!(tree.as_token(conn)) 
             {      Token::Atom(s) => {string.push_str(&s);},
              Token::Expression(s) => {string.push('(');
@@ -143,19 +145,19 @@ impl Tree {
         Ok(string)
     }
 
-    fn as_token(&mut self, conn: &SqliteConnection) -> QueryResult<Token> {
+    fn as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
         match try!(label_from_id(self.id, conn)) 
             {   None => {try!(self.expand(conn));
                          match (self.applicant.clone(), self.argument.clone())
-                             {(Some(app),Some(arg)) => Tree::join_tokens(app, arg, conn),
-                                                  _ => panic!("Unlabelled concept with no definition")
+                             {(Some(app),Some(arg)) => Ok(try!(Tree::join_tokens(app, arg, conn))),
+                                                  _ => Err(DBError::Absence("Unlabelled concept with no definition".to_string()))
                               }
                          },    
              Some(s) => Ok(Token::Atom(s))
              }
     }
 
-    fn expand(&mut self, conn: &SqliteConnection) -> QueryResult<()> {
+    fn expand(&mut self, conn: &SqliteConnection) -> ZiaResult<()> {
         match (self.applicant.clone(), self.argument.clone())  
             {(Some(mut app),Some(mut arg)) => 
                 {match try!(label_from_id(app.id, conn)) 
@@ -177,7 +179,7 @@ impl Tree {
              } 
     }
 
-    fn join_tokens(app: Box<Tree>, arg: Box<Tree>, conn: &SqliteConnection) -> QueryResult<Token> {
+    fn join_tokens(app: Box<Tree>, arg: Box<Tree>, conn: &SqliteConnection) -> ZiaResult<Token> {
         let mut string = String::new();
         string = try!(Tree::add_token(app, conn, string));
         string.push(' ');
@@ -189,7 +191,7 @@ impl Tree {
         Some(Box::new(Tree{id,applicant:None,argument:None}))
     }
 
-    fn new_definition(applicant: Box<Tree>, argument: Box<Tree>, conn: &SqliteConnection) -> QueryResult<Tree> {
+    fn new_definition(applicant: Box<Tree>, argument: Box<Tree>, conn: &SqliteConnection) -> ZiaResult<Tree> {
         let id: i32;
         let app = applicant.id;
         let arg = argument.id;
