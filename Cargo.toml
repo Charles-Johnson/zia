@@ -3,5 +3,9 @@ name = "zia"
 version = "0.1.0"
 authors = ["Charles Johnson <charlesthomasjohnson0@gmail.com>"]
 
+[lib]
+crate-type = ["rlib", "dylib"]
+
 [dependencies]
 zia2sql = {path = "../zia2sql"}
+libc = "0.2"
