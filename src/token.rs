@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod tokens {
     use super::parse_line;
     use super::parse_tokens;

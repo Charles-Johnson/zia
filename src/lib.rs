@@ -4,7 +4,6 @@ extern crate dotenv;
 
 mod token;
 mod tree;
-mod models;
 mod db;
 mod schema;
 
@@ -48,7 +47,7 @@ mod reductions {
         assert_eq!(oracle("a ->", &conn).unwrap(), "c")
     }
 }
-
+#[cfg(test)]
 mod definitions {
     use oracle;
     use memory_database;
