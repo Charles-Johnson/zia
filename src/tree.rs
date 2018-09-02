@@ -1,6 +1,5 @@
-use db::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
+use db::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, unlabel, ZiaResult, DBError};
 use super::token::{Token, parse_tokens, parse_line};
-use super::precedence::set_precedence;
 
 #[derive(Clone)]
 pub struct Tree {
@@ -68,9 +67,6 @@ impl Tree {
                            Ok(None)},
                           DEFINE => 
                           {try!(Tree::transfer_id(arg2.id, arg.id, conn));
-                           Ok(None)},
-                      PRECEDENCE =>
-                          {try!(set_precedence(arg.id, arg2.id, conn));
                            Ok(None)},
                                _ => Ok(None)
                       },

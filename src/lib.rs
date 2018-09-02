@@ -3,7 +3,6 @@ extern crate diesel;
 extern crate dotenv;
 
 mod token;
-mod precedence;
 mod tree;
 mod models;
 mod db;
@@ -47,17 +46,6 @@ mod reductions {
         assert_eq!(oracle("(-> b) a", &conn).unwrap(),"");
         assert_eq!(oracle("(-> c) b", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "c")
-    }
-    #[test]
-    fn diad() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(0 + 1)->", &conn).unwrap(), "1");
-    }
-    #[test]
-    fn set_precedence() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(>- b) a", &conn).unwrap(), "");
-        assert_eq!(oracle("((>- b) a) ->", &conn).unwrap(), "true");
     }
 }
 
