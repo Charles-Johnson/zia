@@ -5,8 +5,8 @@ authors = ["Charles Johnson <charlesthomasjohnson0@gmail.com>"]
 
 [lib]
 name = "zia"
-crate-type = ["rlib", "dylib"]
+crate-type = ["lib"]
 
 [dependencies]
-zia2sql = {path = "../zia2sql"}
-libc = "0.2"
+diesel = { version = "1.0.0", features = ["sqlite"] }
+dotenv = "0.9.0"

@@ -1,4 +1,4 @@
-use zia2sql::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
+use db::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, PRECEDENCE, unlabel, ZiaResult, DBError};
 use super::token::{Token, parse_tokens, parse_line};
 use super::precedence::set_precedence;
 

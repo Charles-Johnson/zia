@@ -1,27 +1,17 @@
-extern crate zia2sql;
-
-pub use zia2sql::{memory_database, SqliteConnection, ZiaResult};
+#[macro_use]
+extern crate diesel;
+extern crate dotenv;
 
 mod token;
 mod precedence;
 mod tree;
+mod models;
+mod db;
+mod schema;
 
+pub use db::{memory_database, SqliteConnection, ZiaResult};
 use tree::extract_tree_from_token;
-
 use token::Token;
-
-#[no_mangle]
-pub extern fn memory_database_ffi() -> SqliteConnection {
-    memory_database().unwrap()
-}
-
-#[no_mangle]
-pub extern fn oracle_ffi(buffer: &str, conn: &SqliteConnection) -> String {
-    match oracle(buffer, conn) {
-        Ok(s) => s,
-        Err(e) => e.to_string()
-    }
-}
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection)-> ZiaResult<String> {
     let tree = try!(extract_tree_from_token(&Token::Expression(buffer.to_string()), conn));
