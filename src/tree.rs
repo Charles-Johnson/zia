@@ -1,3 +1,17 @@
+/*  Copyright (C) 2018 Charles Johnson
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 use db::{SqliteConnection, id_from_label, assign_new_id, insert_definition, REDUCTION, DEFINE, insert_reduction3, label_id, find_definition, refactor_id, select_integer, LUID, label_from_id, select_definition, find_normal_form, unlabel, ZiaResult, DBError};
 use super::token::{Token, parse_tokens, parse_line};
 
