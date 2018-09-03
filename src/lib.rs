@@ -17,35 +17,38 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 extern crate diesel;
 extern crate dotenv;
 
-mod token;
-mod tree;
 mod db;
 mod schema;
+mod token;
+mod tree;
 
 pub use db::{memory_database, SqliteConnection, ZiaResult};
-use tree::extract_tree_from_token;
 use token::Token;
+use tree::extract_tree_from_token;
 
-pub fn oracle(buffer: &str, conn: &SqliteConnection)-> ZiaResult<String> {
-    let tree = try!(extract_tree_from_token(&Token::Expression(buffer.to_string()), conn));
+pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
+    let tree = try!(extract_tree_from_token(
+        &Token::Expression(buffer.to_string()),
+        conn
+    ));
     let mut string = String::new();
-    match try!(tree.call(conn))
-        {Some(s) => string = s,
-         None => ()
-         };
+    match try!(tree.call(conn)) {
+        Some(s) => string = s,
+        None => (),
+    };
     Ok(string)
 }
 
 #[cfg(test)]
 mod reductions {
-    use {oracle, memory_database};
+    use {memory_database, oracle};
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(-> b)a", &conn).unwrap(),"");
-        assert_eq!(oracle("a ->", &conn).unwrap(),"b");
+        assert_eq!(oracle("(-> b)a", &conn).unwrap(), "");
+        assert_eq!(oracle("a ->", &conn).unwrap(), "b");
         assert_eq!(oracle("(-> false)(not true)", &conn).unwrap(), "");
-        assert_eq!(oracle("(not true)->", &conn).unwrap(),"false");
+        assert_eq!(oracle("(not true)->", &conn).unwrap(), "false");
     }
     #[test]
     fn nested_monads() {
@@ -57,15 +60,15 @@ mod reductions {
     #[test]
     fn chain() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(-> b) a", &conn).unwrap(),"");
+        assert_eq!(oracle("(-> b) a", &conn).unwrap(), "");
         assert_eq!(oracle("(-> c) b", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "c")
     }
 }
 #[cfg(test)]
 mod definitions {
-    use oracle;
     use memory_database;
+    use oracle;
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();
@@ -79,4 +82,3 @@ mod definitions {
         assert_eq!(oracle("2 :=", &conn).unwrap(), "++ (++ 0)");
     }
 }
-
