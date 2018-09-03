@@ -28,12 +28,12 @@ pub struct Tree {
 
 pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
     match token {
-        Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
-        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
+        Token::Atom(t) => extract_tree_from_atom(t, conn),
+        Token::Expression(t) => extract_tree_from_expression(t, conn),
     }
 }
 
-fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
+fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
     match tokens.len() {
         0 | 1 => Err(DBError::Syntax(
@@ -55,7 +55,7 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult
     }
 }
 
-fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
+fn extract_tree_from_atom(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let id_if_exists = try!(id_from_label(&t, conn));
     match id_if_exists {
         None => {
