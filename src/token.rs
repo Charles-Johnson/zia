@@ -79,25 +79,25 @@ fn parse_letter(
 ) {
     match letter {
         '(' => {
-            push_token(letter, parenthesis_level, token, tokens);
+            push_token(letter, *parenthesis_level, token, tokens);
             *parenthesis_level += 1;
         }
         ')' => {
             *parenthesis_level -= 1;
-            push_token(letter, parenthesis_level, token, tokens);
+            push_token(letter, *parenthesis_level, token, tokens);
         }
-        ' ' => push_token(letter, parenthesis_level, token, tokens),
+        ' ' => push_token(letter, *parenthesis_level, token, tokens),
         '\n' | '\r' => (),
         _ => token.push(letter),
     };
 }
 
-fn push_token(letter: char, parenthesis_level: &i8, token: &mut String, tokens: &mut Vec<String>) {
-    if (token != "") & (*parenthesis_level == 0) {
+fn push_token(letter: char, parenthesis_level: i8, token: &mut String, tokens: &mut Vec<String>) {
+    if (token != "") & (parenthesis_level == 0) {
         tokens.push(token.clone());
         *token = String::new();
     }
-    if *parenthesis_level != 0 {
+    if parenthesis_level != 0 {
         token.push(letter);
     }
 }
