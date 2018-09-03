@@ -151,13 +151,13 @@ impl Tree {
 
     fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
         match (self.applicand.clone(), self.argument.clone()) {
-            (Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
+            (Some(app), Some(arg)) => Tree::join_tokens(*app, *arg, conn),
             _ => self.as_token(conn),
         }
     }
 
     fn add_token(
-        mut tree: Box<Tree>,
+        mut tree: Tree,
         conn: &SqliteConnection,
         mut string: String,
     ) -> ZiaResult<String> {
@@ -179,7 +179,7 @@ impl Tree {
             None => {
                 try!(self.expand(conn));
                 match (self.applicand.clone(), self.argument.clone()) {
-                    (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(app, arg, conn))),
+                    (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(*app, *arg, conn))),
                     _ => Err(DBError::Absence(
                         "Unlabelled concept with no definition".to_string(),
                     )),
@@ -215,7 +215,7 @@ impl Tree {
         }
     }
 
-    fn join_tokens(app: Box<Tree>, arg: Box<Tree>, conn: &SqliteConnection) -> ZiaResult<Token> {
+    fn join_tokens(app: Tree, arg: Tree, conn: &SqliteConnection) -> ZiaResult<Token> {
         let mut string = String::new();
         string = try!(Tree::add_token(app, conn, string));
         string.push(' ');
