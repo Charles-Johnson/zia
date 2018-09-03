@@ -40,9 +40,9 @@ mod tokens {
     }
 }
 
-pub fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
+pub fn parse_tokens(tokens: &[String]) -> Vec<Token> {
     let mut new_tokens: Vec<Token> = [].to_vec();
-    for token in tokens {
+    for token in tokens.iter() {
         if token.contains(" ") {
             new_tokens.push(Token::Expression(token[..].to_string()));
         } else {
