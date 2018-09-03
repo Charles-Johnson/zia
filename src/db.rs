@@ -52,7 +52,7 @@ mod tests {
     }
 }
 
-pub const LUID: i32 = -2147483648;
+pub const LUID: i32 = -2_147_483_648;
 const LABEL: i32 = LUID + 1;
 pub const DEFINE: i32 = LUID + 2;
 pub const REDUCTION: i32 = LUID + 3;
