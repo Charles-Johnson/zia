@@ -119,17 +119,16 @@ impl Tree {
         match self_reduction {
             None => {
                 let mut result = false;
-                match (self.applicand.clone(), self.argument.clone()) {
-                    (Some(mut app), Some(mut arg)) => {
-                        let app_result = try!(app.reduce(conn));
-                        let arg_result = try!(arg.reduce(conn));
-                        if app_result | arg_result {
-                            *self = try!(Tree::new_definition(app, arg, conn));
-                            try!(self.reduce(conn));
-                            result = true;
-                        }
+                if let (Some(mut app), Some(mut arg)) =
+                    (self.applicand.clone(), self.argument.clone())
+                {
+                    let app_result = try!(app.reduce(conn));
+                    let arg_result = try!(arg.reduce(conn));
+                    if app_result | arg_result {
+                        *self = try!(Tree::new_definition(app, arg, conn));
+                        try!(self.reduce(conn));
+                        result = true;
                     }
-                    _ => (),
                 };
                 Ok(result)
             }
