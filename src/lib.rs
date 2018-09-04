@@ -47,14 +47,14 @@ mod reductions {
         let conn = memory_database().unwrap();
         assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "b");
-        assert_eq!(oracle("(not true) (-> false)", &conn).unwrap(), "");
+        assert_eq!(oracle("((not true) ->) false", &conn).unwrap(), "");
         assert_eq!(oracle("(not true) ->", &conn).unwrap(), "false");
     }
     #[test]
     fn nested_monads() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(not true) (-> false)", &conn).unwrap(), "");
-        assert_eq!(oracle("(not false) (-> true)", &conn).unwrap(), "");
+        assert_eq!(oracle("((not true) ->) false", &conn).unwrap(), "");
+        assert_eq!(oracle("((not false) ->) true", &conn).unwrap(), "");
         assert_eq!(oracle("(not(not true))->", &conn).unwrap(), "true");
     }
     #[test]

@@ -98,13 +98,13 @@ impl Tree {
     }
     fn call_as_applicand(&self, arg: &Tree, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
         match (self.applicand.clone(), self.argument.clone()) {
-            (Some(app2), Some(arg2)) => match app2.id {
+            (Some(app2), Some(arg2)) => match arg2.id {
                 REDUCTION => {
-                    try!(insert_reduction3(arg.id, arg2.id, conn));
+                    try!(insert_reduction3(app2.id, arg.id, conn));
                     Ok(None)
                 }
                 DEFINE => {
-                    try!(Tree::transfer_id(arg2.id, arg.id, conn));
+                    try!(Tree::transfer_id(arg.id, app2.id, conn));
                     Ok(None)
                 }
                 _ => Ok(None),
