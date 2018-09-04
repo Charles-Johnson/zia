@@ -22,7 +22,7 @@ use db::{
 #[derive(Clone)]
 pub struct Tree {
     id: i32,
-    applicant: Option<Box<Tree>>,
+    applicand: Option<Box<Tree>>,
     argument: Option<Box<Tree>>,
 }
 
@@ -41,10 +41,10 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult
         )),
         2 => {
             let parsed_tokens = parse_tokens(&tokens);
-            let applicant = try!(extract_tree_from_token(&parsed_tokens[0], conn));
+            let applicand = try!(extract_tree_from_token(&parsed_tokens[0], conn));
             let argument = try!(extract_tree_from_token(&parsed_tokens[1], conn));
             Ok(try!(Tree::new_definition(
-                Box::new(applicant),
+                Box::new(applicand),
                 Box::new(argument),
                 conn
             )))
@@ -63,13 +63,13 @@ fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree>
             try!(label_id(id, &t, conn));
             Ok(Tree {
                 id,
-                applicant: None,
+                applicand: None,
                 argument: None,
             })
         }
         Some(id) => Ok(Tree {
             id,
-            applicant: None,
+            applicand: None,
             argument: None,
         }),
     }
@@ -77,7 +77,7 @@ fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree>
 
 impl Tree {
     pub fn call(&self, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
-        match (self.applicant.clone(), self.argument.clone()) {
+        match (self.applicand.clone(), self.argument.clone()) {
             (Some(mut app), Some(arg)) => match arg.id {
                 REDUCTION => {
                     try!(app.reduce(conn));
@@ -91,13 +91,13 @@ impl Tree {
                         Token::Expression(s) | Token::Atom(s) => Ok(Some(s)),
                     }
                 }
-                _ => app.call_as_applicant(&arg, conn),
+                _ => app.call_as_applicand(&arg, conn),
             },
             _ => Ok(None),
         }
     }
-    fn call_as_applicant(&self, arg: &Tree, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
-        match (self.applicant.clone(), self.argument.clone()) {
+    fn call_as_applicand(&self, arg: &Tree, conn: &SqliteConnection) -> ZiaResult<Option<String>> {
+        match (self.applicand.clone(), self.argument.clone()) {
             (Some(app2), Some(arg2)) => match app2.id {
                 REDUCTION => {
                     try!(insert_reduction3(arg.id, arg2.id, conn));
@@ -119,7 +119,7 @@ impl Tree {
         match self_reduction {
             None => {
                 let mut result = false;
-                match (self.applicant.clone(), self.argument.clone()) {
+                match (self.applicand.clone(), self.argument.clone()) {
                     (Some(mut app), Some(mut arg)) => {
                         let app_result = try!(app.reduce(conn));
                         let arg_result = try!(arg.reduce(conn));
@@ -135,7 +135,7 @@ impl Tree {
             }
             Some(n) => {
                 self.id = n;
-                self.applicant = None;
+                self.applicand = None;
                 self.argument = None;
                 try!(self.expand(conn));
                 Ok(true)
@@ -151,7 +151,7 @@ impl Tree {
     }
 
     fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
-        match (self.applicant.clone(), self.argument.clone()) {
+        match (self.applicand.clone(), self.argument.clone()) {
             (Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
             _ => self.as_token(conn),
         }
@@ -179,7 +179,7 @@ impl Tree {
         match try!(label_from_id(self.id, conn)) {
             None => {
                 try!(self.expand(conn));
-                match (self.applicant.clone(), self.argument.clone()) {
+                match (self.applicand.clone(), self.argument.clone()) {
                     (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(app, arg, conn))),
                     _ => Err(DBError::Absence(
                         "Unlabelled concept with no definition".to_string(),
@@ -191,7 +191,7 @@ impl Tree {
     }
 
     fn expand(&mut self, conn: &SqliteConnection) -> ZiaResult<()> {
-        match (self.applicant.clone(), self.argument.clone()) {
+        match (self.applicand.clone(), self.argument.clone()) {
             (Some(mut app), Some(mut arg)) => {
                 match try!(label_from_id(app.id, conn)) {
                     None => try!(app.expand(conn)),
@@ -207,7 +207,7 @@ impl Tree {
                 match definition {
                     None => Ok(()),
                     Some(def) => {
-                        self.applicant = Tree::new_leaf(def.0);
+                        self.applicand = Tree::new_leaf(def.0);
                         self.argument = Tree::new_leaf(def.1);
                         Ok(())
                     }
@@ -227,18 +227,18 @@ impl Tree {
     fn new_leaf(id: i32) -> Option<Box<Tree>> {
         Some(Box::new(Tree {
             id,
-            applicant: None,
+            applicand: None,
             argument: None,
         }))
     }
 
     fn new_definition(
-        applicant: Box<Tree>,
+        applicand: Box<Tree>,
         argument: Box<Tree>,
         conn: &SqliteConnection,
     ) -> ZiaResult<Tree> {
         let id: i32;
-        let app = applicant.id;
+        let app = applicand.id;
         let arg = argument.id;
         let application = try!(find_definition(app, arg, conn));
         match application {
@@ -247,7 +247,7 @@ impl Tree {
         };
         Ok(Tree {
             id,
-            applicant: Some(applicant),
+            applicand: Some(applicand),
             argument: Some(argument),
         })
     }

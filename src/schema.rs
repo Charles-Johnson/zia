@@ -1,7 +1,7 @@
 table! {
     definitions (id) {
         id -> Integer,
-        applicant -> Integer,
+        applicand -> Integer,
         argument -> Integer,
     }
 }

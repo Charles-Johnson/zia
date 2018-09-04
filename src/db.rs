@@ -117,7 +117,7 @@ fn setup_database(conn: &SqliteConnection) -> ZiaResult<()> {
 }
 
 fn setup_tables(conn: &SqliteConnection) -> QueryResult<()> {
-    let string: String = "create table definitions (id integer PRIMARY KEY, applicant integer NOT NULL, argument integer NOT NULL); create table text (id integer PRIMARY KEY, result text NOT NULL); create table reductions (id integer PRIMARY KEY, normal_form integer NOT NULL); create table integers (id integer PRIMARY KEY, result integer NOT NULL);".to_string();
+    let string: String = "create table definitions (id integer PRIMARY KEY, applicand integer NOT NULL, argument integer NOT NULL); create table text (id integer PRIMARY KEY, result text NOT NULL); create table reductions (id integer PRIMARY KEY, normal_form integer NOT NULL); create table integers (id integer PRIMARY KEY, result integer NOT NULL);".to_string();
     try!(conn.execute(&string));
     Ok(())
 }
@@ -211,8 +211,8 @@ pub fn refactor_id(
             .execute(conn)
     );
     try!(
-        update(definitions::table.filter(definitions::applicant.eq(id_before)))
-            .set(definitions::applicant.eq(id_after))
+        update(definitions::table.filter(definitions::applicand.eq(id_before)))
+            .set(definitions::applicand.eq(id_after))
             .execute(conn)
     );
     try!(
@@ -223,17 +223,17 @@ pub fn refactor_id(
     Ok(())
 }
 
-/// Returns the id of the application of the given applicant id and argument id pair.
+/// Returns the id of the application of the given applicand id and argument id pair.
 /// If the application is not defined for the given pair, this function inserts a definition
 /// and assigns a new id.
-pub fn insert_definition(applicant: i32, argument: i32, conn: &SqliteConnection) -> ZiaResult<i32> {
-    let application = try!(find_definition(applicant, argument, conn));
+pub fn insert_definition(applicand: i32, argument: i32, conn: &SqliteConnection) -> ZiaResult<i32> {
+    let application = try!(find_definition(applicand, argument, conn));
     match application {
         None => {
             let definition_id = try!(assign_new_id(conn));
             let definition_result = (
                 definitions::id.eq(definition_id),
-                definitions::applicant.eq(applicant),
+                definitions::applicand.eq(applicand),
                 definitions::argument.eq(argument),
             );
             try!(
@@ -406,13 +406,13 @@ fn insert_reduction2(id: i32, normal_form_id: i32, conn: &SqliteConnection) -> Q
 
 // Functions that operate only on the definitions table.
 
-fn select_argument(id: i32, applicant: i32, conn: &SqliteConnection) -> ZiaResult<Option<i32>> {
+fn select_argument(id: i32, applicand: i32, conn: &SqliteConnection) -> ZiaResult<Option<i32>> {
     let arguments = try!(
         definitions::table
             .filter(
                 definitions::id
                     .eq(id)
-                    .and(definitions::applicant.eq(applicant))
+                    .and(definitions::applicand.eq(applicand))
             ).select(definitions::argument)
             .load::<i32>(conn)
     );
@@ -426,15 +426,15 @@ fn select_argument(id: i32, applicant: i32, conn: &SqliteConnection) -> ZiaResul
 }
 
 pub fn find_definition(
-    applicant: i32,
+    applicand: i32,
     argument: i32,
     conn: &SqliteConnection,
 ) -> ZiaResult<Option<i32>> {
     let applications = try!(
         definitions::table
             .filter(
-                definitions::applicant
-                    .eq(applicant)
+                definitions::applicand
+                    .eq(applicand)
                     .and(definitions::argument.eq(argument))
             ).select(definitions::id)
             .load::<i32>(conn)
@@ -443,7 +443,7 @@ pub fn find_definition(
         0 => Ok(None),
         1 => Ok(Some(applications[0])),
         _ => Err(DBError::Ambiguity(
-            "Multiple definitions with the same applicant and argument pair exist.".to_string(),
+            "Multiple definitions with the same applicand and argument pair exist.".to_string(),
         )),
     }
 }
@@ -452,7 +452,7 @@ pub fn select_definition(id: i32, conn: &SqliteConnection) -> ZiaResult<Option<(
     let definitions = try!(
         definitions::table
             .filter(definitions::id.eq(id))
-            .select((definitions::applicant, definitions::argument))
+            .select((definitions::applicand, definitions::argument))
             .load::<(i32, i32)>(conn)
     );
     match definitions.len() {
