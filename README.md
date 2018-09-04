@@ -15,7 +15,7 @@ An expression consists of an applicand and an argument, separated by spaces. Eit
 
 e.g.
 
-(aplicand1 argument1) (applicand2 argument2)
+(applicand1 argument1) (applicand2 argument2)
 
 If an applicand or argument is not an expression, it is an atom: labelled by a string containing no spaces or parentheses.
 
