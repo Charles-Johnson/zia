@@ -45,23 +45,23 @@ mod reductions {
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(-> b)a", &conn).unwrap(), "");
+        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "b");
-        assert_eq!(oracle("(-> false)(not true)", &conn).unwrap(), "");
-        assert_eq!(oracle("(not true)->", &conn).unwrap(), "false");
+        assert_eq!(oracle("(not true) (-> false)", &conn).unwrap(), "");
+        assert_eq!(oracle("(not true) ->", &conn).unwrap(), "false");
     }
     #[test]
     fn nested_monads() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(-> false)(not true)", &conn).unwrap(), "");
-        assert_eq!(oracle("(-> true)(not false)", &conn).unwrap(), "");
+        assert_eq!(oracle("(not true) (-> false)", &conn).unwrap(), "");
+        assert_eq!(oracle("(not false) (-> true)", &conn).unwrap(), "");
         assert_eq!(oracle("(not(not true))->", &conn).unwrap(), "true");
     }
     #[test]
     fn chain() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(-> b) a", &conn).unwrap(), "");
-        assert_eq!(oracle("(-> c) b", &conn).unwrap(), "");
+        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
+        assert_eq!(oracle("(b ->) c", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "c")
     }
 }
@@ -72,13 +72,13 @@ mod definitions {
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(:= (repeated +))*", &conn).unwrap(), "");
+        assert_eq!(oracle("(* :=) (repeated +)", &conn).unwrap(), "");
         assert_eq!(oracle("* :=", &conn).unwrap(), "repeated +");
     }
     #[test]
     fn nested_monads() {
         let conn = memory_database().unwrap();
-        assert_eq!(oracle("(:= (++ (++ 0)))2", &conn).unwrap(), "");
+        assert_eq!(oracle("(2 :=) (++ (++ 0))", &conn).unwrap(), "");
         assert_eq!(oracle("2 :=", &conn).unwrap(), "++ (++ 0)");
     }
 }

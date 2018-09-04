@@ -23,7 +23,7 @@ If an applicand or argument is not an expression, it is an atom: labelled by a s
 
 We can change the label of an atom from "a" to "b" by the expression:
 ```
-(:= a) b
+(b :=) a
 ```
 
 Ideally, we would write:
@@ -34,7 +34,7 @@ but that would require Zia to know the precedence of atoms to order the applicat
 
 We can also define "c" as the application of "a" and "b" by:
 ```
-(:= (a b)) c
+(c :=) (a b)
 ```
 
 If you want to know what "c" consists of, you can expand it by:
@@ -44,7 +44,7 @@ c :=
 
 Reduction rules for expressions can be defined. If "a" reduces to "b" then we can write:
 ```
-(-> b) a
+(a ->) b 
 ```
 
 If we want to find the normal form of "a" then we can write:
