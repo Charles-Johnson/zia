@@ -40,10 +40,10 @@ mod tokens {
     }
 }
 
-pub fn parse_tokens(tokens: &Vec<String>) -> Vec<Token> {
+pub fn parse_tokens(tokens: &[String]) -> Vec<Token> {
     let mut new_tokens: Vec<Token> = [].to_vec();
-    for token in tokens {
-        if token.contains(" ") {
+    for token in tokens.iter() {
+        if token.contains(' ') {
             new_tokens.push(Token::Expression(token[..].to_string()));
         } else {
             new_tokens.push(Token::Atom(token[..].to_string()));
@@ -79,25 +79,25 @@ fn parse_letter(
 ) {
     match letter {
         '(' => {
-            push_token(letter, parenthesis_level, token, tokens);
+            push_token(letter, *parenthesis_level, token, tokens);
             *parenthesis_level += 1;
         }
         ')' => {
             *parenthesis_level -= 1;
-            push_token(letter, parenthesis_level, token, tokens);
+            push_token(letter, *parenthesis_level, token, tokens);
         }
-        ' ' => push_token(letter, parenthesis_level, token, tokens),
+        ' ' => push_token(letter, *parenthesis_level, token, tokens),
         '\n' | '\r' => (),
         _ => token.push(letter),
     };
 }
 
-fn push_token(letter: char, parenthesis_level: &i8, token: &mut String, tokens: &mut Vec<String>) {
-    if (token != "") & (*parenthesis_level == 0) {
+fn push_token(letter: char, parenthesis_level: i8, token: &mut String, tokens: &mut Vec<String>) {
+    if (token != "") & (parenthesis_level == 0) {
         tokens.push(token.clone());
         *token = String::new();
     }
-    if *parenthesis_level != 0 {
+    if parenthesis_level != 0 {
         token.push(letter);
     }
 }

@@ -31,12 +31,7 @@ pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
         &Token::Expression(buffer.to_string()),
         conn
     ));
-    let mut string = String::new();
-    match try!(tree.call(conn)) {
-        Some(s) => string = s,
-        None => (),
-    };
-    Ok(string)
+    Ok(try!(tree.call(conn)).unwrap_or_default())
 }
 
 #[cfg(test)]

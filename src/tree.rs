@@ -28,12 +28,12 @@ pub struct Tree {
 
 pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
     match token {
-        Token::Atom(t) => extract_tree_from_atom(t.to_string(), conn),
-        Token::Expression(t) => extract_tree_from_expression(t.to_string(), conn),
+        Token::Atom(t) => extract_tree_from_atom(t, conn),
+        Token::Expression(t) => extract_tree_from_expression(t, conn),
     }
 }
 
-fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
+fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
     match tokens.len() {
         0 | 1 => Err(DBError::Syntax(
@@ -55,7 +55,7 @@ fn extract_tree_from_expression(t: String, conn: &SqliteConnection) -> ZiaResult
     }
 }
 
-fn extract_tree_from_atom(t: String, conn: &SqliteConnection) -> ZiaResult<Tree> {
+fn extract_tree_from_atom(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let id_if_exists = try!(id_from_label(&t, conn));
     match id_if_exists {
         None => {
@@ -119,17 +119,16 @@ impl Tree {
         match self_reduction {
             None => {
                 let mut result = false;
-                match (self.applicand.clone(), self.argument.clone()) {
-                    (Some(mut app), Some(mut arg)) => {
-                        let app_result = try!(app.reduce(conn));
-                        let arg_result = try!(arg.reduce(conn));
-                        if app_result | arg_result {
-                            *self = try!(Tree::new_definition(app, arg, conn));
-                            try!(self.reduce(conn));
-                            result = true;
-                        }
+                if let (Some(mut app), Some(mut arg)) =
+                    (self.applicand.clone(), self.argument.clone())
+                {
+                    let app_result = try!(app.reduce(conn));
+                    let arg_result = try!(arg.reduce(conn));
+                    if app_result | arg_result {
+                        *self = try!(Tree::new_definition(app, arg, conn));
+                        try!(self.reduce(conn));
+                        result = true;
                     }
-                    _ => (),
                 };
                 Ok(result)
             }
@@ -152,13 +151,13 @@ impl Tree {
 
     fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
         match (self.applicand.clone(), self.argument.clone()) {
-            (Some(app), Some(arg)) => Tree::join_tokens(app, arg, conn),
+            (Some(app), Some(arg)) => Tree::join_tokens(*app, *arg, conn),
             _ => self.as_token(conn),
         }
     }
 
     fn add_token(
-        mut tree: Box<Tree>,
+        mut tree: Tree,
         conn: &SqliteConnection,
         mut string: String,
     ) -> ZiaResult<String> {
@@ -180,7 +179,7 @@ impl Tree {
             None => {
                 try!(self.expand(conn));
                 match (self.applicand.clone(), self.argument.clone()) {
-                    (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(app, arg, conn))),
+                    (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(*app, *arg, conn))),
                     _ => Err(DBError::Absence(
                         "Unlabelled concept with no definition".to_string(),
                     )),
@@ -216,7 +215,7 @@ impl Tree {
         }
     }
 
-    fn join_tokens(app: Box<Tree>, arg: Box<Tree>, conn: &SqliteConnection) -> ZiaResult<Token> {
+    fn join_tokens(app: Tree, arg: Tree, conn: &SqliteConnection) -> ZiaResult<Token> {
         let mut string = String::new();
         string = try!(Tree::add_token(app, conn, string));
         string.push(' ');
