@@ -37,9 +37,10 @@ pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaRes
 fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
     match tokens.len() {
-        0 | 1 => Err(DBError::Syntax(
-            "Expression needs to be composed of multiple tokens".to_string(),
+        0 => Err(DBError::Syntax(
+            "Parentheses need to contain an expression".to_string(),
         )),
+        1 => extract_tree_from_atom(&tokens[0], conn),
         2 => {
             let parsed_tokens = parse_tokens(&tokens);
             let applicand = try!(extract_tree_from_token(&parsed_tokens[0], conn));
@@ -57,22 +58,14 @@ fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<T
 }
 
 fn extract_tree_from_atom(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
-    let id_if_exists = try!(id_from_label(&t, conn));
+    let id_if_exists = try!(id_from_label(t, conn));
     match id_if_exists {
         None => {
             let id = try!(assign_new_id(conn));
-            try!(label_id(id, &t, conn));
-            Ok(Tree {
-                id,
-                applicand: None,
-                argument: None,
-            })
+            try!(label_id(id, t, conn));
+            Tree::new_leaf(id)
         }
-        Some(id) => Ok(Tree {
-            id,
-            applicand: None,
-            argument: None,
-        }),
+        Some(id) => Tree::new_leaf(id),
     }
 }
 
@@ -203,8 +196,8 @@ impl Tree {
                 match definition {
                     None => Ok(()),
                     Some(def) => {
-                        self.applicand = Tree::new_leaf(def.0);
-                        self.argument = Tree::new_leaf(def.1);
+                        self.applicand = Some(Box::new(try!(Tree::new_leaf(def.0))));
+                        self.argument = Some(Box::new(try!(Tree::new_leaf(def.1))));
                         Ok(())
                     }
                 }
@@ -220,12 +213,12 @@ impl Tree {
         Ok(Token::Expression(string))
     }
 
-    fn new_leaf(id: i32) -> Option<Box<Tree>> {
-        Some(Box::new(Tree {
+    fn new_leaf(id: i32) -> ZiaResult<Tree> {
+        Ok(Tree {
             id,
             applicand: None,
             argument: None,
-        }))
+        })
     }
 
     fn new_definition(

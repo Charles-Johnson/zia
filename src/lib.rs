@@ -69,6 +69,11 @@ mod reductions {
         assert_matches!(oracle("(b ->) a", &conn), Err(DBError::Loop(_)));
         assert_eq!(oracle("b ->", &conn).unwrap(), "b");
     }
+    #[test]
+    fn trivial_parentheses() {
+        let conn = memory_database().unwrap();
+        assert_eq!(oracle("(a) ->", &conn).unwrap(), "a");
+    }
 }
 #[cfg(test)]
 mod definitions {
