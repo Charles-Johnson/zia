@@ -25,7 +25,7 @@ mod schema;
 mod token;
 mod tree;
 
-pub use db::{memory_database, SqliteConnection, ZiaResult, DBError};
+pub use db::{memory_database, DBError, SqliteConnection, ZiaResult};
 use token::Token;
 use tree::extract_tree_from_token;
 
@@ -39,7 +39,7 @@ pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
 
 #[cfg(test)]
 mod reductions {
-    use {DBError, memory_database, oracle};
+    use {memory_database, oracle, DBError};
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();

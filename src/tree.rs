@@ -157,11 +157,7 @@ impl Tree {
         }
     }
 
-    fn add_token(
-        mut tree: Tree,
-        conn: &SqliteConnection,
-        mut string: String,
-    ) -> ZiaResult<String> {
+    fn add_token(mut tree: Tree, conn: &SqliteConnection, mut string: String) -> ZiaResult<String> {
         match try!(tree.as_token(conn)) {
             Token::Atom(s) => {
                 string.push_str(&s);

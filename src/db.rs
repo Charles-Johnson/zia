@@ -355,12 +355,15 @@ pub fn insert_reduction3(
             )))
         }
     };
-    let prereductions = try!(find_reduction(id, conn));
     let postreduction = try!(find_normal_form(normal_form_id, conn));
     match postreduction {
         None => (),
         Some(n) => normal_form_id = n,
     };
+    if normal_form_id == id {
+        return Err(DBError::Loop("Cannot create a reduction loop".to_string()));
+    }
+    let prereductions = try!(find_reduction(id, conn));
     for prereduction in prereductions {
         try!(update_reduction(prereduction, normal_form_id, conn));
     }
