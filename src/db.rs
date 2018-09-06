@@ -1,4 +1,4 @@
-/*
+/*  Library for the Zia programming language.
     Copyright (C) 2018 Charles Johnson
 
     This program is free software: you can redistribute it and/or modify
@@ -66,6 +66,7 @@ pub enum DBError {
     Redundancy(String),
     Absence(String),
     Syntax(String),
+    Loop(String),
 }
 
 pub type ZiaResult<T> = Result<T, DBError>;
@@ -80,6 +81,7 @@ impl fmt::Display for DBError {
             DBError::Redundancy(s) => write!(f, "{}", s),
             DBError::Absence(s) => write!(f, "{}", s),
             DBError::Syntax(s) => write!(f, "{}", s),
+            DBError::Loop(s) => write!(f, "{}", s),
         }
     }
 }

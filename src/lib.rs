@@ -1,4 +1,5 @@
-/*  Copyright (C) 2018  Charles Johnson
+/*  Library for the Zia programming language.
+    Copyright (C) 2018  Charles Johnson
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,13 +17,15 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
+#[macro_use]
+extern crate matches;
 
 mod db;
 mod schema;
 mod token;
 mod tree;
 
-pub use db::{memory_database, SqliteConnection, ZiaResult};
+pub use db::{memory_database, SqliteConnection, ZiaResult, DBError};
 use token::Token;
 use tree::extract_tree_from_token;
 
@@ -36,7 +39,7 @@ pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
 
 #[cfg(test)]
 mod reductions {
-    use {memory_database, oracle};
+    use {DBError, memory_database, oracle};
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();
@@ -58,6 +61,13 @@ mod reductions {
         assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
         assert_eq!(oracle("(b ->) c", &conn).unwrap(), "");
         assert_eq!(oracle("a ->", &conn).unwrap(), "c")
+    }
+    #[test]
+    fn prevent_loop() {
+        let conn = memory_database().unwrap();
+        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
+        assert_matches!(oracle("(b ->) a", &conn), Err(DBError::Loop(_)));
+        assert_eq!(oracle("b ->", &conn).unwrap(), "b");
     }
 }
 #[cfg(test)]

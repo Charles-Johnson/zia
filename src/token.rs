@@ -1,4 +1,5 @@
-/*  Copyright (C) 2018  Charles Johnson
+/*  Library for the Zia programming language.
+    Copyright (C) 2018  Charles Johnson
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
