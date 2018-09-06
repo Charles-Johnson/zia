@@ -179,6 +179,14 @@ fn label_text_from_label_definition(id: i32, conn: &SqliteConnection) -> ZiaResu
     }
 }
 
+pub fn transfer_id(id_before: i32, id_after: i32, conn: &SqliteConnection) -> ZiaResult<()> {
+    ///Need to delete label of id_before if exists
+    try!(unlabel(id_before, conn));
+    let luid = try!(select_integer(LUID, conn));
+    try!(refactor_id(id_before, id_after, luid, conn));
+    Ok(())
+}
+
 pub fn refactor_id(
     id_before: i32,
     id_after: i32,

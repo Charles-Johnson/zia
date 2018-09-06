@@ -25,21 +25,19 @@ mod schema;
 mod token;
 mod tree;
 
-pub use db::{memory_database, DBError, SqliteConnection, ZiaResult};
-use token::Token;
-use tree::extract_tree_from_token;
+pub use db::memory_database;
+use db::{SqliteConnection, ZiaResult};
+use tree::extract_tree_from_expression;
 
 pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
-    let tree = try!(extract_tree_from_token(
-        &Token::Expression(buffer.to_string()),
-        conn
-    ));
+    let tree = try!(extract_tree_from_expression(buffer, conn));
     Ok(try!(tree.call(conn)).unwrap_or_default())
 }
 
 #[cfg(test)]
 mod reductions {
-    use {memory_database, oracle, DBError};
+    use db::{memory_database, DBError};
+    use oracle;
     #[test]
     fn monad() {
         let conn = memory_database().unwrap();

@@ -13,13 +13,14 @@
 
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.*/
-use super::token::{parse_line, parse_tokens, Token};
 use db::{
     assign_new_id, find_definition, find_normal_form, id_from_label, insert_definition,
-    insert_reduction3, label_from_id, label_id, refactor_id, select_definition, select_integer,
-    unlabel, DBError, SqliteConnection, ZiaResult, DEFINE, LUID, REDUCTION,
+    insert_reduction3, label_from_id, label_id, select_definition, transfer_id, DBError,
+    SqliteConnection, ZiaResult, DEFINE, REDUCTION,
 };
+use token::{parse_line, parse_tokens, Token};
 
+///Data structure representing the (full binary) abstract syntax tree used to interpret expressions.
 #[derive(Clone)]
 pub struct Tree {
     id: i32,
@@ -27,14 +28,8 @@ pub struct Tree {
     argument: Option<Box<Tree>>,
 }
 
-pub fn extract_tree_from_token(token: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
-    match token {
-        Token::Atom(t) => extract_tree_from_atom(t, conn),
-        Token::Expression(t) => extract_tree_from_expression(t, conn),
-    }
-}
-
-fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
+///A function to generate the syntax tree from an expression
+pub fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
     let tokens: Vec<String> = parse_line(&t);
     match tokens.len() {
         0 => Err(DBError::Syntax(
@@ -43,13 +38,7 @@ fn extract_tree_from_expression(t: &str, conn: &SqliteConnection) -> ZiaResult<T
         1 => extract_tree_from_atom(&tokens[0], conn),
         2 => {
             let parsed_tokens = parse_tokens(&tokens);
-            let applicand = try!(extract_tree_from_token(&parsed_tokens[0], conn));
-            let argument = try!(extract_tree_from_token(&parsed_tokens[1], conn));
-            Ok(try!(Tree::new_definition(
-                Box::new(applicand),
-                Box::new(argument),
-                conn
-            )))
+            extract_tree_from_monad(&parsed_tokens[0], &parsed_tokens[1], conn)
         }
         _ => Err(DBError::Syntax(
             "Expression composed of more than 2 tokens has not been implemented yet".to_string(),
@@ -66,6 +55,23 @@ fn extract_tree_from_atom(t: &str, conn: &SqliteConnection) -> ZiaResult<Tree> {
             Tree::new_leaf(id)
         }
         Some(id) => Tree::new_leaf(id),
+    }
+}
+
+fn extract_tree_from_monad(app: &Token, arg: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
+    let applicand = try!(extract_tree_from_token(app, conn));
+    let argument = try!(extract_tree_from_token(arg, conn));
+    Ok(try!(Tree::new_definition(
+        Box::new(applicand),
+        Box::new(argument),
+        conn
+    )))
+}
+
+fn extract_tree_from_token(t: &Token, conn: &SqliteConnection) -> ZiaResult<Tree> {
+    match t {
+        Token::Atom(s) => extract_tree_from_atom(&s, conn),
+        Token::Expression(s) => extract_tree_from_expression(&s, conn),
     }
 }
 
@@ -98,7 +104,7 @@ impl Tree {
                     Ok(None)
                 }
                 DEFINE => {
-                    try!(Tree::transfer_id(arg.id, app2.id, conn));
+                    try!(transfer_id(arg.id, app2.id, conn));
                     Ok(None)
                 }
                 _ => Ok(None),
@@ -106,9 +112,8 @@ impl Tree {
             _ => Ok(None),
         }
     }
-
+    ///assuming no errors, returns Ok(true) if self is mutated by this function, else Ok(false)
     fn reduce(&mut self, conn: &SqliteConnection) -> ZiaResult<bool> {
-        //returns true if self is mutated by this function, else false
         let self_reduction = try!(find_normal_form(self.id, conn));
         match self_reduction {
             None => {
@@ -127,20 +132,11 @@ impl Tree {
                 Ok(result)
             }
             Some(n) => {
-                self.id = n;
-                self.applicand = None;
-                self.argument = None;
+                *self = try!(Tree::new_leaf(n));
                 try!(self.expand(conn));
                 Ok(true)
             }
         }
-    }
-    fn transfer_id(id_before: i32, id_after: i32, conn: &SqliteConnection) -> ZiaResult<()> {
-        ///Need to delete label of arg if exists
-        try!(unlabel(id_before, conn));
-        let luid = try!(select_integer(LUID, conn));
-        try!(refactor_id(id_before, id_after, luid, conn));
-        Ok(())
     }
 
     fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
@@ -150,8 +146,8 @@ impl Tree {
         }
     }
 
-    fn add_token(mut tree: Tree, conn: &SqliteConnection, mut string: String) -> ZiaResult<String> {
-        match try!(tree.as_token(conn)) {
+    fn add_token(mut self, conn: &SqliteConnection, mut string: String) -> ZiaResult<String> {
+        match try!(self.as_token(conn)) {
             Token::Atom(s) => {
                 string.push_str(&s);
             }
@@ -169,7 +165,7 @@ impl Tree {
             None => {
                 try!(self.expand(conn));
                 match (self.applicand.clone(), self.argument.clone()) {
-                    (Some(app), Some(arg)) => Ok(try!(Tree::join_tokens(*app, *arg, conn))),
+                    (Some(app), Some(arg)) => Ok(try!(app.join_tokens(*arg, conn))),
                     _ => Err(DBError::Absence(
                         "Unlabelled concept with no definition".to_string(),
                     )),
@@ -205,9 +201,9 @@ impl Tree {
         }
     }
 
-    fn join_tokens(app: Tree, arg: Tree, conn: &SqliteConnection) -> ZiaResult<Token> {
+    fn join_tokens(self, arg: Tree, conn: &SqliteConnection) -> ZiaResult<Token> {
         let mut string = String::new();
-        string = try!(Tree::add_token(app, conn, string));
+        string = try!(Tree::add_token(self, conn, string));
         string.push(' ');
         string = try!(Tree::add_token(arg, conn, string));
         Ok(Token::Expression(string))

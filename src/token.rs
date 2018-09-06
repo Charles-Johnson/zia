@@ -17,15 +17,18 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.*/
 mod tokens {
     use super::parse_line;
     use super::parse_tokens;
-    use Token::Atom;
-    use Token::Expression;
+    use super::Token;
     #[test]
     fn monad() {
         let parsed_line = parse_line("(not true)->");
         assert_eq!(parsed_line, ["not true", "->"].to_vec());
         assert_eq!(
             parse_tokens(&parsed_line),
-            [Expression("not true".to_string()), Atom("->".to_string())].to_vec()
+            [
+                Token::Expression("not true".to_string()),
+                Token::Atom("->".to_string())
+            ]
+                .to_vec()
         );
     }
     #[test]
