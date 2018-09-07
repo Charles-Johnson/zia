@@ -141,7 +141,7 @@ impl Tree {
 
     fn expand_as_token(&mut self, conn: &SqliteConnection) -> ZiaResult<Token> {
         match (self.applicand.clone(), self.argument.clone()) {
-            (Some(app), Some(arg)) => Tree::join_tokens(*app, *arg, conn),
+            (Some(app), Some(arg)) => app.join_tokens(*arg, conn),
             _ => self.as_token(conn),
         }
     }
@@ -203,9 +203,9 @@ impl Tree {
 
     fn join_tokens(self, arg: Tree, conn: &SqliteConnection) -> ZiaResult<Token> {
         let mut string = String::new();
-        string = try!(Tree::add_token(self, conn, string));
+        string = try!(self.add_token(conn, string));
         string.push(' ');
-        string = try!(Tree::add_token(arg, conn, string));
+        string = try!(arg.add_token(conn, string));
         Ok(Token::Expression(string))
     }
 
