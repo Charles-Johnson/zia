@@ -14,79 +14,78 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#[macro_use]
-extern crate diesel;
-extern crate dotenv;
+#![feature(vec_remove_item)]
 #[macro_use]
 extern crate matches;
 
-mod db;
-mod schema;
+mod concept;
+mod constants;
+mod context;
 mod token;
-mod tree;
+mod utils;
 
-pub use db::memory_database;
-use db::{SqliteConnection, ZiaResult};
-use tree::extract_tree_from_expression;
+pub use context::Context;
+use utils::ZiaResult;
 
-pub fn oracle(buffer: &str, conn: &SqliteConnection) -> ZiaResult<String> {
-    let tree = try!(extract_tree_from_expression(buffer, conn));
-    Ok(try!(tree.call(conn)).unwrap_or_default())
+pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String> {
+    let concept = try!(cont.concept_from_expression(buffer));
+    cont.call(concept)
 }
 
 #[cfg(test)]
 mod reductions {
-    use db::{memory_database, DBError};
     use oracle;
+    use utils::ZiaError;
+    use Context;
     #[test]
     fn monad() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
-        assert_eq!(oracle("a ->", &conn).unwrap(), "b");
-        assert_eq!(oracle("((not true) ->) false", &conn).unwrap(), "");
-        assert_eq!(oracle("(not true) ->", &conn).unwrap(), "false");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_eq!(oracle("a ->", &mut cont).unwrap(), "b");
+        assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(not true) ->", &mut cont).unwrap(), "false");
     }
     #[test]
     fn nested_monads() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("((not true) ->) false", &conn).unwrap(), "");
-        assert_eq!(oracle("((not false) ->) true", &conn).unwrap(), "");
-        assert_eq!(oracle("(not(not true))->", &conn).unwrap(), "true");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
+        assert_eq!(oracle("((not false) ->) true", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true");
     }
     #[test]
     fn chain() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
-        assert_eq!(oracle("(b ->) c", &conn).unwrap(), "");
-        assert_eq!(oracle("a ->", &conn).unwrap(), "c")
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), "");
+        assert_eq!(oracle("a ->", &mut cont).unwrap(), "c")
     }
     #[test]
     fn prevent_loop() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(a ->) b", &conn).unwrap(), "");
-        assert_matches!(oracle("(b ->) a", &conn), Err(DBError::Loop(_)));
-        assert_eq!(oracle("b ->", &conn).unwrap(), "b");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
+        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b");
     }
     #[test]
     fn trivial_parentheses() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(a) ->", &conn).unwrap(), "a");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a) ->", &mut cont).unwrap(), "a");
     }
 }
 #[cfg(test)]
 mod definitions {
-    use memory_database;
     use oracle;
+    use Context;
     #[test]
     fn monad() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(* :=) (repeated +)", &conn).unwrap(), "");
-        assert_eq!(oracle("* :=", &conn).unwrap(), "repeated +");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
     }
     #[test]
     fn nested_monads() {
-        let conn = memory_database().unwrap();
-        assert_eq!(oracle("(2 :=) (++ (++ 0))", &conn).unwrap(), "");
-        assert_eq!(oracle("2 :=", &conn).unwrap(), "++ (++ 0)");
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(2 :=) (++ (++ 0))", &mut cont).unwrap(), "");
+        assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)");
     }
 }
