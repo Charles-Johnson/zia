@@ -29,7 +29,7 @@ use utils::ZiaResult;
 
 pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String> {
     let concept = try!(cont.concept_from_expression(buffer));
-    cont.call(concept)
+    cont.call(&concept)
 }
 
 #[cfg(test)]
