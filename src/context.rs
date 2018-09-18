@@ -1,6 +1,6 @@
 use concept::{Concept, ConceptRef};
 use constants::{DEFINE, LABEL, LUID, REDUCTION};
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
@@ -18,7 +18,7 @@ impl Context {
             concepts: Vec::new(),
         };
         cont.concepts.push(Concept::new_luid());
-        try!(cont.setup()); // !Error!
+        try!(cont.setup());
         Ok(cont)
     }
     fn setup(&mut self) -> ZiaResult<()> {
@@ -28,13 +28,13 @@ impl Context {
         let luid_label_definition = try!(self.new_concept());
         let concepts = self.concepts.clone(); // for (LABEL LUID)
         try!(self.label_safe(&concepts[LUID], &luid_label_definition, "luid")); //one more id occupied. self.label(&concepts[LUID], "luid") requires a borrow of LUID once in insert_definition and again to get a new concept so self.label_safe is used instead.
-        try!(self.label(&concepts[DEFINE], ":=")); //two more ids occupied !Error!
+        try!(self.label(&concepts[DEFINE], ":=")); //two more ids occupied
         try!(self.label(&concepts[REDUCTION], "->")); //two more ids occupied
         Ok(())
     }
     fn label_safe(&mut self, concept: &ConceptRef, definition: &ConceptRef, string: &str) -> ZiaResult<()> {
         let concepts = self.concepts.clone();
-        let definition = try!(self.insert_definition_safe(&concepts[LABEL], concept, definition)); // !Error! concept is borrowed twice in this method
+        let definition = try!(self.insert_definition_safe(&concepts[LABEL], concept, definition));
         let text = try!(self.insert_new_reduction(&definition));
         try!(self.insert_text(&text, string));
         Ok(())
@@ -47,7 +47,7 @@ impl Context {
     ) -> ZiaResult<ConceptRef> {
         let mut bm_applicand = applicand.borrow_mut();
         let mut bm_argument = argument.borrow_mut();
-        let application = try!(bm_applicand.find_definition(&bm_argument)); // !Error! argument is borrowed again in this method call.
+        let application = try!(bm_applicand.find_definition(&bm_argument));
         match application {
             None => {
                 let mut bm_definition = definition.borrow_mut();
@@ -61,7 +61,7 @@ impl Context {
     }
     fn label(&mut self, concept: &ConceptRef, string: &str) -> ZiaResult<()> {
         let definition = try!(self.new_concept());
-        self.label_safe(concept, &definition, string) // !Error!
+        self.label_safe(concept, &definition, string)
     }
     fn insert_definition(
         &mut self,
@@ -73,7 +73,7 @@ impl Context {
     }
     fn insert_new_reduction(&mut self, concept: &ConceptRef) -> ZiaResult<ConceptRef> {
         let normal_form = try!(self.new_concept());
-        try!(Concept::insert_reduction(concept, &normal_form)); // !Error!
+        try!(Concept::insert_reduction(concept, &normal_form, &mut normal_form.borrow_mut()));
         Ok(normal_form)
     }
     fn new_concept(&mut self) -> ZiaResult<ConceptRef> {
@@ -151,11 +151,10 @@ impl Context {
         }
     }
     pub fn call(&mut self, c: &ConceptRef) -> ZiaResult<String> {
-        let arg_clone: ConceptRef;
         match c.borrow().definition.clone() {
             Some((app, arg)) => {
-                arg_clone = arg.clone();
-                match arg_clone.borrow().id {
+                let mut bm_arg = arg.borrow_mut();
+                match bm_arg.id {
                     REDUCTION => {
                         let reduced_app = match try!(self.reduce(&app.clone())) {
                             None => app,
@@ -168,7 +167,7 @@ impl Context {
                     DEFINE => match try!(self.expand_as_token(&app)) {
                         Token::Expression(s) | Token::Atom(s) => Ok(s),
                     },
-                    _ => self.call_as_applicand(&app, &arg),
+                    _ => self.call_as_applicand(&app, &arg, &mut bm_arg), // !Error!
                 }
             }
             _ => Err(ZiaError::Absence(
@@ -181,13 +180,13 @@ impl Context {
         match bc.normal_form.clone() {
             None => match bc.definition.clone() {
                 Some((app, arg)) => {
-                    let app_result = try!(self.reduce(&app.clone()));
-                    let arg_result = try!(self.reduce(&arg.clone()));
+                    let app_result = try!(self.reduce(&app));
+                    let arg_result = try!(self.reduce(&arg));
                     match (app_result.clone(), arg_result.clone()) {
                         (None, None) => Ok(None),
                         (None, Some(ar)) => {
                             let application =
-                                try!(self.insert_definition(&app.clone(), &ar.clone()));
+                                try!(self.insert_definition(&app, &ar));
                             self.reduce(&application)
                         }
                         (Some(ap), None) => {
@@ -244,16 +243,16 @@ impl Context {
             },
         )
     }
-    fn call_as_applicand(&mut self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<String> {
+    fn call_as_applicand(&mut self, app: &ConceptRef, arg: &ConceptRef, bm_arg: &mut RefMut<Concept>) -> ZiaResult<String> {
         let bapp = app.borrow();
         match bapp.definition.clone() {
             Some((ap, ar)) => match ar.borrow().id {
                 REDUCTION => {
-                    try!(Concept::insert_reduction(&ap, arg));
+                    try!(Concept::insert_reduction(&ap, arg, bm_arg)); // !Error! arg.normal_form gets borrowed again
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    try!(self.refactor(arg, &ap));
+                    try!(self.refactor(arg, bm_arg, &ap));
                     Ok("".to_string())
                 }
                 _ => Err(ZiaError::Absence(
@@ -265,15 +264,14 @@ impl Context {
             )),
         }
     }
-    fn refactor(&mut self, before: &ConceptRef, after: &ConceptRef) -> ZiaResult<()> {
-        try!(self.unlabel(before));
-        let b = before.borrow();
+    fn refactor(&mut self, before: &ConceptRef, bm_before: &Concept, after: &ConceptRef) -> ZiaResult<()> {
+        try!(self.unlabel(bm_before));
         let a = after.borrow();
-        self.refactor_id(b.id, a.id)
+        self.refactor_id(bm_before.id, a.id)
     }
-    fn unlabel(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+    fn unlabel(&mut self, concept: &Concept) -> ZiaResult<()> {
         let luid = self.concepts[LUID].borrow();
-        match try!(luid.find_definition(&concept.borrow())).clone() {
+        match try!(luid.find_definition(concept)).clone() {
             None => Ok(()),
             Some(d) => Concept::delete_normal_form(&d),
         }
@@ -310,7 +308,7 @@ mod context {
         cont.new_concept().unwrap(); // REDUCTION
         let luid_label_definition = cont.new_concept().unwrap();
         let concepts = cont.concepts.clone();
-        cont.label_safe(&concepts[LUID], &luid_label_definition, "luid").unwrap(); //two more ids occupied !Error!
+        cont.label_safe(&concepts[LUID], &luid_label_definition, "luid").unwrap(); //two more ids occupied
         cont.label(&concepts[DEFINE], ":=").unwrap(); //two more ids occupied 
         cont.label(&concepts[REDUCTION], "->").unwrap(); //two more ids occupied
     }

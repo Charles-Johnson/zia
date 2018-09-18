@@ -47,7 +47,7 @@ impl Concept {
     pub fn find_definition(&self, argument: &Concept) -> ZiaResult<Option<ConceptRef>> {
         let mut candidates: Vec<ConceptRef> = Vec::new();
         for candidate in self.applicand_of.clone() {
-            if argument.argument_of.contains(&candidate) // !Error! already mutably borrowed from Context::insert_definition_safe.
+            if argument.argument_of.contains(&candidate)
                 && !candidates.contains(&candidate)
             {
                 candidates.push(candidate);
@@ -61,7 +61,7 @@ impl Concept {
             )),
         }
     }
-    pub fn insert_reduction(concept: &ConceptRef, normal_form: &ConceptRef) -> ZiaResult<()> {
+    pub fn insert_reduction(concept: &ConceptRef, normal_form: &ConceptRef, bm_normal_form: &mut RefMut<Concept>) -> ZiaResult<()> {
         let mut bm_concept = concept.borrow_mut();
         match bm_concept.normal_form {
             None => (),
@@ -73,23 +73,22 @@ impl Concept {
             }
         };
         let mut new_normal_form = normal_form.clone();
-        let mut bm_normal_form = normal_form.borrow_mut(); // !Error! normal_form is already borrowed in Context::call_as_applicand.
         match bm_normal_form.normal_form.clone() {
             None => (),
-            Some(n) => {if n.borrow().id == bm_concept.id 
+            Some(n) => {if n.borrow().id == bm_concept.id // !Error! n has already been mutably borrowed from Context::call_as_applicand
                 {return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
                 } new_normal_form = n.clone()},
         };
         let prereductions = bm_concept.reduces_from.clone();
         for prereduction in prereductions {
-            try!(Concept::update_normal_form(&prereduction, &mut prereduction.borrow_mut(), &new_normal_form, &mut bm_normal_form));
+            try!(Concept::update_normal_form(&prereduction, &mut prereduction.borrow_mut(), &new_normal_form, bm_normal_form));
         }
-        Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, &mut bm_normal_form)
+        Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, bm_normal_form) // !Error!
     }
     fn insert_normal_form(concept: &ConceptRef, bm_concept: &mut RefMut<Concept>, normal_form: &ConceptRef, bm_normal_form: &mut RefMut<Concept>) -> ZiaResult<()> {
         match bm_concept.normal_form {
             None => {
-                if bm_normal_form.reduces_from.contains(concept) {
+                if bm_normal_form.reduces_from.contains(concept) { // !Error! already mutably borrowed
                     Err(ZiaError::Redundancy(
                         "Normal form already reduces from this concept".to_string(),
                     ))
