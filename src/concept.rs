@@ -75,7 +75,7 @@ impl Concept {
         let mut new_normal_form = normal_form.clone();
         match bm_normal_form.normal_form.clone() {
             None => (),
-            Some(n) => {if n.borrow().id == bm_concept.id // !Error! n has already been mutably borrowed from Context::call_as_applicand
+            Some(n) => {if n == concept // !Error! concept must be borrowed twice for this to true but not necessary
                 {return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
                 } new_normal_form = n.clone()},
         };
