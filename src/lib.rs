@@ -37,7 +37,6 @@ mod reductions {
     use oracle;
     use utils::ZiaError;
     use Context;
-    use std::collections::HashMap;
     #[test]
     fn monad() {
         let mut cont = Context::new().unwrap(); // Error
