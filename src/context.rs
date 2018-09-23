@@ -258,7 +258,7 @@ impl Context {
     }
     fn get_label(&self, c: &ConceptRef) -> ZiaResult<Option<String>> {
         Ok(
-            match try!(self.concepts[LUID].borrow().find_definition(c)) {
+            match try!(self.concepts[LABEL].borrow().find_definition(&c.borrow())) {
                 None => None,
                 Some(d) => match d.borrow().normal_form.clone() {
                     None => None,
