@@ -1,4 +1,4 @@
-use constants::{LUID, LABEL};
+use constants::{LABEL, LUID};
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -47,9 +47,7 @@ impl Concept {
     pub fn find_definition(&self, argument: &Concept) -> ZiaResult<Option<ConceptRef>> {
         let mut candidates: Vec<ConceptRef> = Vec::new();
         for candidate in self.applicand_of.clone() {
-            if argument.argument_of.contains(&candidate)
-                && !candidates.contains(&candidate)
-            {
+            if argument.argument_of.contains(&candidate) && !candidates.contains(&candidate) {
                 candidates.push(candidate);
             }
         }
@@ -61,7 +59,11 @@ impl Concept {
             )),
         }
     }
-    pub fn insert_reduction(concept: &ConceptRef, normal_form: &ConceptRef, bm_normal_form: &mut RefMut<Concept>) -> ZiaResult<()> {
+    pub fn insert_reduction(
+        concept: &ConceptRef,
+        normal_form: &ConceptRef,
+        bm_normal_form: &mut RefMut<Concept>,
+    ) -> ZiaResult<()> {
         let mut bm_concept = concept.borrow_mut();
         match bm_concept.normal_form {
             None => (),
@@ -75,33 +77,51 @@ impl Concept {
         let mut new_normal_form = normal_form.clone();
         match bm_normal_form.normal_form.clone() {
             None => (),
-            Some(n) => {if n == concept // !Error! concept must be borrowed twice for this to true but not necessary
-                {return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
-                } new_normal_form = n.clone()},
+            Some(n) => match n.try_borrow() {
+                Ok(_) => new_normal_form = n.clone(),
+                Err(_) => return Err(ZiaError::Loop("Cannot create a reduction loop".to_string())), // This will catch the cases where n == concept as well other cases where another concept is mutably borrowed which can't be filtered out.
+            },
         };
         let prereductions = bm_concept.reduces_from.clone();
         for prereduction in prereductions {
-            try!(Concept::update_normal_form(&prereduction, &mut prereduction.borrow_mut(), &new_normal_form, bm_normal_form));
+            try!(Concept::update_normal_form(
+                &prereduction,
+                &mut prereduction.borrow_mut(),
+                &new_normal_form,
+                bm_normal_form
+            ));
         }
         Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, bm_normal_form) // !Error!
     }
-    fn insert_normal_form(concept: &ConceptRef, bm_concept: &mut RefMut<Concept>, normal_form: &ConceptRef, bm_normal_form: &mut RefMut<Concept>) -> ZiaResult<()> {
+    fn insert_normal_form(
+        concept: &ConceptRef,
+        bm_concept: &mut RefMut<Concept>,
+        normal_form: &ConceptRef,
+        bm_normal_form: &mut RefMut<Concept>,
+    ) -> ZiaResult<()> {
         match bm_concept.normal_form {
             None => {
-                if bm_normal_form.reduces_from.contains(concept) { // !Error! already mutably borrowed
-                    Err(ZiaError::Redundancy(
-                        "Normal form already reduces from this concept".to_string(),
-                    ))
-                } else {
-                    Concept::update_normal_form(concept, bm_concept, normal_form, bm_normal_form)
+                for reduces_from_item in bm_normal_form.reduces_from.clone() {
+                    if reduces_from_item.try_borrow().is_err() {
+                        // This will catch the cases where reduces_from_item == concept as well other cases where another concept is mutably borrowed which can't be filtered out.
+                        return Err(ZiaError::Redundancy(
+                            "Normal form already reduces from this concept".to_string(),
+                        ));
+                    }
                 }
+                Concept::update_normal_form(concept, bm_concept, normal_form, bm_normal_form)
             }
             Some(_) => Err(ZiaError::Ambiguity(
                 "Normal form already exists for this concept".to_string(),
             )),
         }
     }
-    fn update_normal_form(concept: &ConceptRef, bm_concept: &mut RefMut<Concept>, normal_form: &ConceptRef, bm_normal_form: &mut RefMut<Concept>) -> ZiaResult<()> {
+    fn update_normal_form(
+        concept: &ConceptRef,
+        bm_concept: &mut RefMut<Concept>,
+        normal_form: &ConceptRef,
+        bm_normal_form: &mut RefMut<Concept>,
+    ) -> ZiaResult<()> {
         bm_normal_form.reduces_from.push(concept.clone());
         bm_concept.normal_form = Some(normal_form.clone());
         Ok(())

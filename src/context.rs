@@ -32,7 +32,12 @@ impl Context {
         try!(self.label(&concepts[REDUCTION], "->")); //two more ids occupied
         Ok(())
     }
-    fn label_safe(&mut self, concept: &ConceptRef, definition: &ConceptRef, string: &str) -> ZiaResult<()> {
+    fn label_safe(
+        &mut self,
+        concept: &ConceptRef,
+        definition: &ConceptRef,
+        string: &str,
+    ) -> ZiaResult<()> {
         let concepts = self.concepts.clone();
         let definition = try!(self.insert_definition_safe(&concepts[LABEL], concept, definition));
         let text = try!(self.insert_new_reduction(&definition));
@@ -67,13 +72,17 @@ impl Context {
         &mut self,
         applicand: &ConceptRef,
         argument: &ConceptRef,
-    ) -> ZiaResult<ConceptRef> { 
+    ) -> ZiaResult<ConceptRef> {
         let definition = try!(self.new_concept());
         self.insert_definition_safe(applicand, argument, &definition)
     }
     fn insert_new_reduction(&mut self, concept: &ConceptRef) -> ZiaResult<ConceptRef> {
         let normal_form = try!(self.new_concept());
-        try!(Concept::insert_reduction(concept, &normal_form, &mut normal_form.borrow_mut()));
+        try!(Concept::insert_reduction(
+            concept,
+            &normal_form,
+            &mut normal_form.borrow_mut()
+        ));
         Ok(normal_form)
     }
     fn new_concept(&mut self) -> ZiaResult<ConceptRef> {
@@ -185,8 +194,7 @@ impl Context {
                     match (app_result.clone(), arg_result.clone()) {
                         (None, None) => Ok(None),
                         (None, Some(ar)) => {
-                            let application =
-                                try!(self.insert_definition(&app, &ar));
+                            let application = try!(self.insert_definition(&app, &ar));
                             self.reduce(&application)
                         }
                         (Some(ap), None) => {
@@ -243,7 +251,12 @@ impl Context {
             },
         )
     }
-    fn call_as_applicand(&mut self, app: &ConceptRef, arg: &ConceptRef, bm_arg: &mut RefMut<Concept>) -> ZiaResult<String> {
+    fn call_as_applicand(
+        &mut self,
+        app: &ConceptRef,
+        arg: &ConceptRef,
+        bm_arg: &mut RefMut<Concept>,
+    ) -> ZiaResult<String> {
         let bapp = app.borrow();
         match bapp.definition.clone() {
             Some((ap, ar)) => match ar.borrow().id {
@@ -252,7 +265,7 @@ impl Context {
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    try!(self.refactor(arg, bm_arg, &ap));
+                    try!(self.refactor(bm_arg, &ap));
                     Ok("".to_string())
                 }
                 _ => Err(ZiaError::Absence(
@@ -264,10 +277,10 @@ impl Context {
             )),
         }
     }
-    fn refactor(&mut self, before: &ConceptRef, bm_before: &Concept, after: &ConceptRef) -> ZiaResult<()> {
-        try!(self.unlabel(bm_before));
+    fn refactor(&mut self, before: &Concept, after: &ConceptRef) -> ZiaResult<()> {
+        try!(self.unlabel(before));
         let a = after.borrow();
-        self.refactor_id(bm_before.id, a.id)
+        self.refactor_id(before.id, a.id)
     }
     fn unlabel(&mut self, concept: &Concept) -> ZiaResult<()> {
         let luid = self.concepts[LUID].borrow();
@@ -292,10 +305,10 @@ impl Context {
 
 #[cfg(test)]
 mod context {
-    use constants::{LUID, DEFINE, REDUCTION};
-    use Context;
-    use std::collections::HashMap;
     use concept::Concept;
+    use constants::{DEFINE, LUID, REDUCTION};
+    use std::collections::HashMap;
+    use Context;
     #[test]
     fn new_context() {
         let mut cont = Context {
@@ -308,8 +321,9 @@ mod context {
         cont.new_concept().unwrap(); // REDUCTION
         let luid_label_definition = cont.new_concept().unwrap();
         let concepts = cont.concepts.clone();
-        cont.label_safe(&concepts[LUID], &luid_label_definition, "luid").unwrap(); //two more ids occupied
-        cont.label(&concepts[DEFINE], ":=").unwrap(); //two more ids occupied 
+        cont.label_safe(&concepts[LUID], &luid_label_definition, "luid")
+            .unwrap(); //two more ids occupied
+        cont.label(&concepts[DEFINE], ":=").unwrap(); //two more ids occupied
         cont.label(&concepts[REDUCTION], "->").unwrap(); //two more ids occupied
     }
 }

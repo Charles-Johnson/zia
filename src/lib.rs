@@ -63,8 +63,8 @@ mod reductions {
     fn prevent_loop() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
-        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_))); // !Error! mutable reference is borrowed again
-        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b");
+        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
+        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b"); // !Error! Absence("Unlabelled concept with no definition")
     }
     #[test]
     fn trivial_parentheses() {
@@ -84,7 +84,7 @@ mod definitions {
     }
     #[test]
     fn nested_monads() {
-        let mut cont = Context::new().unwrap(); 
+        let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(2 :=) (++ (++ 0))", &mut cont).unwrap(), "");
         assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)"); // !Error! Absence("Unlabelled concept with no definition")
     }
