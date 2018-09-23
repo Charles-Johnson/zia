@@ -192,7 +192,7 @@ impl Context {
                     DEFINE => match try!(self.expand_as_token(&app)) {
                         Token::Expression(s) | Token::Atom(s) => Ok(s),
                     },
-                    _ => self.call_as_applicand(&app, &arg, &mut bm_arg), // !Error!
+                    _ => self.call_as_applicand(&app, &arg, &mut bm_arg),
                 }
             }
             _ => Err(ZiaError::Absence(
@@ -277,7 +277,7 @@ impl Context {
         match bapp.definition.clone() {
             Some((ap, ar)) => match ar.borrow().id {
                 REDUCTION => {
-                    try!(Concept::insert_reduction(&ap, arg, bm_arg)); // !Error! arg.normal_form gets borrowed again
+                    try!(Concept::insert_reduction(&ap, arg, bm_arg));
                     Ok("".to_string())
                 }
                 DEFINE => {

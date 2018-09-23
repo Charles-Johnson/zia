@@ -107,7 +107,7 @@ impl Concept {
                 bm_normal_form
             ));
         }
-        Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, bm_normal_form) // !Error!
+        Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, bm_normal_form)
     }
     fn insert_normal_form(
         concept: &ConceptRef,
