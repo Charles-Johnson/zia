@@ -56,7 +56,6 @@ impl Concept {
             normal_form: None,
             reduces_from: Vec::new(),
             string: None,
-            integer: None,
         }
     }
     pub fn find_definition(&self, argument: &Concept) -> ZiaResult<Option<ConceptRef>> {
@@ -173,10 +172,5 @@ impl Concept {
             }
         };
         Ok(())
-    }
-    pub fn new_luid() -> ConceptRef {
-        let mut luid = Concept::new(LUID);
-        luid.integer = Some(1);
-        Rc::new(RefCell::new(luid))
     }
 }

@@ -33,17 +33,14 @@ impl Context {
             string_map: HashMap::new(),
             concepts: Vec::new(),
         };
-        cont.concepts.push(Concept::new_luid());
         try!(cont.setup());
         Ok(cont)
     }
     fn setup(&mut self) -> ZiaResult<()> {
-        try!(self.new_concept()); // for LABEL
-        try!(self.new_concept()); // for DEFINE
-        try!(self.new_concept()); // for REDUCTION
-        let luid_label_definition = try!(self.new_concept());
-        let concepts = self.concepts.clone(); // for (LABEL LUID)
-        try!(self.label_safe(&concepts[LUID], &luid_label_definition, "luid")); //one more id occupied. self.label(&concepts[LUID], "luid") requires a borrow of LUID once in insert_definition and again to get a new concept so self.label_safe is used instead.
+        self.new_concept(); // for LABEL
+        self.new_concept(); // for DEFINE
+        self.new_concept(); // for REDUCTION
+        let concepts = self.concepts.clone();
         try!(self.label(&concepts[DEFINE], ":=")); //two more ids occupied
         try!(self.label(&concepts[REDUCTION], "->")); //two more ids occupied
         Ok(())
@@ -81,7 +78,7 @@ impl Context {
         }
     }
     fn label(&mut self, concept: &ConceptRef, string: &str) -> ZiaResult<()> {
-        let definition = try!(self.new_concept());
+        let definition = self.new_concept();
         self.label_safe(concept, &definition, string)
     }
     fn insert_definition(
@@ -89,11 +86,11 @@ impl Context {
         applicand: &ConceptRef,
         argument: &ConceptRef,
     ) -> ZiaResult<ConceptRef> {
-        let definition = try!(self.new_concept());
+        let definition = self.new_concept();
         self.insert_definition_safe(applicand, argument, &definition)
     }
     fn insert_new_reduction(&mut self, concept: &ConceptRef) -> ZiaResult<ConceptRef> {
-        let normal_form = try!(self.new_concept());
+        let normal_form = self.new_concept();
         try!(Concept::insert_reduction(
             concept,
             &normal_form,
@@ -101,23 +98,14 @@ impl Context {
         ));
         Ok(normal_form)
     }
-    fn new_concept(&mut self) -> ZiaResult<ConceptRef> {
-        let new_id = try!(self.assign_new_id());
+    fn new_concept(&mut self) -> ConceptRef {
+        let new_id = self.assign_new_id();
         let concept = Concept::new(new_id);
         self.concepts.push(Rc::new(RefCell::new(concept)));
-        Ok(self.concepts[new_id].clone())
+        self.concepts[new_id].clone()
     }
-    fn assign_new_id(&mut self) -> ZiaResult<usize> {
-        let mut luid = self.concepts[LUID].borrow_mut();
-        match luid.integer {
-            None => Err(ZiaError::Absence(
-                "Don't know what to do when an integer is undefined".to_string(),
-            )),
-            Some(i) => {
-                luid.integer = Some(i + 1);
-                Ok(i)
-            }
-        }
+    fn assign_new_id(&self) -> usize {
+        self.concepts.len()
     }
     fn insert_text(&mut self, concept: &ConceptRef, result: &str) -> ZiaResult<()> {
         let mut bm_concept = concept.borrow_mut();
@@ -151,7 +139,7 @@ impl Context {
         let concept_if_exists = try!(self.concept_from_label(s));
         match concept_if_exists {
             None => {
-                let concept = try!(self.new_concept());
+                let concept = self.new_concept();
                 try!(self.label(&concept, s));
                 Ok(concept)
             }
@@ -281,7 +269,7 @@ impl Context {
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    try!(self.refactor(bm_arg, &ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg. 
+                    try!(self.refactor(bm_arg, &ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg.
                     Ok("".to_string())
                 }
                 _ => Err(ZiaError::Absence(
@@ -299,40 +287,32 @@ impl Context {
         self.refactor_id(before.id, a.id)
     }
     fn unlabel(&mut self, concept: &Concept) -> ZiaResult<()> {
-        let luid = self.concepts[LUID].borrow();
-        match try!(luid.find_definition(concept)).clone() {
+        let label = self.concepts[LABEL].borrow();
+        match try!(label.find_definition(concept)).clone() {
             None => Ok(()),
             Some(d) => Concept::delete_normal_form(&d),
         }
     }
     fn refactor_id(&mut self, before: usize, after: usize) -> ZiaResult<()> {
-        let luid_ref = self.concepts[LUID].clone();
-        let mut luid = luid_ref.borrow_mut();
-        match luid.integer {
-            Some(i) => {
-                if i > before {
-                    let concept_ref = self.concepts[before].clone();
-                    let mut concept = concept_ref.borrow_mut();
-                    concept.id = after;
-                    self.concepts[after] = self.concepts[before].clone();
-                    try!(self.refactor_id(before + 1, before));
-                } else if i == before {// For the case when the id gap has been filled.
-                    self.concepts.remove(before - 1);
-                    luid.integer = Some(before - 1);
-                } else {
-                    panic!("refactoring id has gone wrong!")
-                }
-            },
-            None => panic!("luid is not an integer!"),
-        };
+        if self.concepts.len() > before {
+            let concept_ref = self.concepts[before].clone();
+            let mut concept = concept_ref.borrow_mut();
+            concept.id = after;
+            self.concepts[after] = self.concepts[before].clone();
+            try!(self.refactor_id(before + 1, before));
+        } else if self.concepts.len() == before {
+            // For the case when the id gap has been filled.
+            self.concepts.remove(before - 1);
+        } else {
+            panic!("refactoring id has gone wrong!")
+        }
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod context {
-    use concept::Concept;
-    use constants::{DEFINE, LUID, REDUCTION};
+    use constants::{DEFINE, REDUCTION};
     use std::collections::HashMap;
     use Context;
     #[test]
@@ -341,14 +321,10 @@ mod context {
             string_map: HashMap::new(),
             concepts: Vec::new(),
         };
-        cont.concepts.push(Concept::new_luid());
-        cont.new_concept().unwrap(); // LABEL
-        cont.new_concept().unwrap(); // DEFINE
-        cont.new_concept().unwrap(); // REDUCTION
-        let luid_label_definition = cont.new_concept().unwrap();
+        cont.new_concept(); // LABEL
+        cont.new_concept(); // DEFINE
+        cont.new_concept(); // REDUCTION
         let concepts = cont.concepts.clone();
-        cont.label_safe(&concepts[LUID], &luid_label_definition, "luid")
-            .unwrap(); //two more ids occupied
         cont.label(&concepts[DEFINE], ":=").unwrap(); //two more ids occupied
         cont.label(&concepts[REDUCTION], "->").unwrap(); //two more ids occupied
     }
