@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use constants::{LABEL, LUID};
+use constants::LABEL;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -30,7 +30,6 @@ pub struct Concept {
     pub normal_form: Option<ConceptRef>,
     pub reduces_from: Vec<ConceptRef>,
     pub string: Option<String>,
-    pub integer: Option<usize>,
 }
 
 impl PartialEq for Concept {

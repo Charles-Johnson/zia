@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub const LUID: usize = 0;
-pub const LABEL: usize = 1;
-pub const DEFINE: usize = 2;
-pub const REDUCTION: usize = 3;
+pub const LABEL: usize = 0;
+pub const DEFINE: usize = 1;
+pub const REDUCTION: usize = 2;

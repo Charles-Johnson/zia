@@ -15,7 +15,7 @@
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concept::{Concept, ConceptRef};
-use constants::{DEFINE, LABEL, LUID, REDUCTION};
+use constants::{DEFINE, LABEL, REDUCTION};
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
 use std::rc::Rc;
