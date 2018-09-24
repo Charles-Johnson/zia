@@ -281,7 +281,7 @@ impl Context {
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    try!(self.refactor(bm_arg, &ap));
+                    try!(self.refactor(bm_arg, &ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg. 
                     Ok("".to_string())
                 }
                 _ => Err(ZiaError::Absence(
@@ -307,14 +307,24 @@ impl Context {
     }
     fn refactor_id(&mut self, before: usize, after: usize) -> ZiaResult<()> {
         let luid_ref = self.concepts[LUID].clone();
-        let luid = luid_ref.borrow();
-        if before < luid.id {
-            let concept_ref = self.concepts[before].clone();
-            let mut concept = concept_ref.borrow_mut();
-            concept.id = after;
-            self.concepts[after] = self.concepts[before].clone();
-            try!(self.refactor_id(before + 1, before));
-        }
+        let mut luid = luid_ref.borrow_mut();
+        match luid.integer {
+            Some(i) => {
+                if i > before {
+                    let concept_ref = self.concepts[before].clone();
+                    let mut concept = concept_ref.borrow_mut();
+                    concept.id = after;
+                    self.concepts[after] = self.concepts[before].clone();
+                    try!(self.refactor_id(before + 1, before));
+                } else if i == before {// For the case when the id gap has been filled.
+                    self.concepts.remove(before - 1);
+                    luid.integer = Some(before - 1);
+                } else {
+                    panic!("refactoring id has gone wrong!")
+                }
+            },
+            None => panic!("luid is not an integer!"),
+        };
         Ok(())
     }
 }
