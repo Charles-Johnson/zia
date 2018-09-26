@@ -164,7 +164,9 @@ impl Context {
         }
     }
     pub fn call(&mut self, c: &ConceptRef) -> ZiaResult<String> {
-        match c.borrow().definition.clone() {
+        let b_c = c.borrow();
+        println!("{:?}", b_c.id);
+        match b_c.definition.clone() {
             Some((app, arg)) => {
                 let mut bm_arg = arg.borrow_mut();
                 match bm_arg.id {
@@ -269,7 +271,9 @@ impl Context {
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    try!(self.refactor(bm_arg, &ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg.
+                    let mut bm_ap = ap.borrow_mut();
+                    println!("{:?}", DEFINE);
+                    try!(self.refactor(bm_arg, &mut bm_ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg.
                     Ok("".to_string())
                 }
                 _ => Err(ZiaError::Absence(
@@ -281,10 +285,14 @@ impl Context {
             )),
         }
     }
-    fn refactor(&mut self, before: &Concept, after: &ConceptRef) -> ZiaResult<()> {
+    fn refactor(&mut self, before: &mut RefMut<Concept>, after: &mut RefMut<Concept>) -> ZiaResult<()> {
         try!(self.unlabel(before));
-        let a = after.borrow();
-        self.refactor_id(before.id, a.id)
+        println!("{:?},{:?}", before.id, after.id);
+        if before.id < after.id {
+            Ok(self.refactor_id(after, before.id))
+        } else {
+            Ok(self.refactor_id(before, after.id))
+        }
     }
     fn unlabel(&mut self, concept: &Concept) -> ZiaResult<()> {
         let label = self.concepts[LABEL].borrow();
@@ -293,20 +301,19 @@ impl Context {
             Some(d) => Concept::delete_normal_form(&d),
         }
     }
-    fn refactor_id(&mut self, before: usize, after: usize) -> ZiaResult<()> {
-        if self.concepts.len() > before {
-            let concept_ref = self.concepts[before].clone();
-            let mut concept = concept_ref.borrow_mut();
-            concept.id = after;
-            self.concepts[after] = self.concepts[before].clone();
-            try!(self.refactor_id(before + 1, before));
-        } else if self.concepts.len() == before {
-            // For the case when the id gap has been filled.
-            self.concepts.remove(before - 1);
+    fn refactor_id(&mut self, before: &mut RefMut<Concept>, after: usize) {
+        if self.concepts.len() > before.id {
+            before.id = after;
+            let concepts = self.concepts.clone();
+            self.concepts[after] = concepts[before.id].clone(); 
+            self.concepts.remove(before.id);
+            for id in before.id .. concepts.len() {
+                let mut concept = concepts[id].borrow_mut();
+                concept.id = id;
+            }
         } else {
             panic!("refactoring id has gone wrong!")
         }
-        Ok(())
     }
 }
 
