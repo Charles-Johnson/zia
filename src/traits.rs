@@ -54,7 +54,7 @@ pub trait Reduction where Self: NormalForm<Self> + Clone {
         match normal_form.get_normal_form() {
             None => (),
             Some(n) => 
-                if n.get_id() == self.get_id() {
+                if n.get_id() != self.get_id() {
                     new_normal_form = n.clone()
                 } else {
                     return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()))

@@ -65,7 +65,7 @@ mod reductions {
     fn prevent_loop() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
-        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_))); // assertion error: left = Ok("")
+        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
         assert_eq!(oracle("b ->", &mut cont).unwrap(), "b"); 
     }
     #[test]
