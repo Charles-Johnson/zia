@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concept::{ConceptRef, AbstractConcept, StringConcept, StringRef,};
+use concept::{AbstractConcept, ConceptRef, StringConcept, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
-use traits::{NormalForm, Reduction, Application, Definition, Label};
+use traits::{Application, Definition, Label, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
@@ -53,7 +53,8 @@ impl Context {
         string: &str,
     ) -> ZiaResult<()> {
         let mut concepts = self.concepts.clone();
-        let mut definition = try!(self.insert_definition_safe(&mut concepts[LABEL], concept, definition));
+        let mut definition =
+            try!(self.insert_definition_safe(&mut concepts[LABEL], concept, definition));
         let string_ref = self.new_string(string);
         definition.insert_reduction(&mut ConceptRef::String(string_ref))
     }
@@ -66,7 +67,12 @@ impl Context {
         let application = try!(applicand.find_definition(&argument));
         match application {
             None => {
-                println!("Setting definition of concept {:?} as ({:?}, {:?})", definition.get_id(), applicand.get_id(), argument.get_id());
+                println!(
+                    "Setting definition of concept {:?} as ({:?}, {:?})",
+                    definition.get_id(),
+                    applicand.get_id(),
+                    argument.get_id()
+                );
                 definition.set_definition(applicand, argument);
                 applicand.add_applicand_of(definition);
                 argument.add_argument_of(definition);
@@ -96,7 +102,8 @@ impl Context {
     fn new_string(&mut self, string: &str) -> StringRef {
         let new_id = self.assign_new_id();
         let string_ref = StringConcept::new_ref(new_id, string);
-        self.string_map.insert(string.to_string(), string_ref.clone());
+        self.string_map
+            .insert(string.to_string(), string_ref.clone());
         self.concepts.push(ConceptRef::String(string_ref.clone()));
         string_ref
     }
@@ -150,22 +157,21 @@ impl Context {
     }
     pub fn call(&mut self, c: &ConceptRef) -> ZiaResult<String> {
         match c.get_definition() {
-            Some((app, mut arg)) => 
-                match arg.get_id() {
-                    REDUCTION => {
-                        let reduced_app = match try!(self.reduce(&app.clone())) {
-                            None => app,
-                            Some(a) => a,
-                        };
-                        match try!(self.get_token(&reduced_app)) {
-                            Token::Expression(s) | Token::Atom(s) => Ok(s),
-                        }
-                    }
-                    DEFINE => match try!(self.expand_as_token(&app)) {
+            Some((app, mut arg)) => match arg.get_id() {
+                REDUCTION => {
+                    let reduced_app = match try!(self.reduce(&app.clone())) {
+                        None => app,
+                        Some(a) => a,
+                    };
+                    match try!(self.get_token(&reduced_app)) {
                         Token::Expression(s) | Token::Atom(s) => Ok(s),
-                    },
-                    _ => self.call_as_applicand(&app, &mut arg),
+                    }
                 }
+                DEFINE => match try!(self.expand_as_token(&app)) {
+                    Token::Expression(s) | Token::Atom(s) => Ok(s),
+                },
+                _ => self.call_as_applicand(&app, &mut arg),
+            },
             _ => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
             )),
@@ -218,7 +224,11 @@ impl Context {
         }
     }
     fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
-        println!("Joining tokens of concepts {:?} and {:?}", app.get_id(), arg.get_id());
+        println!(
+            "Joining tokens of concepts {:?} and {:?}",
+            app.get_id(),
+            arg.get_id()
+        );
         Ok(Token::Expression(
             try!(self.add_token(app)) + " " + &try!(self.add_token(arg)),
         ))
@@ -230,25 +240,18 @@ impl Context {
         })
     }
     fn get_label(&self, c: &ConceptRef) -> ZiaResult<Option<String>> {
-        Ok(
-            match try!(self.concepts[LABEL].find_definition(c)) {
+        Ok(match try!(self.concepts[LABEL].find_definition(c)) {
+            None => None,
+            Some(d) => match d.get_normal_form() {
                 None => None,
-                Some(d) => match d.get_normal_form() {
-                    None => None,
-                    Some(n) => 
-                        match n {
-                            ConceptRef::String(s) => Some(s.borrow().get_string()),
-                            _ => None,
-                        },
+                Some(n) => match n {
+                    ConceptRef::String(s) => Some(s.borrow().get_string()),
+                    _ => None,
                 },
             },
-        )
+        })
     }
-    fn call_as_applicand(
-        &mut self,
-        app: &ConceptRef,
-        arg: &mut ConceptRef,
-    ) -> ZiaResult<String> {
+    fn call_as_applicand(&mut self, app: &ConceptRef, arg: &mut ConceptRef) -> ZiaResult<String> {
         match app.get_definition() {
             Some((mut ap, ar)) => match ar.get_id() {
                 REDUCTION => {
@@ -271,9 +274,11 @@ impl Context {
     fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         try!(self.unlabel(before));
         if before.get_id() < after.get_id() {
-            Ok(self.refactor_id(after, before.get_id()))
+            self.refactor_id(after, before.get_id());
+            Ok(())
         } else {
-            Ok(self.refactor_id(before, after.get_id()))
+            self.refactor_id(before, after.get_id());
+            Ok(())
         }
     }
     fn unlabel(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
@@ -286,10 +291,10 @@ impl Context {
         if self.concepts.len() > before.get_id() {
             before.set_id(after);
             let mut concepts = self.concepts.clone();
-            self.concepts[after] = concepts[before.get_id()].clone(); 
+            self.concepts[after] = concepts[before.get_id()].clone();
             self.concepts.remove(before.get_id());
-            for id in before.get_id() .. concepts.len() {
-                concepts[id].set_id(id);
+            for (id, concept) in concepts.iter_mut().enumerate().skip(before.get_id()) {
+                concept.set_id(id);
             }
         } else {
             panic!("refactoring id has gone wrong!")

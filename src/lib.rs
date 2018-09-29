@@ -18,7 +18,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #[macro_use]
 extern crate matches;
 
-
 mod concept;
 mod constants;
 mod context;
@@ -66,7 +65,7 @@ mod reductions {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
         assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
-        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b"); 
+        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b");
     }
     #[test]
     fn trivial_parentheses() {

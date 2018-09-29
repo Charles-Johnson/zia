@@ -23,10 +23,13 @@ pub trait Application<T> {
     fn get_definition(&self) -> Option<(T, T)>;
     fn set_definition(&mut self, applicand: &T, argument: &T);
     fn add_applicand_of(&mut self, applicand: &T);
-    fn add_argument_of(&mut self, argument: &T); 
+    fn add_argument_of(&mut self, argument: &T);
 }
 
-pub trait Definition<T: Application<T> + Clone + PartialEq> where Self: Application<T>{
+pub trait Definition<T: Application<T> + Clone + PartialEq>
+where
+    Self: Application<T>,
+{
     fn find_definition(&self, argument: &T) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
         for candidate in self.get_applicand_of() {
@@ -54,41 +57,35 @@ pub trait NormalForm<T> {
     fn remove_reduces_from(&mut self, &T);
 }
 
-pub trait Reduction where Self: NormalForm<Self> + Clone {
-    fn insert_reduction(
-        &mut self,
-        normal_form: &mut Self,
-    ) -> ZiaResult<()> {
+pub trait Reduction
+where
+    Self: NormalForm<Self> + Clone,
+{
+    fn insert_reduction(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         match self.get_normal_form() {
             None => (),
             Some(_) => {
                 return Err(ZiaError::Redundancy(
-                    "Reduction rule already exists for concept".to_string()
+                    "Reduction rule already exists for concept".to_string(),
                 ))
             }
         };
         let mut new_normal_form = normal_form.clone();
         match normal_form.get_normal_form() {
             None => (),
-            Some(n) => 
-                if n.get_id() != self.get_id() {
-                    new_normal_form = n.clone()
-                } else {
-                    return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()))
-                },
+            Some(n) => if n.get_id() != self.get_id() {
+                new_normal_form = n.clone()
+            } else {
+                return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
+            },
         };
         let prereductions = self.get_reduces_from();
         for mut prereduction in prereductions {
-            try!(prereduction.update_normal_form(
-                &mut new_normal_form,
-            ));
+            try!(prereduction.update_normal_form(&mut new_normal_form,));
         }
         self.insert_normal_form(&mut new_normal_form)
     }
-    fn insert_normal_form(
-        &mut self,
-        normal_form: &mut Self,
-    ) -> ZiaResult<()> {
+    fn insert_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         match self.get_normal_form() {
             None => {
                 for reduces_from_item in normal_form.get_reduces_from() {
@@ -105,28 +102,27 @@ pub trait Reduction where Self: NormalForm<Self> + Clone {
             )),
         }
     }
-    fn update_normal_form(
-        &mut self,
-        normal_form: &mut Self,
-    ) -> ZiaResult<()> {
+    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         normal_form.add_reduces_from(self);
         self.set_normal_form(normal_form);
         Ok(())
     }
 }
 
-pub trait Label<T: Application<T> + NormalForm<T> + Clone> where Self: NormalForm<T> {
+pub trait Label<T: Application<T> + NormalForm<T> + Clone>
+where
+    Self: NormalForm<T>,
+{
     fn get_labellee(&self) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
         for label in self.get_reduces_from() {
             match label.get_definition() {
                 None => continue,
-                Some((r, x)) =>
-                    if r.get_id() == LABEL {
-                        candidates.push(x)
-                    } else {
-                        continue
-                    },
+                Some((r, x)) => if r.get_id() == LABEL {
+                    candidates.push(x)
+                } else {
+                    continue;
+                },
             };
         }
         match candidates.len() {

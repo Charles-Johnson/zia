@@ -16,8 +16,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::cell::RefCell;
 use std::rc::Rc;
+use traits::{Application, Definition, Label, NormalForm, Reduction};
 use utils::ZiaResult;
-use traits::{Application, Definition, NormalForm, Reduction, Label};
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
@@ -99,10 +99,8 @@ impl Definition<ConceptRef> for ConceptRef {}
 impl NormalForm<ConceptRef> for ConceptRef {
     fn get_id(&self) -> usize {
         match *self {
-            ConceptRef::Abstract(ref r) => 
-                r.borrow().get_id(),
-            ConceptRef::String(ref r) => 
-                r.borrow().get_id(),
+            ConceptRef::Abstract(ref r) => r.borrow().get_id(),
+            ConceptRef::String(ref r) => r.borrow().get_id(),
         }
     }
     fn get_normal_form(&self) -> Option<ConceptRef> {
@@ -149,7 +147,7 @@ impl Label<ConceptRef> for ConceptRef {}
 
 impl PartialEq for ConceptRef {
     fn eq(&self, other: &ConceptRef) -> bool {
-         self.get_id() == other.get_id()
+        self.get_id() == other.get_id()
     }
 }
 
@@ -160,7 +158,7 @@ pub struct StringConcept {
 
 impl StringConcept {
     pub fn new_ref(id: usize, string: &str) -> StringRef {
-        Rc::new(RefCell::new(StringConcept{
+        Rc::new(RefCell::new(StringConcept {
             string: string.to_string(),
             abstract_concept: AbstractConcept::new(id),
         }))
@@ -234,7 +232,7 @@ impl AbstractConcept {
         Rc::new(RefCell::new(AbstractConcept::new(id)))
     }
     fn new(id: usize) -> AbstractConcept {
-        AbstractConcept{
+        AbstractConcept {
             id,
             definition: None,
             applicand_of: Vec::new(),
@@ -294,5 +292,3 @@ impl NormalForm<ConceptRef> for AbstractConcept {
 }
 
 impl Label<ConceptRef> for AbstractConcept {}
-
-
