@@ -44,6 +44,12 @@ impl ConceptRef {
         };
         Ok(())
     }
+    pub fn refactor_from(&mut self, other: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
+            ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
+        }
+    }
 }
 
 impl Clone for ConceptRef {
@@ -169,6 +175,9 @@ impl StringConcept {
     pub fn get_string(&self) -> String {
         self.string.clone()
     }
+    fn refactor_from(&mut self, other: &ConceptRef) {
+        self.abstract_concept.refactor_from(other);
+    }
 }
 
 impl Application<ConceptRef> for StringConcept {
@@ -243,6 +252,13 @@ impl AbstractConcept {
     }
     fn set_id(&mut self, number: usize) {
         self.id = number;
+    }
+    fn refactor_from(&mut self, other: &ConceptRef) {
+        self.definition = other.get_definition();
+        self.applicand_of = other.get_applicand_of();
+        self.argument_of = other.get_argument_of();
+        self.normal_form = other.get_normal_form();
+        self.reduces_from = other.get_reduces_from();
     }
 }
 

@@ -24,8 +24,8 @@ use traits::{Application, Definition, Label, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
-    pub string_map: HashMap<String, Rc<RefCell<StringConcept>>>,
-    pub concepts: Vec<ConceptRef>,
+    string_map: HashMap<String, Rc<RefCell<StringConcept>>>,
+    concepts: Vec<ConceptRef>,
 }
 
 impl Context {
@@ -272,29 +272,23 @@ impl Context {
         }
     }
     fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
+        println!("Refactoring concept {:?} to concept {:?}", before.get_id(), after.get_id());
         try!(self.unlabel(before));
-        if before.get_id() < after.get_id() {
-            self.refactor_id(after, before.get_id());
-            Ok(())
-        } else {
-            self.refactor_id(before, after.get_id());
-            Ok(())
-        }
+        self.refactor_id(before, after);
+        Ok(())
     }
     fn unlabel(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         match try!(self.concepts[LABEL].find_definition(concept)) {
             None => Ok(()),
             Some(mut d) => d.delete_normal_form(),
         }
-    }
-    fn refactor_id(&mut self, before: &mut ConceptRef, after: usize) {
+    }                        // 18                         // 7
+    fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) {
         if self.concepts.len() > before.get_id() {
-            before.set_id(after);
-            let mut concepts = self.concepts.clone();
-            self.concepts[after] = concepts[before.get_id()].clone();
+            after.refactor_from(before); 
             self.concepts.remove(before.get_id());
-            for (id, concept) in concepts.iter_mut().enumerate().skip(before.get_id()) {
-                concept.set_id(id);
+            for id in before.get_id() .. self.concepts.len() {
+                self.concepts[id].set_id(id);
             }
         } else {
             panic!("refactoring id has gone wrong!")
