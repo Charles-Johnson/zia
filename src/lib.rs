@@ -43,7 +43,7 @@ mod reductions {
     fn monad() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
-        assert_eq!(oracle("a ->", &mut cont).unwrap(), "b"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_eq!(oracle("a ->", &mut cont).unwrap(), "b");
         assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
         assert_eq!(oracle("(not true) ->", &mut cont).unwrap(), "false");
     }
@@ -52,26 +52,26 @@ mod reductions {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
         assert_eq!(oracle("((not false) ->) true", &mut cont).unwrap(), "");
-        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true");
     }
     #[test]
     fn chain() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
-        assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), ""); // !Error! already mutably borrowed
+        assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), "");
         assert_eq!(oracle("a ->", &mut cont).unwrap(), "c")
     }
     #[test]
     fn prevent_loop() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
-        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
-        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_))); // assertion error: left = Ok("")
+        assert_eq!(oracle("b ->", &mut cont).unwrap(), "b"); 
     }
     #[test]
     fn trivial_parentheses() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(oracle("(a) ->", &mut cont).unwrap(), "a"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_eq!(oracle("(a) ->", &mut cont).unwrap(), "a");
     }
 }
 #[cfg(test)]
@@ -82,12 +82,12 @@ mod definitions {
     fn monad() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
-        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +"); // assertion error: "*"
     }
     #[test]
     fn nested_monads() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(2 :=) (++ (++ 0))", &mut cont).unwrap(), "");
-        assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)"); // !Error! Absence("Unlabelled concept with no definition")
+        assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)"); // assertion error: left = "2"
     }
 }
