@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use constants::LABEL;
 use utils::{ZiaError, ZiaResult};
 
 pub trait Application<T> {
@@ -120,12 +121,12 @@ pub trait Label<T: Application<T> + NormalForm<T> + Clone> where Self: NormalFor
         for label in self.get_reduces_from() {
             match label.get_definition() {
                 None => continue,
-                Some((r, x)) => {
-                    match r.get_id() {
-                        LABEL => candidates.push(x),
-                        _ => continue,
-                    };
-                }
+                Some((r, x)) =>
+                    if r.get_id() == LABEL {
+                        candidates.push(x)
+                    } else {
+                        continue
+                    },
             };
         }
         match candidates.len() {

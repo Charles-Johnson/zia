@@ -153,65 +153,6 @@ impl PartialEq for ConceptRef {
     }
 }
 
-enum Concept {
-    Abstract(AbstractConcept),
-    String(StringConcept),
-}
-
-impl Concept {
-    fn set_id(&mut self, number: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.set_id(number),
-            Concept::String(ref mut c) => c.set_id(number),
-        }
-    }
-}
-
-impl NormalForm<ConceptRef> for Concept {
-    fn get_id(&self) -> usize {
-        match *self {
-            Concept::Abstract(ref c) => c.get_id(),
-            Concept::String(ref c) => c.get_id(),
-        }
-    }
-    fn get_normal_form(&self) -> Option<ConceptRef> {
-        match *self {
-            Concept::Abstract(ref c) => c.get_normal_form(),
-            Concept::String(ref c) => c.get_normal_form(),
-        }
-    }
-    fn get_reduces_from(&self) -> Vec<ConceptRef> {
-        match *self {
-            Concept::Abstract(ref c) => c.get_reduces_from(),
-            Concept::String(ref c) => c.get_reduces_from(),
-        }
-    }
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.set_normal_form(concept),
-            Concept::String(ref mut c) => c.set_normal_form(concept),
-        }
-    }
-    fn add_reduces_from(&mut self, concept: &ConceptRef) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.add_reduces_from(concept),
-            Concept::String(ref mut c) => c.add_reduces_from(concept),
-        }
-    }
-    fn remove_normal_form(&mut self) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.remove_normal_form(),
-            Concept::String(ref mut c) => c.remove_normal_form(),
-        }
-    }
-    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.remove_reduces_from(concept),
-            Concept::String(ref mut c) => c.remove_reduces_from(concept),
-        }
-    }
-}
-
 pub struct StringConcept {
     abstract_concept: AbstractConcept,
     string: String,

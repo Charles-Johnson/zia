@@ -66,6 +66,7 @@ impl Context {
         let application = try!(applicand.find_definition(&argument));
         match application {
             None => {
+                println!("Setting definition of concept {:?} as ({:?}, {:?})", definition.get_id(), applicand.get_id(), argument.get_id());
                 definition.set_definition(applicand, argument);
                 applicand.add_applicand_of(definition);
                 argument.add_argument_of(definition);
@@ -85,13 +86,6 @@ impl Context {
     ) -> ZiaResult<ConceptRef> {
         let mut definition = self.new_abstract();
         self.insert_definition_safe(applicand, argument, &mut definition)
-    }
-    fn insert_new_reduction(&mut self, concept: &mut ConceptRef) -> ZiaResult<ConceptRef> {
-        let mut normal_form = self.new_abstract();
-        try!(concept.insert_reduction(
-            &mut normal_form,
-        ));
-        Ok(normal_form)
     }
     fn new_abstract(&mut self) -> ConceptRef {
         let new_id = self.assign_new_id();
@@ -155,7 +149,6 @@ impl Context {
         }
     }
     pub fn call(&mut self, c: &ConceptRef) -> ZiaResult<String> {
-        println!("{:?}", c.get_id());
         match c.get_definition() {
             Some((app, mut arg)) => 
                 match arg.get_id() {
@@ -206,12 +199,14 @@ impl Context {
         }
     }
     fn expand_as_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
+        println!("Expanding token for concept {:?}", c.get_id());
         match c.get_definition() {
             Some((app, arg)) => self.join_tokens(&app, &arg),
             None => self.get_token(c),
         }
     }
     fn get_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
+        println!("Getting token for concept {:?}", c.get_id());
         match try!(self.get_label(c)) {
             None => match c.get_definition() {
                 Some((app, arg)) => self.join_tokens(&app, &arg),
@@ -223,6 +218,7 @@ impl Context {
         }
     }
     fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
+        println!("Joining tokens of concepts {:?} and {:?}", app.get_id(), arg.get_id());
         Ok(Token::Expression(
             try!(self.add_token(app)) + " " + &try!(self.add_token(arg)),
         ))
@@ -260,7 +256,6 @@ impl Context {
                     Ok("".to_string())
                 }
                 DEFINE => {
-                    println!("{:?}", DEFINE);
                     try!(self.refactor(arg, &mut ap)); // This refactoring doesn't work apart from refactoring the ids and removing the previous label. ap needs to inherit the definition of arg.
                     Ok("".to_string())
                 }
@@ -275,7 +270,6 @@ impl Context {
     }
     fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         try!(self.unlabel(before));
-        println!("{:?},{:?}", before.get_id(), after.get_id());
         if before.get_id() < after.get_id() {
             Ok(self.refactor_id(after, before.get_id()))
         } else {
