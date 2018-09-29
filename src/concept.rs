@@ -14,163 +14,344 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use constants::LABEL;
-use std::cell::{RefCell, RefMut};
-use std::hash::{Hash, Hasher};
+use std::cell::RefCell;
 use std::rc::Rc;
-use utils::{ZiaError, ZiaResult};
+use utils::ZiaResult;
+use traits::{Application, Definition, NormalForm, Reduction, Label};
 
-pub type ConceptRef = Rc<RefCell<Concept>>;
-
-pub struct Concept {
-    pub id: usize,
-    pub definition: Option<(ConceptRef, ConceptRef)>,
-    pub applicand_of: Vec<ConceptRef>,
-    pub argument_of: Vec<ConceptRef>,
-    pub normal_form: Option<ConceptRef>,
-    pub reduces_from: Vec<ConceptRef>,
-    pub string: Option<String>,
+pub enum ConceptRef {
+    Abstract(AbstractRef),
+    String(StringRef),
 }
 
-impl PartialEq for Concept {
-    fn eq(&self, other: &Concept) -> bool {
-        self.id == other.id
+pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
+pub type StringRef = Rc<RefCell<StringConcept>>;
+
+impl ConceptRef {
+    pub fn set_id(&mut self, number: usize) {
+        match *self {
+            ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
+            ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
+        }
+    }
+    pub fn delete_normal_form(&mut self) -> ZiaResult<()> {
+        match self.get_normal_form() {
+            None => (),
+            Some(mut n) => {
+                n.remove_reduces_from(self);
+                self.remove_normal_form();
+            }
+        };
+        Ok(())
     }
 }
 
-impl Eq for Concept {}
-
-impl Hash for Concept {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.id.hash(state);
+impl Clone for ConceptRef {
+    fn clone(&self) -> Self {
+        match *self {
+            ConceptRef::Abstract(ref r) => ConceptRef::Abstract(r.clone()),
+            ConceptRef::String(ref r) => ConceptRef::String(r.clone()),
+        }
     }
+}
+
+impl Application<ConceptRef> for ConceptRef {
+    fn get_argument_of(&self) -> Vec<ConceptRef> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_argument_of(),
+            ConceptRef::String(ref c) => c.borrow().get_argument_of(),
+        }
+    }
+    fn get_applicand_of(&self) -> Vec<ConceptRef> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_applicand_of(),
+            ConceptRef::String(ref c) => c.borrow().get_applicand_of(),
+        }
+    }
+    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_definition(),
+            ConceptRef::String(ref c) => c.borrow().get_definition(),
+        }
+    }
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
+            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
+        }
+    }
+    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
+        }
+    }
+    fn add_argument_of(&mut self, argument: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_argument_of(argument),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_argument_of(argument),
+        }
+    }
+}
+
+impl Definition<ConceptRef> for ConceptRef {}
+
+impl NormalForm<ConceptRef> for ConceptRef {
+    fn get_id(&self) -> usize {
+        match *self {
+            ConceptRef::Abstract(ref r) => 
+                r.borrow().get_id(),
+            ConceptRef::String(ref r) => 
+                r.borrow().get_id(),
+        }
+    }
+    fn get_normal_form(&self) -> Option<ConceptRef> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_normal_form(),
+            ConceptRef::String(ref c) => c.borrow().get_normal_form(),
+        }
+    }
+    fn get_reduces_from(&self) -> Vec<ConceptRef> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_reduces_from(),
+            ConceptRef::String(ref c) => c.borrow().get_reduces_from(),
+        }
+    }
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),
+        }
+    }
+    fn add_reduces_from(&mut self, concept: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_reduces_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_reduces_from(concept),
+        }
+    }
+    fn remove_normal_form(&mut self) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form(),
+        }
+    }
+    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
+        }
+    }
+}
+
+impl Reduction for ConceptRef {}
+
+impl Label<ConceptRef> for ConceptRef {}
+
+impl PartialEq for ConceptRef {
+    fn eq(&self, other: &ConceptRef) -> bool {
+         self.get_id() == other.get_id()
+    }
+}
+
+enum Concept {
+    Abstract(AbstractConcept),
+    String(StringConcept),
 }
 
 impl Concept {
-    pub fn new(id: usize) -> Concept {
-        Concept {
+    fn set_id(&mut self, number: usize) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.set_id(number),
+            Concept::String(ref mut c) => c.set_id(number),
+        }
+    }
+}
+
+impl NormalForm<ConceptRef> for Concept {
+    fn get_id(&self) -> usize {
+        match *self {
+            Concept::Abstract(ref c) => c.get_id(),
+            Concept::String(ref c) => c.get_id(),
+        }
+    }
+    fn get_normal_form(&self) -> Option<ConceptRef> {
+        match *self {
+            Concept::Abstract(ref c) => c.get_normal_form(),
+            Concept::String(ref c) => c.get_normal_form(),
+        }
+    }
+    fn get_reduces_from(&self) -> Vec<ConceptRef> {
+        match *self {
+            Concept::Abstract(ref c) => c.get_reduces_from(),
+            Concept::String(ref c) => c.get_reduces_from(),
+        }
+    }
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.set_normal_form(concept),
+            Concept::String(ref mut c) => c.set_normal_form(concept),
+        }
+    }
+    fn add_reduces_from(&mut self, concept: &ConceptRef) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.add_reduces_from(concept),
+            Concept::String(ref mut c) => c.add_reduces_from(concept),
+        }
+    }
+    fn remove_normal_form(&mut self) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.remove_normal_form(),
+            Concept::String(ref mut c) => c.remove_normal_form(),
+        }
+    }
+    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.remove_reduces_from(concept),
+            Concept::String(ref mut c) => c.remove_reduces_from(concept),
+        }
+    }
+}
+
+pub struct StringConcept {
+    abstract_concept: AbstractConcept,
+    string: String,
+}
+
+impl StringConcept {
+    pub fn new_ref(id: usize, string: &str) -> StringRef {
+        Rc::new(RefCell::new(StringConcept{
+            string: string.to_string(),
+            abstract_concept: AbstractConcept::new(id),
+        }))
+    }
+    fn set_id(&mut self, number: usize) {
+        self.abstract_concept.set_id(number);
+    }
+    pub fn get_string(&self) -> String {
+        self.string.clone()
+    }
+}
+
+impl Application<ConceptRef> for StringConcept {
+    fn get_applicand_of(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_applicand_of()
+    }
+    fn get_argument_of(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_argument_of()
+    }
+    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
+        self.abstract_concept.get_definition()
+    }
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
+        self.abstract_concept.set_definition(applicand, argument);
+    }
+    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
+        self.abstract_concept.add_applicand_of(applicand);
+    }
+    fn add_argument_of(&mut self, argument: &ConceptRef) {
+        self.abstract_concept.add_argument_of(argument);
+    }
+}
+
+impl NormalForm<ConceptRef> for StringConcept {
+    fn get_id(&self) -> usize {
+        self.abstract_concept.get_id()
+    }
+    fn get_normal_form(&self) -> Option<ConceptRef> {
+        self.abstract_concept.get_normal_form()
+    }
+    fn get_reduces_from(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_reduces_from()
+    }
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.set_normal_form(concept);
+    }
+    fn add_reduces_from(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.add_reduces_from(concept);
+    }
+    fn remove_normal_form(&mut self) {
+        self.abstract_concept.remove_normal_form();
+    }
+    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.remove_reduces_from(concept);
+    }
+}
+
+impl Label<ConceptRef> for StringConcept {}
+
+pub struct AbstractConcept {
+    id: usize,
+    definition: Option<(ConceptRef, ConceptRef)>,
+    applicand_of: Vec<ConceptRef>,
+    argument_of: Vec<ConceptRef>,
+    normal_form: Option<ConceptRef>,
+    reduces_from: Vec<ConceptRef>,
+}
+
+impl AbstractConcept {
+    pub fn new_ref(id: usize) -> AbstractRef {
+        Rc::new(RefCell::new(AbstractConcept::new(id)))
+    }
+    fn new(id: usize) -> AbstractConcept {
+        AbstractConcept{
             id,
             definition: None,
             applicand_of: Vec::new(),
             argument_of: Vec::new(),
             normal_form: None,
             reduces_from: Vec::new(),
-            string: None,
         }
     }
-    pub fn find_definition(&self, argument: &Concept) -> ZiaResult<Option<ConceptRef>> {
-        let mut candidates: Vec<ConceptRef> = Vec::new();
-        for candidate in self.applicand_of.clone() {
-            if argument.argument_of.contains(&candidate) && !candidates.contains(&candidate) {
-                candidates.push(candidate);
-            }
-        }
-        match candidates.len() {
-            0 => Ok(None),
-            1 => Ok(Some(candidates[0].clone())),
-            _ => Err(ZiaError::Ambiguity(
-                "Multiple definitions with the same applicand and argument pair exist.".to_string(),
-            )),
-        }
-    }
-    pub fn insert_reduction(
-        concept: &ConceptRef,
-        normal_form: &ConceptRef,
-        bm_normal_form: &mut RefMut<Concept>,
-    ) -> ZiaResult<()> {
-        let mut bm_concept = concept.borrow_mut();
-        match bm_concept.normal_form {
-            None => (),
-            Some(_) => {
-                return Err(ZiaError::Redundancy(format!(
-                    "Reduction rule already exists for concept {:?}",
-                    bm_concept.id
-                )))
-            }
-        };
-        let mut new_normal_form = normal_form.clone();
-        match bm_normal_form.normal_form.clone() {
-            None => (),
-            Some(n) => match n.try_borrow() {
-                Ok(_) => new_normal_form = n.clone(),
-                Err(_) => return Err(ZiaError::Loop("Cannot create a reduction loop".to_string())), // This will catch the cases where n == concept as well other cases where another concept is mutably borrowed which can't be filtered out.
-            },
-        };
-        let prereductions = bm_concept.reduces_from.clone();
-        for prereduction in prereductions {
-            try!(Concept::update_normal_form(
-                &prereduction,
-                &mut prereduction.borrow_mut(),
-                &new_normal_form,
-                bm_normal_form
-            ));
-        }
-        Concept::insert_normal_form(&concept, &mut bm_concept, &new_normal_form, bm_normal_form)
-    }
-    fn insert_normal_form(
-        concept: &ConceptRef,
-        bm_concept: &mut RefMut<Concept>,
-        normal_form: &ConceptRef,
-        bm_normal_form: &mut RefMut<Concept>,
-    ) -> ZiaResult<()> {
-        match bm_concept.normal_form {
-            None => {
-                for reduces_from_item in bm_normal_form.reduces_from.clone() {
-                    if reduces_from_item.try_borrow().is_err() {
-                        // This will catch the cases where reduces_from_item == concept as well other cases where another concept is mutably borrowed which can't be filtered out.
-                        return Err(ZiaError::Redundancy(
-                            "Normal form already reduces from this concept".to_string(),
-                        ));
-                    }
-                }
-                Concept::update_normal_form(concept, bm_concept, normal_form, bm_normal_form)
-            }
-            Some(_) => Err(ZiaError::Ambiguity(
-                "Normal form already exists for this concept".to_string(),
-            )),
-        }
-    }
-    fn update_normal_form(
-        concept: &ConceptRef,
-        bm_concept: &mut RefMut<Concept>,
-        normal_form: &ConceptRef,
-        bm_normal_form: &mut RefMut<Concept>,
-    ) -> ZiaResult<()> {
-        bm_normal_form.reduces_from.push(concept.clone());
-        bm_concept.normal_form = Some(normal_form.clone());
-        Ok(())
-    }
-    pub fn get_labellee(&self) -> ZiaResult<Option<ConceptRef>> {
-        let labels = &self.reduces_from;
-        let mut candidates: Vec<ConceptRef> = Vec::new();
-        for label in labels {
-            match label.borrow().definition.clone() {
-                None => continue,
-                Some((r, x)) => {
-                    match r.borrow().id {
-                        LABEL => candidates.push(x),
-                        _ => continue,
-                    };
-                }
-            };
-        }
-        match candidates.len() {
-            0 => Ok(None),
-            1 => Ok(Some(candidates[0].clone())),
-            _ => Err(ZiaError::Ambiguity(
-                "Multiple concepts are labelled with the same string".to_string(),
-            )),
-        }
-    }
-    pub fn delete_normal_form(concept: &ConceptRef) -> ZiaResult<()> {
-        let mut bm_concept = concept.borrow_mut();
-        match bm_concept.normal_form.clone() {
-            None => (),
-            Some(n) => {
-                n.borrow_mut().reduces_from.remove_item(concept);
-                bm_concept.normal_form = None;
-            }
-        };
-        Ok(())
+    fn set_id(&mut self, number: usize) {
+        self.id = number;
     }
 }
+
+impl Application<ConceptRef> for AbstractConcept {
+    fn get_applicand_of(&self) -> Vec<ConceptRef> {
+        self.applicand_of.clone()
+    }
+    fn get_argument_of(&self) -> Vec<ConceptRef> {
+        self.argument_of.clone()
+    }
+    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
+        self.definition.clone()
+    }
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
+        self.definition = Some((applicand.clone(), argument.clone()));
+    }
+    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
+        self.applicand_of.push(applicand.clone());
+    }
+    fn add_argument_of(&mut self, argument: &ConceptRef) {
+        self.argument_of.push(argument.clone());
+    }
+}
+
+impl NormalForm<ConceptRef> for AbstractConcept {
+    fn get_id(&self) -> usize {
+        self.id
+    }
+    fn get_normal_form(&self) -> Option<ConceptRef> {
+        self.normal_form.clone()
+    }
+    fn get_reduces_from(&self) -> Vec<ConceptRef> {
+        self.reduces_from.clone()
+    }
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
+        self.normal_form = Some(concept.clone());
+    }
+    fn add_reduces_from(&mut self, concept: &ConceptRef) {
+        self.reduces_from.push(concept.clone());
+    }
+    fn remove_normal_form(&mut self) {
+        self.normal_form = None;
+    }
+    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
+        self.reduces_from.remove_item(concept);
+    }
+}
+
+impl Label<ConceptRef> for AbstractConcept {}
+
+
