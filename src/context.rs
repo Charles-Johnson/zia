@@ -67,12 +67,6 @@ impl Context {
         let application = try!(applicand.find_definition(&argument));
         match application {
             None => {
-                println!(
-                    "Setting definition of concept {:?} as ({:?}, {:?})",
-                    definition.get_id(),
-                    applicand.get_id(),
-                    argument.get_id()
-                );
                 definition.set_definition(applicand, argument);
                 applicand.add_applicand_of(definition);
                 argument.add_argument_of(definition);
@@ -205,14 +199,12 @@ impl Context {
         }
     }
     fn expand_as_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
-        println!("Expanding token for concept {:?}", c.get_id());
         match c.get_definition() {
             Some((app, arg)) => self.join_tokens(&app, &arg),
             None => self.get_token(c),
         }
     }
     fn get_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
-        println!("Getting token for concept {:?}", c.get_id());
         match try!(self.get_label(c)) {
             None => match c.get_definition() {
                 Some((app, arg)) => self.join_tokens(&app, &arg),
@@ -224,11 +216,6 @@ impl Context {
         }
     }
     fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
-        println!(
-            "Joining tokens of concepts {:?} and {:?}",
-            app.get_id(),
-            arg.get_id()
-        );
         Ok(Token::Expression(
             try!(self.add_token(app)) + " " + &try!(self.add_token(arg)),
         ))
@@ -272,7 +259,6 @@ impl Context {
         }
     }
     fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
-        println!("Refactoring concept {:?} to concept {:?}", before.get_id(), after.get_id());
         try!(self.unlabel(before));
         self.refactor_id(before, after);
         Ok(())
@@ -282,12 +268,12 @@ impl Context {
             None => Ok(()),
             Some(mut d) => d.delete_normal_form(),
         }
-    }                        // 18                         // 7
+    } // 18                         // 7
     fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) {
         if self.concepts.len() > before.get_id() {
-            after.refactor_from(before); 
+            after.refactor_from(before);
             self.concepts.remove(before.get_id());
-            for id in before.get_id() .. self.concepts.len() {
+            for id in before.get_id()..self.concepts.len() {
                 self.concepts[id].set_id(id);
             }
         } else {
