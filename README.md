@@ -3,14 +3,12 @@ Library for the Zia programming language.
 
 Zia is a symbolic programming language that aims to have a minimal set of built-in features yet maximal expressive power by having the most extensible and flexible syntax.
 
-The current implementation exposes two functions that can be used in an interface:
+The current implementation exposes the `oracle` function that can be used in an interface such as [IZia](https://github.com/Charles-Johnson/izia):
 ```
-pub fn memory_database() -> SqliteConnection {...}
-pub fn oracle(buffer: &str, conn: &SqliteConnection) -> String {...}
+pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String>;
 ```
 
-`memory_database` initialises a database representing the knowledge of the program and returns a handle to that database.
-`oracle` accepts an expression as input (buffer references this string) and processes the command given the knowledge in the database (conn references this database).
+`oracle` accepts an expression as input (`buffer` references this string) and processes the command given the `Context` (`cont` mutably references this). A new `Context` can be constructed by `Context::new()`.
 
 An expression consists of an applicand and an argument, separated by spaces. Either of these could be another expression nested in parentheses.
 
