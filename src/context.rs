@@ -16,15 +16,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concept::{AbstractConcept, ConceptRef, StringConcept, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{Application, Definition, Label, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
-    string_map: HashMap<String, Rc<RefCell<StringConcept>>>,
+    string_map: HashMap<String, StringRef>,
     concepts: Vec<ConceptRef>,
 }
 
