@@ -13,6 +13,8 @@
 
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.*/
+use std::ops::Add;
+
 #[cfg(test)]
 mod tokens {
     use super::parse_line;
@@ -60,6 +62,32 @@ pub fn parse_tokens(tokens: &[String]) -> Vec<Token> {
 pub enum Token {
     Atom(String),
     Expression(String),
+}
+
+impl Token {
+    pub fn as_string(&self) -> String {
+        match *self {
+            Token::Expression(ref s) => s.clone(),
+            Token::Atom(ref s) => s.clone(),
+        }
+    }
+}
+
+impl Add<Token> for Token {
+    type Output = Token;
+    fn add(self, other: Token) -> Token {
+        let app_string: String;
+        match self {
+            Token::Expression(s) => app_string = "(".to_string() + &s + ")",
+            Token::Atom(s) => app_string = s,
+        };
+        let arg_string: String;
+        match other {
+            Token::Expression(s) => arg_string = "(".to_string() + &s + ")",
+            Token::Atom(s) => arg_string = s,
+        };
+        Token::Expression(app_string + " " + &arg_string)
+    }
 }
 
 pub fn parse_line(buffer: &str) -> Vec<String> {

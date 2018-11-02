@@ -18,6 +18,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #[macro_use]
 extern crate matches;
 
+mod ast;
 mod concept;
 mod constants;
 mod context;
@@ -29,8 +30,8 @@ pub use context::Context;
 use utils::ZiaResult;
 
 pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String> {
-    let concept = try!(cont.concept_from_expression(buffer));
-    cont.call(&concept)
+    let ast = try!(cont.ast_from_expression(buffer));
+    cont.call(&ast)
 }
 
 #[cfg(test)]
@@ -51,7 +52,7 @@ mod reductions {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
         assert_eq!(oracle("((not false) ->) true", &mut cont).unwrap(), "");
-        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true");
+        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true"); 
     }
     #[test]
     fn chain() {
@@ -81,12 +82,12 @@ mod definitions {
     fn monad() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
-        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +"); // assertion error: "*"
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
     }
     #[test]
     fn nested_monads() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(2 :=) (++ (++ 0))", &mut cont).unwrap(), "");
-        assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)"); // assertion error: left = "2"
+        assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)");
     }
 }
