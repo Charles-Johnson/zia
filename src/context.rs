@@ -78,8 +78,12 @@ impl Context {
                         Ok("".to_string())
                     }
                     DEFINE => {
-                        try!(self.define(arg, &ap));
-                        Ok("".to_string())
+						if arg.contains(&ap) {
+							Err(ZiaError::Loop("Definition is circular".to_string()))
+						} else {
+                        	try!(self.define(arg, &ap));
+                        	Ok("".to_string())
+						}
                     }
                     _ => Err(ZiaError::Absence(
                         "This concept is not a program".to_string(),
@@ -101,7 +105,11 @@ impl Context {
         after: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
-            self.define2(&mut before_c, after)
+			if before.get_token() == after.get_token() {
+				Ok(before_c.remove_definition())
+			} else {
+            	self.define2(&mut before_c, after)
+			}
         } else if let Some((app, arg)) = before.get_expansion() {
             if let Some(mut after_c) = after.get_concept() {
                 if let Some((mut ap, mut ar)) = after_c.get_definition() {
@@ -132,7 +140,7 @@ impl Context {
         &mut self,
         before_c: &mut ConceptRef,
         after: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<()> {
+    ) -> ZiaResult<()> { 
         if let Some(mut after_c) = after.get_concept() {
             self.refactor(before_c, &mut after_c)
         } else {

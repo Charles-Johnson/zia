@@ -67,6 +67,19 @@ impl AbstractSyntaxTree {
     pub fn get_expansion(&self) -> Option<(Rc<AbstractSyntaxTree>, Rc<AbstractSyntaxTree>)> {
         self.expansion.clone()
     }
+	pub fn contains(&self, ast: &Rc<AbstractSyntaxTree>) -> bool {
+        if let Some((app, arg)) = self.get_expansion() {
+			if app.get_token() == ast.get_token() || arg.get_token() == ast.get_token() {
+				true
+			} else if app.contains(ast) || arg.contains(ast) {
+				true
+			} else {
+				false
+			}
+        } else {
+			false
+		}
+    }
 }
 
 impl Application<ConceptRef> for AbstractSyntaxTree {
@@ -112,6 +125,21 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             c.add_argument_of(concept)
         }
     }
+	fn delete_definition(&mut self) {
+		if let Some(mut c) = self.get_concept() {
+            c.delete_definition()
+        }
+	}
+    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+		if let Some(mut c) = self.get_concept() {
+            c.delete_applicand_of(definition)
+        }
+	}
+    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+		if let Some(mut c) = self.get_concept() {
+            c.delete_argument_of(definition)
+        }
+	}
 }
 
 impl Definition<ConceptRef> for AbstractSyntaxTree {}

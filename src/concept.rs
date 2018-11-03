@@ -55,6 +55,16 @@ impl ConceptRef {
         applicand.add_applicand_of(self);
         argument.add_argument_of(self);
     }
+    pub fn remove_definition(&mut self) {
+		match self.get_definition() {
+	    	None => panic!("No definition to remove!"),
+			Some((mut app, mut arg)) => {
+				app.delete_applicand_of(self);
+				arg.delete_argument_of(self);
+				self.delete_definition();
+			},
+        };
+    }
 }
 
 impl Clone for ConceptRef {
@@ -103,6 +113,24 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().add_argument_of(argument),
         }
     }
+	fn delete_definition(&mut self) {
+		match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_definition(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_definition(),
+        }
+	}
+    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+		match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
+        }
+	}
+    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+		match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_argument_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_argument_of(definition),
+        }
+	}
 }
 
 impl Definition<ConceptRef> for ConceptRef {}
@@ -204,6 +232,15 @@ impl Application<ConceptRef> for StringConcept {
     fn add_argument_of(&mut self, argument: &ConceptRef) {
         self.abstract_concept.add_argument_of(argument);
     }
+	fn delete_definition(&mut self) {
+		self.abstract_concept.delete_definition();
+	}
+    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+		self.abstract_concept.delete_applicand_of(definition)
+    }
+    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+		self.abstract_concept.delete_argument_of(definition)
+	}
 }
 
 impl NormalForm<ConceptRef> for StringConcept {
@@ -286,6 +323,15 @@ impl Application<ConceptRef> for AbstractConcept {
     fn add_argument_of(&mut self, argument: &ConceptRef) {
         self.argument_of.push(argument.clone());
     }
+	fn delete_definition(&mut self) {
+		self.definition = None
+	}
+    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+		self.applicand_of.remove_item(definition);
+	}
+    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+		self.argument_of.remove_item(definition);
+	}
 }
 
 impl NormalForm<ConceptRef> for AbstractConcept {

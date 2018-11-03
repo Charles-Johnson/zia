@@ -21,9 +21,12 @@ pub trait Application<T> {
     fn get_applicand_of(&self) -> Vec<T>;
     fn get_argument_of(&self) -> Vec<T>;
     fn get_definition(&self) -> Option<(T, T)>;
-    fn set_definition(&mut self, applicand: &T, argument: &T);
-    fn add_applicand_of(&mut self, applicand: &T);
-    fn add_argument_of(&mut self, argument: &T);
+    fn set_definition(&mut self, &T, &T);
+    fn add_applicand_of(&mut self, &T);
+    fn add_argument_of(&mut self, &T);
+    fn delete_definition(&mut self);
+    fn delete_applicand_of(&mut self, &T);
+    fn delete_argument_of(&mut self, &T);
 }
 
 pub trait Definition<T: Application<T> + Clone + PartialEq>

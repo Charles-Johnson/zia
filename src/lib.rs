@@ -77,17 +77,63 @@ mod reductions {
 #[cfg(test)]
 mod definitions {
     use oracle;
+    use utils::ZiaError;
     use Context;
     #[test]
-    fn monad() {
+    fn fresh_monad() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
         assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
     }
     #[test]
-    fn nested_monads() {
+    fn fresh_nested_monads() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(2 :=) (++ (++ 0))", &mut cont).unwrap(), "");
         assert_eq!(oracle("2 :=", &mut cont).unwrap(), "++ (++ 0)");
+    }
+    #[test]
+    fn left_fresh_monad() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(((2 (repeated +)) 2) ->) 4", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
+    }
+    #[test]
+    fn right_fresh_monad() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(((2 *) 2) ->) 4", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
+    }
+    #[test]
+    fn old_monad() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(((2 *) 2) ->) 4", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(((2 (repeated +)) 2) ->) 4", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(* :=) (repeated +)", &mut cont).unwrap(), "");
+        assert_eq!(oracle("* :=", &mut cont).unwrap(), "repeated +");
+    }
+    #[test] 
+    fn monad_on_the_left() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("((x y) ->) c", &mut cont).unwrap(), "");
+        assert_matches!(oracle("((a b) :=) c", &mut cont) , Err(ZiaError::Syntax(_)));
+    }
+    #[test] 
+    fn fresh_refactor() {
+        let mut cont = Context::new().unwrap();
+        assert_matches!(oracle("(a :=) b", &mut cont) , Err(ZiaError::Redundancy(_)));
+    }
+    #[test] 
+    fn definition_loop() {
+        let mut cont = Context::new().unwrap();
+        assert_matches!(oracle("(a :=) (a b)", &mut cont) , Err(ZiaError::Loop(_)));
+    }
+    #[test]
+    fn remove_definition() {
+	let mut cont = Context::new().unwrap();
+	assert_eq!(oracle("(a :=) (b c)", &mut cont).unwrap(), "");
+	assert_eq!(oracle("(a :=) a", &mut cont).unwrap(), "");
+	assert_eq!(oracle("a :=", &mut cont).unwrap(), "a");
     }
 }
