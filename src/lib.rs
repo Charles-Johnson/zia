@@ -62,7 +62,7 @@ mod reductions {
         assert_eq!(oracle("a ->", &mut cont).unwrap(), "c")
     }
     #[test]
-    fn prevent_loop() {
+    fn circular_loop() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
         assert_matches!(oracle("(b ->) a", &mut cont), Err(ZiaError::Loop(_)));
@@ -72,6 +72,18 @@ mod reductions {
     fn trivial_parentheses() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a) ->", &mut cont).unwrap(), "a");
+    }
+    #[test]
+    fn remove_reduction() {
+	let mut cont = Context::new().unwrap();
+	assert_eq!(oracle("((b c) ->) a", &mut cont).unwrap(), "");
+	assert_eq!(oracle("((b c) ->) (b c)", &mut cont).unwrap(), "");
+	assert_eq!(oracle("(b c) ->", &mut cont).unwrap(), "b c");
+    }
+    #[test]
+    fn infinite_loop() {
+        let mut cont = Context::new().unwrap();
+        assert_matches!(oracle("(b ->) (a b)", &mut cont), Err(ZiaError::Loop(_)));
     }
 }
 #[cfg(test)]

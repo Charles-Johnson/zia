@@ -71,15 +71,28 @@ impl Context {
             Some((ap, ar)) => if let Some(arc) = ar.get_concept() {
                 match arc.get_id() {
                     REDUCTION => {
-                        try!(
-                            try!(self.concept_from_ast(&ap))
-                                .insert_reduction(&mut try!(self.concept_from_ast(arg)))
-                        );
-                        Ok("".to_string())
+						if arg.contains(&ap) {
+							Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
+						} else if arg.get_token() == ap.get_token() {
+							if let Some(mut c) = arg.get_concept() {
+								try!(c.delete_normal_form());
+								Ok("".to_string())
+							} else {
+								Err(ZiaError::Redundancy(
+                					"Removing the normal form a symbol that was never previously used is redundant".to_string(),
+            					))
+							}
+						} else {	
+                        	try!(
+                            	try!(self.concept_from_ast(&ap))
+                            	    .insert_reduction(&mut try!(self.concept_from_ast(arg)))
+                        	);
+                        	Ok("".to_string())
+						}
                     }
                     DEFINE => {
 						if arg.contains(&ap) {
-							Err(ZiaError::Loop("Definition is circular".to_string()))
+							Err(ZiaError::Loop("Definition is infinite".to_string()))
 						} else {
                         	try!(self.define(arg, &ap));
                         	Ok("".to_string())
