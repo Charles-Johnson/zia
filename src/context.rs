@@ -65,7 +65,7 @@ impl Context {
     fn call_as_applicand(
         &mut self,
         app: &AbstractSyntaxTree,
-        arg: &AbstractSyntaxTree,
+        arg: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<String> {
         match app.get_expansion() {
             Some((ap, ar)) => if let Some(arc) = ar.get_concept() {
@@ -78,9 +78,7 @@ impl Context {
                         Ok("".to_string())
                     }
                     DEFINE => {
-                        let mut argc = try!(self.concept_from_ast(arg));
-                        let mut apc = try!(self.concept_from_ast(&ap));
-                        try!(self.refactor(&mut argc, &mut apc,));
+                        try!(self.define(arg, &ap));
                         Ok("".to_string())
                     }
                     _ => Err(ZiaError::Absence(
@@ -97,24 +95,72 @@ impl Context {
             )),
         }
     }
-    fn concept_from_ast(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<ConceptRef> {
+    fn define(
+        &mut self,
+        before: &Rc<AbstractSyntaxTree>,
+        after: &Rc<AbstractSyntaxTree>,
+    ) -> ZiaResult<()> {
+        if let Some(mut before_c) = before.get_concept() {
+            self.define2(&mut before_c, after)
+        } else if let Some((app, arg)) = before.get_expansion() {
+            if let Some(mut after_c) = after.get_concept() {
+                if let Some((mut ap, mut ar)) = after_c.get_definition() {
+                    try!(self.define2(&mut ap, &app));
+                    self.define2(&mut ar, &arg)
+                } else {
+                    after_c.insert_definition(
+                        &mut try!(self.concept_from_ast(&app)),
+                        &mut try!(self.concept_from_ast(&arg)),
+                    );
+					Ok(())
+                }
+            } else {
+                try!(self.concept_from_ast(&try!(AbstractSyntaxTree::from_monad(
+                    after.get_token(),
+                    &app,
+                    &arg,
+                ))));
+                Ok(())
+            }
+        } else {
+            return Err(ZiaError::Redundancy(
+                "Refactoring a symbol that was never previously used is redundant".to_string(),
+            ));
+        }
+    }
+    fn define2(
+        &mut self,
+        before_c: &mut ConceptRef,
+        after: &Rc<AbstractSyntaxTree>,
+    ) -> ZiaResult<()> {
+        if let Some(mut after_c) = after.get_concept() {
+            self.refactor(before_c, &mut after_c)
+        } else {
+            match after.get_token() {
+                Token::Atom(s) => {
+                    try!(self.unlabel(before_c));
+                    self.label(before_c, &s)
+                }
+                Token::Expression(_) => Err(ZiaError::Syntax(
+                    "Only symbols can have definitions".to_string(),
+                )),
+            }
+        }
+    }
+    fn concept_from_ast(&mut self, ast: &Rc<AbstractSyntaxTree>) -> ZiaResult<ConceptRef> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
-            match ast.get_token() {
-                Token::Atom(s) => {
-                    let c = try!(self.new_labelled_abstract(&s));
-                    Ok(c)
-                }
-                Token::Expression(_) => if let Some((mut app, mut arg)) = ast.get_expansion() {
-                    let mut appc = try!(self.concept_from_ast(&app));
-                    let mut argc = try!(self.concept_from_ast(&arg));
-                    let def = try!(self.insert_definition(&mut appc, &mut argc));
-                    Ok(def)
-                } else {
-                    panic!("AST with a expression token has no expansion!")
-                },
-            }
+			let mut c = match ast.get_token() {
+				Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
+				Token::Expression(_) => self.new_abstract(),
+			};
+			if let Some((mut app, mut arg)) = ast.get_expansion() {
+				let mut appc = try!(self.concept_from_ast(&app));
+            	let mut argc = try!(self.concept_from_ast(&arg));
+				c.insert_definition(&mut appc, &mut argc);
+			}
+            Ok(c)
         }
     }
     fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<ConceptRef> {
@@ -123,18 +169,8 @@ impl Context {
         Ok(new_abstract)
     }
     fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
-        let mut definition = self.new_abstract();
-        self.label_safe(concept, &mut definition, string)
-    }
-    fn label_safe(
-        &mut self,
-        concept: &mut ConceptRef,
-        definition: &mut ConceptRef,
-        string: &str,
-    ) -> ZiaResult<()> {
         let mut concepts = self.concepts.clone();
-        let mut definition =
-            try!(self.insert_definition_safe(&mut concepts[LABEL], concept, definition));
+        let mut definition = try!(self.insert_definition(&mut concepts[LABEL], concept));
         let string_ref = self.new_string(string);
         definition.insert_reduction(&mut ConceptRef::String(string_ref))
     }
@@ -143,24 +179,14 @@ impl Context {
         applicand: &mut ConceptRef,
         argument: &mut ConceptRef,
     ) -> ZiaResult<ConceptRef> {
-        let mut definition = self.new_abstract();
-        self.insert_definition_safe(applicand, argument, &mut definition)
-    }
-    fn insert_definition_safe(
-        &mut self,
-        applicand: &mut ConceptRef,
-        argument: &mut ConceptRef,
-        definition: &mut ConceptRef,
-    ) -> ZiaResult<ConceptRef> {
         let application = try!(applicand.find_definition(&argument));
         match application {
             None => {
-                definition.set_definition(applicand, argument);
-                applicand.add_applicand_of(definition);
-                argument.add_argument_of(definition);
+                let mut definition = self.new_abstract();
+                definition.insert_definition(applicand, argument);
                 Ok(definition.clone())
             }
-            Some(id) => Ok(id),
+            Some(def) => Ok(def),
         }
     }
     fn new_abstract(&mut self) -> ConceptRef {
@@ -238,9 +264,7 @@ impl Context {
         ast: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
         match ast.get_concept() {
-            Some(ref c) => {
-                self.reduce_concept(c)
-            }
+            Some(ref c) => self.reduce_concept(c),
             None => match ast.get_expansion() {
                 None => Ok(None),
                 Some((app, arg)) => Context::match_app_arg(
@@ -267,14 +291,11 @@ impl Context {
                 }
                 None => Ok(None),
             },
-            Some(n) => {
-                Ok(Some(try!(self.ast_from_concept(&n))))
-            }
+            Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
         }
     }
     // Quite an ugly static method that I made to save myself from having to write
     // the same pattern twice in reduce and reduce_concept methods.
-    // Need to check whether a definition exists of the reduced application.
     fn match_app_arg(
         app: Option<Rc<AbstractSyntaxTree>>,
         arg: Option<Rc<AbstractSyntaxTree>>,
@@ -376,6 +397,6 @@ mod context {
     use Context;
     #[test]
     fn new_context() {
-        let _cont = Context::new();
+        let _cont = Context::new().unwrap();
     }
 }

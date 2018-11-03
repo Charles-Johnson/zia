@@ -50,6 +50,11 @@ impl ConceptRef {
             ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
         }
     }
+    pub fn insert_definition(&mut self, applicand: &mut ConceptRef, argument: &mut ConceptRef) {
+        self.set_definition(applicand, argument);
+        applicand.add_applicand_of(self);
+        argument.add_argument_of(self);
+    }
 }
 
 impl Clone for ConceptRef {

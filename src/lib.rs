@@ -52,7 +52,7 @@ mod reductions {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("((not true) ->) false", &mut cont).unwrap(), "");
         assert_eq!(oracle("((not false) ->) true", &mut cont).unwrap(), "");
-        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true"); 
+        assert_eq!(oracle("(not(not true))->", &mut cont).unwrap(), "true");
     }
     #[test]
     fn chain() {
