@@ -54,7 +54,7 @@ pub trait NormalForm<T> {
     fn get_id(&self) -> usize;
     fn get_normal_form(&self) -> Option<T>;
     fn get_reduces_from(&self) -> Vec<T>;
-    fn set_normal_form(&mut self, &T);
+    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
     fn add_reduces_from(&mut self, &T);
     fn remove_normal_form(&mut self);
     fn remove_reduces_from(&mut self, &T);
@@ -107,8 +107,7 @@ where
     }
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         normal_form.add_reduces_from(self);
-        self.set_normal_form(normal_form);
-        Ok(())
+        self.set_normal_form(normal_form)
     }
 }
 

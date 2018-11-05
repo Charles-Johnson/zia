@@ -102,6 +102,13 @@ mod reductions {
         assert_eq!(oracle("(b ->) b", &mut cont).unwrap(), "");
 		assert_eq!(oracle("a ->", &mut cont).unwrap(), "b");
     }
+	#[test]
+	fn change_reduction_rule() {
+        let mut cont = Context::new().unwrap();
+		assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+		assert_eq!(oracle("(a ->) c", &mut cont).unwrap(), "");
+		assert_eq!(oracle("a ->", &mut cont).unwrap(), "c");
+	}
 }
 #[cfg(test)]
 mod definitions {

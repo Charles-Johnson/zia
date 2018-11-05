@@ -17,7 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 use std::cell::RefCell;
 use std::rc::Rc;
 use traits::{Application, Definition, Label, NormalForm, Reduction};
-use utils::ZiaResult;
+use utils::{ZiaResult, ZiaError};
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
@@ -154,7 +154,7 @@ impl NormalForm<ConceptRef> for ConceptRef {
             ConceptRef::String(ref c) => c.borrow().get_reduces_from(),
         }
     }
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
+    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
             ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),
@@ -253,8 +253,8 @@ impl NormalForm<ConceptRef> for StringConcept {
     fn get_reduces_from(&self) -> Vec<ConceptRef> {
         self.abstract_concept.get_reduces_from()
     }
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.set_normal_form(concept);
+    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+        self.abstract_concept.set_normal_form(concept)
     }
     fn add_reduces_from(&mut self, concept: &ConceptRef) {
         self.abstract_concept.add_reduces_from(concept);
@@ -339,13 +339,32 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         self.id
     }
     fn get_normal_form(&self) -> Option<ConceptRef> {
-        self.normal_form.clone()
+        match self.normal_form {
+			None => None,
+			Some(ref n) => match n.get_normal_form() {
+				None => Some(n.clone()),
+				Some(ref m) => Some(m.clone()),
+			},
+		}
     }
     fn get_reduces_from(&self) -> Vec<ConceptRef> {
-        self.reduces_from.clone()
+		let mut reduces_from: Vec<ConceptRef> = Vec::new();
+		for concept in self.reduces_from.clone() {
+			reduces_from.push(concept.clone());
+			for concept2 in concept.get_reduces_from() {
+				reduces_from.push(concept2);
+			}
+		}
+        reduces_from
     }
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
-        self.normal_form = Some(concept.clone());
+    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+		match self.get_reduces_from().contains(concept) {
+			true => Err(ZiaError::Loop("Cannot create a reduction loop".to_string())),
+			false => {
+				self.normal_form = Some(concept.clone());
+				Ok(())
+			},
+		}
     }
     fn add_reduces_from(&mut self, concept: &ConceptRef) {
         self.reduces_from.push(concept.clone());
