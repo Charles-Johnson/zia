@@ -59,7 +59,7 @@ mod reductions {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
         assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), "");
-        assert_eq!(oracle("a ->", &mut cont).unwrap(), "c")
+        assert_eq!(oracle("a ->", &mut cont).unwrap(), "c");
     }
     #[test]
     fn circular_loop() {
@@ -75,15 +75,32 @@ mod reductions {
     }
     #[test]
     fn remove_reduction() {
-	let mut cont = Context::new().unwrap();
-	assert_eq!(oracle("((b c) ->) a", &mut cont).unwrap(), "");
-	assert_eq!(oracle("((b c) ->) (b c)", &mut cont).unwrap(), "");
-	assert_eq!(oracle("(b c) ->", &mut cont).unwrap(), "b c");
+		let mut cont = Context::new().unwrap();
+		assert_eq!(oracle("((b c) ->) a", &mut cont).unwrap(), "");
+		assert_eq!(oracle("((b c) ->) (b c)", &mut cont).unwrap(), "");
+		assert_eq!(oracle("(b c) ->", &mut cont).unwrap(), "b c");
     }
     #[test]
     fn infinite_loop() {
         let mut cont = Context::new().unwrap();
         assert_matches!(oracle("(b ->) (a b)", &mut cont), Err(ZiaError::Loop(_)));
+    }
+	#[test]
+	fn broken_end_chain() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(b ->) b", &mut cont).unwrap(), "");
+		assert_eq!(oracle("a ->", &mut cont).unwrap(), "b");
+    }
+	#[test]
+	fn broken_middle_chain() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(b ->) c", &mut cont).unwrap(), "");
+		assert_eq!(oracle("(c ->) d", &mut cont).unwrap(), "");
+        assert_eq!(oracle("(b ->) b", &mut cont).unwrap(), "");
+		assert_eq!(oracle("a ->", &mut cont).unwrap(), "b");
     }
 }
 #[cfg(test)]
