@@ -65,14 +65,6 @@ where
     Self: NormalForm<Self> + Clone,
 {
     fn insert_reduction(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        match self.get_normal_form() {
-            None => (),
-            Some(_) => {
-                return Err(ZiaError::Redundancy(
-                    "Reduction rule already exists for concept".to_string(),
-                ))
-            }
-        };
         let mut new_normal_form = normal_form.clone();
         match normal_form.get_normal_form() {
             None => (),
@@ -89,21 +81,14 @@ where
         self.insert_normal_form(&mut new_normal_form)
     }
     fn insert_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        match self.get_normal_form() {
-            None => {
-                for reduces_from_item in normal_form.get_reduces_from() {
-                    if reduces_from_item.get_id() == self.get_id() {
-                        return Err(ZiaError::Redundancy(
-                            "Normal form already reduces from this concept".to_string(),
-                        ));
-                    }
-                }
-                self.update_normal_form(normal_form)
+        for reduces_from_item in normal_form.get_reduces_from() {
+            if reduces_from_item.get_id() == self.get_id() {
+                return Err(ZiaError::Redundancy(
+                    "Normal form already reduces from this concept".to_string(),
+                ));
             }
-            Some(_) => Err(ZiaError::Ambiguity(
-                "Normal form already exists for this concept".to_string(),
-            )),
         }
+        self.update_normal_form(normal_form)
     }
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         normal_form.add_reduces_from(self);
