@@ -85,7 +85,7 @@ impl Context {
 						} else {	
                         	try!(
                             	try!(self.concept_from_ast(&ap))
-                            	    .insert_reduction(&mut try!(self.concept_from_ast(arg)))
+                            	    .update_normal_form(&mut try!(self.concept_from_ast(arg)))
                         	);
                         	Ok("".to_string())
 						}
@@ -298,7 +298,7 @@ impl Context {
         }
     }
     fn reduce_concept(&mut self, c: &ConceptRef) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
-        match c.get_normal_form() {
+        match try!(c.get_normal_form()) {
             None => match c.get_definition() {
                 Some((mut app, mut arg)) => {
                     let app_result = try!(self.reduce_concept(&app));
@@ -380,7 +380,7 @@ impl Context {
     fn get_label(&self, c: &ConceptRef) -> ZiaResult<Option<String>> {
         Ok(match try!(self.concepts[LABEL].find_definition(c)) {
             None => None,
-            Some(d) => match d.get_normal_form() {
+            Some(d) => match try!(d.get_normal_form()) {
                 None => None,
                 Some(n) => match n {
                     ConceptRef::String(s) => Some(s.borrow().get_string()),

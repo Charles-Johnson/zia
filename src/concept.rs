@@ -35,7 +35,7 @@ impl ConceptRef {
         }
     }
     pub fn delete_normal_form(&mut self) -> ZiaResult<()> {
-        match self.get_normal_form() {
+        match try!(self.get_normal_form()) {
             None => (),
             Some(mut n) => {
                 n.remove_reduces_from(self);
@@ -44,10 +44,16 @@ impl ConceptRef {
         };
         Ok(())
     }
-    pub fn refactor_from(&mut self, other: &ConceptRef) {
+    pub fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         match *self {
             ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
             ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
+        }
+    }
+	pub fn check_borrow_err(&self) -> bool {
+        match *self {
+            ConceptRef::Abstract(ref r) => r.try_borrow().is_err(),
+            ConceptRef::String(ref r) => r.try_borrow().is_err(),
         }
     }
     pub fn insert_definition(&mut self, applicand: &mut ConceptRef, argument: &mut ConceptRef) {
@@ -142,7 +148,7 @@ impl NormalForm<ConceptRef> for ConceptRef {
             ConceptRef::String(ref r) => r.borrow().get_id(),
         }
     }
-    fn get_normal_form(&self) -> Option<ConceptRef> {
+    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match *self {
             ConceptRef::Abstract(ref c) => c.borrow().get_normal_form(),
             ConceptRef::String(ref c) => c.borrow().get_normal_form(),
@@ -208,8 +214,8 @@ impl StringConcept {
     pub fn get_string(&self) -> String {
         self.string.clone()
     }
-    fn refactor_from(&mut self, other: &ConceptRef) {
-        self.abstract_concept.refactor_from(other);
+    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+        self.abstract_concept.refactor_from(other)
     }
 }
 
@@ -247,7 +253,7 @@ impl NormalForm<ConceptRef> for StringConcept {
     fn get_id(&self) -> usize {
         self.abstract_concept.get_id()
     }
-    fn get_normal_form(&self) -> Option<ConceptRef> {
+    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         self.abstract_concept.get_normal_form()
     }
     fn get_reduces_from(&self) -> Vec<ConceptRef> {
@@ -295,12 +301,13 @@ impl AbstractConcept {
     fn set_id(&mut self, number: usize) {
         self.id = number;
     }
-    fn refactor_from(&mut self, other: &ConceptRef) {
+    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         self.definition = other.get_definition();
         self.applicand_of = other.get_applicand_of();
         self.argument_of = other.get_argument_of();
-        self.normal_form = other.get_normal_form();
+        self.normal_form = try!(other.get_normal_form());
         self.reduces_from = other.get_reduces_from();
+		Ok(())
     }
 }
 
@@ -338,12 +345,17 @@ impl NormalForm<ConceptRef> for AbstractConcept {
     fn get_id(&self) -> usize {
         self.id
     }
-    fn get_normal_form(&self) -> Option<ConceptRef> {
+    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match self.normal_form {
-			None => None,
-			Some(ref n) => match n.get_normal_form() {
-				None => Some(n.clone()),
-				Some(ref m) => Some(m.clone()),
+			None => Ok(None),
+			Some(ref n) => {
+				if n.check_borrow_err() {
+					return Err(ZiaError::Borrow("Error while borrowing normal form".to_string()));
+				}
+				match try!(n.get_normal_form()) {
+					None => Ok(Some(n.clone())),
+					Some(ref m) => Ok(Some(m.clone())),
+				}
 			},
 		}
     }
@@ -358,13 +370,14 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         reduces_from
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-		match self.get_reduces_from().contains(concept) {
-			true => Err(ZiaError::Loop("Cannot create a reduction loop".to_string())),
-			false => {
-				self.normal_form = Some(concept.clone());
-				Ok(())
-			},
-		}
+		match concept.get_normal_form() {
+			Ok(_) => (),
+			Err(_) => return Err(ZiaError::Loop(
+				"Cannot create a reduction loop".to_string()
+			)),
+		};
+		self.normal_form = Some(concept.clone());
+		Ok(())
     }
     fn add_reduces_from(&mut self, concept: &ConceptRef) {
         self.reduces_from.push(concept.clone());

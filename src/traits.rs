@@ -52,7 +52,7 @@ where
 
 pub trait NormalForm<T> {
     fn get_id(&self) -> usize;
-    fn get_normal_form(&self) -> Option<T>;
+    fn get_normal_form(&self) -> ZiaResult<Option<T>>;
     fn get_reduces_from(&self) -> Vec<T>;
     fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
     fn add_reduces_from(&mut self, &T);
@@ -66,7 +66,7 @@ where
 {
     fn insert_reduction(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         let mut new_normal_form = normal_form.clone();
-        match normal_form.get_normal_form() {
+        match try!(normal_form.get_normal_form()) {
             None => (),
             Some(n) => if n.get_id() != self.get_id() {
                 new_normal_form = n.clone()
@@ -74,10 +74,6 @@ where
                 return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
             },
         };
-        let prereductions = self.get_reduces_from();
-        for mut prereduction in prereductions {
-            try!(prereduction.update_normal_form(&mut new_normal_form,));
-        }
         self.insert_normal_form(&mut new_normal_form)
     }
     fn insert_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
@@ -91,8 +87,9 @@ where
         self.update_normal_form(normal_form)
     }
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
+		try!(self.set_normal_form(normal_form));
         normal_form.add_reduces_from(self);
-        self.set_normal_form(normal_form)
+		Ok(())
     }
 }
 

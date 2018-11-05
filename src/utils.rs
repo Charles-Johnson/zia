@@ -14,15 +14,14 @@
     You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::cell::{BorrowError, BorrowMutError};
 use std::fmt;
 
 pub type ZiaResult<T> = Result<T, ZiaError>;
 
 #[derive(Debug)]
 pub enum ZiaError {
-    Borrow(BorrowError),
-    BorrowMut(BorrowMutError),
+    Borrow(String),
+    BorrowMut(String),
     Ambiguity(String),
     Redundancy(String),
     Absence(String),
@@ -30,23 +29,11 @@ pub enum ZiaError {
     Loop(String),
 }
 
-impl From<BorrowError> for ZiaError {
-    fn from(error: BorrowError) -> Self {
-        ZiaError::Borrow(error)
-    }
-}
-
-impl From<BorrowMutError> for ZiaError {
-    fn from(error: BorrowMutError) -> Self {
-        ZiaError::BorrowMut(error)
-    }
-}
-
 impl fmt::Display for ZiaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ZiaError::Borrow(ref b) => b.fmt(f),
-            ZiaError::BorrowMut(ref b) => b.fmt(f),
+            ZiaError::Borrow(ref s) => write!(f, "{}", s),
+            ZiaError::BorrowMut(ref s) => write!(f, "{}", s),
             ZiaError::Ambiguity(ref s) => write!(f, "{}", s),
             ZiaError::Redundancy(ref s) => write!(f, "{}", s),
             ZiaError::Absence(ref s) => write!(f, "{}", s),
