@@ -83,7 +83,7 @@ mod reductions {
     #[test]
     fn infinite_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(oracle("(b ->) (a b)", &mut cont), Err(ZiaError::Loop(_)),);
+        assert_matches!(oracle("(b ->) (a b)", &mut cont), Err(ZiaError::Loop(_)));
     }
     #[test]
     fn broken_end_chain() {
@@ -108,6 +108,12 @@ mod reductions {
         assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
         assert_eq!(oracle("(a ->) c", &mut cont).unwrap(), "");
         assert_eq!(oracle("a ->", &mut cont).unwrap(), "c");
+    }
+	#[test]
+    fn redundancy() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a ->) b", &mut cont).unwrap(), "");
+        assert_matches!(oracle("(a ->) b", &mut cont), Err(ZiaError::Redundancy(_)));
     }
 }
 #[cfg(test)]
@@ -159,17 +165,17 @@ mod definitions {
     fn monad_on_the_left() {
         let mut cont = Context::new().unwrap();
         assert_eq!(oracle("((x y) ->) c", &mut cont).unwrap(), "");
-        assert_matches!(oracle("((a b) :=) c", &mut cont), Err(ZiaError::Syntax(_)),);
+        assert_matches!(oracle("((a b) :=) c", &mut cont), Err(ZiaError::Syntax(_)));
     }
     #[test]
     fn fresh_refactor() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(oracle("(a :=) b", &mut cont), Err(ZiaError::Redundancy(_)),);
+        assert_matches!(oracle("(a :=) b", &mut cont), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn definition_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(oracle("(a :=) (a b)", &mut cont), Err(ZiaError::Loop(_)),);
+        assert_matches!(oracle("(a :=) (a b)", &mut cont), Err(ZiaError::Loop(_)));
     }
     #[test]
     fn remove_definition() {
