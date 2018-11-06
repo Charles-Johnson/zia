@@ -27,10 +27,7 @@ pub struct AbstractSyntaxTree {
 }
 
 impl AbstractSyntaxTree {
-    pub fn from_token_and_concept(
-		t: &Token,
-		c: &ConceptRef
-	) -> Rc<AbstractSyntaxTree> {
+    pub fn from_token_and_concept(t: &Token, c: &ConceptRef) -> Rc<AbstractSyntaxTree> {
         Rc::new(AbstractSyntaxTree {
             token: t.clone(),
             concept: Some(c.clone()),
@@ -67,17 +64,15 @@ impl AbstractSyntaxTree {
     pub fn get_concept(&self) -> Option<ConceptRef> {
         self.concept.clone()
     }
-    pub fn get_expansion(
-		&self
-	) -> Option<(Rc<AbstractSyntaxTree>, Rc<AbstractSyntaxTree>)> {
+    pub fn get_expansion(&self) -> Option<(Rc<AbstractSyntaxTree>, Rc<AbstractSyntaxTree>)> {
         self.expansion.clone()
     }
-	pub fn contains(&self, ast: &Rc<AbstractSyntaxTree>) -> bool {
+    pub fn contains(&self, ast: &Rc<AbstractSyntaxTree>) -> bool {
         if let Some((ref app, ref arg)) = self.get_expansion() {
-			app == ast || arg == ast || app.contains(ast) || arg.contains(ast)
+            app == ast || arg == ast || app.contains(ast) || arg.contains(ast)
         } else {
-			false
-		}
+            false
+        }
     }
 }
 
@@ -85,14 +80,13 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         match self.get_concept() {
             None => match self.get_expansion() {
-                Some((app, arg)) => if let (Some(appc), Some(argc)) = (
-					app.get_concept(),
-					arg.get_concept(),
-				) {
-                    Some((appc, argc))
-                } else {
-                    None
-                },
+                Some((app, arg)) => {
+                    if let (Some(appc), Some(argc)) = (app.get_concept(), arg.get_concept()) {
+                        Some((appc, argc))
+                    } else {
+                        None
+                    }
+                }
                 None => None,
             },
             Some(c) => c.get_definition(),
@@ -110,11 +104,7 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             Some(c) => c.get_argument_of(),
         }
     }
-    fn set_definition(
-		&mut self,
-		applicand: &ConceptRef,
-		argument: &ConceptRef
-	) {
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
             c.set_definition(applicand, argument)
         }
@@ -129,30 +119,29 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             c.add_argument_of(concept)
         }
     }
-	fn delete_definition(&mut self) {
-		if let Some(mut c) = self.get_concept() {
+    fn delete_definition(&mut self) {
+        if let Some(mut c) = self.get_concept() {
             c.delete_definition()
         }
-	}
+    }
     fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-		if let Some(mut c) = self.get_concept() {
+        if let Some(mut c) = self.get_concept() {
             c.delete_applicand_of(definition)
         }
-	}
+    }
     fn delete_argument_of(&mut self, definition: &ConceptRef) {
-		if let Some(mut c) = self.get_concept() {
+        if let Some(mut c) = self.get_concept() {
             c.delete_argument_of(definition)
         }
-	}
+    }
 }
 
 impl Definition<ConceptRef> for AbstractSyntaxTree {}
 
 impl PartialEq for AbstractSyntaxTree {
-	fn eq(&self, other: &Self) -> bool {
-		self.get_token() == other.get_token()
-	}
+    fn eq(&self, other: &Self) -> bool {
+        self.get_token() == other.get_token()
+    }
 }
 
-impl Eq for AbstractSyntaxTree {
-}
+impl Eq for AbstractSyntaxTree {}

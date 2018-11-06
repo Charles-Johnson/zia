@@ -17,7 +17,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use traits::{Application, Definition, Label, NormalForm, Reduction};
-use utils::{ZiaResult, ZiaError};
+use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
@@ -46,35 +46,29 @@ impl ConceptRef {
     }
     pub fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         match *self {
-            ConceptRef::Abstract(ref mut r) => r.borrow_mut()
-				.refactor_from(other),
-            ConceptRef::String(ref mut r) => r.borrow_mut()
-				.refactor_from(other),
+            ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
+            ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
         }
     }
-	pub fn check_borrow_err(&self) -> bool {
+    pub fn check_borrow_err(&self) -> bool {
         match *self {
             ConceptRef::Abstract(ref r) => r.try_borrow().is_err(),
             ConceptRef::String(ref r) => r.try_borrow().is_err(),
         }
     }
-    pub fn insert_definition(
-		&mut self,
-		applicand: &mut ConceptRef,
-		argument: &mut ConceptRef,
-	) {
+    pub fn insert_definition(&mut self, applicand: &mut ConceptRef, argument: &mut ConceptRef) {
         self.set_definition(applicand, argument);
         applicand.add_applicand_of(self);
         argument.add_argument_of(self);
     }
     pub fn remove_definition(&mut self) {
-		match self.get_definition() {
-	    	None => panic!("No definition to remove!"),
-			Some((mut app, mut arg)) => {
-				app.delete_applicand_of(self);
-				arg.delete_argument_of(self);
-				self.delete_definition();
-			},
+        match self.get_definition() {
+            None => panic!("No definition to remove!"),
+            Some((mut app, mut arg)) => {
+                app.delete_applicand_of(self);
+                arg.delete_argument_of(self);
+                self.delete_definition();
+            }
         };
     }
 }
@@ -107,62 +101,42 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref c) => c.borrow().get_definition(),
         }
     }
-    fn set_definition(
-		&mut self,
-		applicand: &ConceptRef, 
-		argument: &ConceptRef
-	) {
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(
-				applicand,
-				argument,
-			),
-            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(
-				applicand, 
-				argument,
-			),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
+            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
         }
     }
     fn add_applicand_of(&mut self, applicand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.add_applicand_of(applicand),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.add_applicand_of(applicand),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
         }
     }
     fn add_argument_of(&mut self, argument: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.add_argument_of(argument),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.add_argument_of(argument),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_argument_of(argument),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_argument_of(argument),
         }
     }
-	fn delete_definition(&mut self) {
-		match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.delete_definition(),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.delete_definition(),
+    fn delete_definition(&mut self) {
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_definition(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_definition(),
         }
-	}
+    }
     fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-		match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.delete_applicand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.delete_applicand_of(definition),
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
         }
-	}
+    }
     fn delete_argument_of(&mut self, definition: &ConceptRef) {
-		match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.delete_argument_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.delete_argument_of(definition),
+        match *self {
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_argument_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_argument_of(definition),
         }
-	}
+    }
 }
 
 impl Definition<ConceptRef> for ConceptRef {}
@@ -188,34 +162,26 @@ impl NormalForm<ConceptRef> for ConceptRef {
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.set_normal_form(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.set_normal_form(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),
         }
     }
     fn add_reduces_from(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.add_reduces_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.add_reduces_from(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_reduces_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_reduces_from(concept),
         }
     }
     fn remove_normal_form(&mut self) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.remove_normal_form(),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.remove_normal_form(),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form(),
         }
     }
     fn remove_reduces_from(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut()
-				.remove_reduces_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut()
-				.remove_reduces_from(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
         }
     }
 }
@@ -263,11 +229,7 @@ impl Application<ConceptRef> for StringConcept {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.abstract_concept.get_definition()
     }
-    fn set_definition(
-		&mut self,
-		applicand: &ConceptRef,
-		argument: &ConceptRef
-	) {
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
         self.abstract_concept.set_definition(applicand, argument);
     }
     fn add_applicand_of(&mut self, applicand: &ConceptRef) {
@@ -276,15 +238,15 @@ impl Application<ConceptRef> for StringConcept {
     fn add_argument_of(&mut self, argument: &ConceptRef) {
         self.abstract_concept.add_argument_of(argument);
     }
-	fn delete_definition(&mut self) {
-		self.abstract_concept.delete_definition();
-	}
+    fn delete_definition(&mut self) {
+        self.abstract_concept.delete_definition();
+    }
     fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-		self.abstract_concept.delete_applicand_of(definition)
+        self.abstract_concept.delete_applicand_of(definition)
     }
     fn delete_argument_of(&mut self, definition: &ConceptRef) {
-		self.abstract_concept.delete_argument_of(definition)
-	}
+        self.abstract_concept.delete_argument_of(definition)
+    }
 }
 
 impl NormalForm<ConceptRef> for StringConcept {
@@ -345,7 +307,7 @@ impl AbstractConcept {
         self.argument_of = other.get_argument_of();
         self.normal_form = try!(other.get_normal_form());
         self.reduces_from = other.get_reduces_from();
-		Ok(())
+        Ok(())
     }
 }
 
@@ -359,11 +321,7 @@ impl Application<ConceptRef> for AbstractConcept {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.definition.clone()
     }
-    fn set_definition(
-		&mut self, 
-		applicand: &ConceptRef, 
-		argument: &ConceptRef,
-	) {
+    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
         self.definition = Some((applicand.clone(), argument.clone()));
     }
     fn add_applicand_of(&mut self, applicand: &ConceptRef) {
@@ -372,15 +330,15 @@ impl Application<ConceptRef> for AbstractConcept {
     fn add_argument_of(&mut self, argument: &ConceptRef) {
         self.argument_of.push(argument.clone());
     }
-	fn delete_definition(&mut self) {
-		self.definition = None
-	}
+    fn delete_definition(&mut self) {
+        self.definition = None
+    }
     fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-		self.applicand_of.remove_item(definition);
-	}
+        self.applicand_of.remove_item(definition);
+    }
     fn delete_argument_of(&mut self, definition: &ConceptRef) {
-		self.argument_of.remove_item(definition);
-	}
+        self.argument_of.remove_item(definition);
+    }
 }
 
 impl NormalForm<ConceptRef> for AbstractConcept {
@@ -389,39 +347,37 @@ impl NormalForm<ConceptRef> for AbstractConcept {
     }
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match self.normal_form {
-			None => Ok(None),
-			Some(ref n) => {
-				if n.check_borrow_err() {
-					return Err(ZiaError::Borrow(
-						"Error while borrowing normal form".to_string()
-					));
-				}
-				match try!(n.get_normal_form()) {
-					None => Ok(Some(n.clone())),
-					Some(ref m) => Ok(Some(m.clone())),
-				}
-			},
-		}
+            None => Ok(None),
+            Some(ref n) => {
+                if n.check_borrow_err() {
+                    return Err(ZiaError::Borrow(
+                        "Error while borrowing normal form".to_string(),
+                    ));
+                }
+                match try!(n.get_normal_form()) {
+                    None => Ok(Some(n.clone())),
+                    Some(ref m) => Ok(Some(m.clone())),
+                }
+            }
+        }
     }
     fn get_reduces_from(&self) -> Vec<ConceptRef> {
-		let mut reduces_from: Vec<ConceptRef> = Vec::new();
-		for concept in self.reduces_from.clone() {
-			reduces_from.push(concept.clone());
-			for concept2 in concept.get_reduces_from() {
-				reduces_from.push(concept2);
-			}
-		}
+        let mut reduces_from: Vec<ConceptRef> = Vec::new();
+        for concept in self.reduces_from.clone() {
+            reduces_from.push(concept.clone());
+            for concept2 in concept.get_reduces_from() {
+                reduces_from.push(concept2);
+            }
+        }
         reduces_from
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-		match concept.get_normal_form() {
-			Ok(_) => (),
-			Err(_) => return Err(ZiaError::Loop(
-				"Cannot create a reduction loop".to_string()
-			)),
-		};
-		self.normal_form = Some(concept.clone());
-		Ok(())
+        match concept.get_normal_form() {
+            Ok(_) => (),
+            Err(_) => return Err(ZiaError::Loop("Cannot create a reduction loop".to_string())),
+        };
+        self.normal_form = Some(concept.clone());
+        Ok(())
     }
     fn add_reduces_from(&mut self, concept: &ConceptRef) {
         self.reduces_from.push(concept.clone());

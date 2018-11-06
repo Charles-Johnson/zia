@@ -49,10 +49,7 @@ impl Context {
         match ast.get_expansion() {
             Some((app, arg)) => if let Some(c) = arg.get_concept() {
                 match c.get_id() {
-                    REDUCTION => Ok(
-						try!(self.recursively_reduce(&app)).get_token()
-							.as_string()
-					),
+                    REDUCTION => Ok(try!(self.recursively_reduce(&app)).get_token().as_string()),
                     DEFINE => Ok(try!(self.expand_ast_token(&app)).as_string()),
                     _ => self.call_as_applicand(&app, &arg),
                 }
@@ -73,37 +70,33 @@ impl Context {
             Some((ap, ar)) => if let Some(arc) = ar.get_concept() {
                 match arc.get_id() {
                     REDUCTION => if arg.contains(&ap) {
-						Err(ZiaError::Loop(
-							"Reduction rule is infinite".to_string()
-						))
-					} else if arg.get_token() == ap.get_token() {
-						if let Some(mut c) = arg.get_concept() {
-							try!(c.delete_normal_form());
-							Ok("".to_string())
-						} else {
-							Err(ZiaError::Redundancy("Removing the normal form \
-								a symbol that was never previously used is \
-								redundant".to_string(),
-        					))
-						}
-					} else {	
-                    	try!(
-                        	try!(self.concept_from_ast(&ap))
-                        	    .update_normal_form(
-									&mut try!(self.concept_from_ast(arg))
-								)
-                    	);
-                    	Ok("".to_string())
-					}
+                        Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
+                    } else if arg.get_token() == ap.get_token() {
+                        if let Some(mut c) = arg.get_concept() {
+                            try!(c.delete_normal_form());
+                            Ok("".to_string())
+                        } else {
+                            Err(ZiaError::Redundancy(
+                                "Removing the normal form \
+                                 a symbol that was never previously used is \
+                                 redundant"
+                                    .to_string(),
+                            ))
+                        }
+                    } else {
+                        try!(
+                            try!(self.concept_from_ast(&ap))
+                                .update_normal_form(&mut try!(self.concept_from_ast(arg)))
+                        );
+                        Ok("".to_string())
+                    },
                     DEFINE => {
-						if arg.contains(&ap) {
-							Err(ZiaError::Loop(
-								"Definition is infinite".to_string()
-							))
-						} else {
-                        	try!(self.define(arg, &ap));
-                        	Ok("".to_string())
-						}
+                        if arg.contains(&ap) {
+                            Err(ZiaError::Loop("Definition is infinite".to_string()))
+                        } else {
+                            try!(self.define(arg, &ap));
+                            Ok("".to_string())
+                        }
                     }
                     _ => Err(ZiaError::Absence(
                         "This concept is not a program".to_string(),
@@ -125,12 +118,12 @@ impl Context {
         after: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
-			if before.get_token() == after.get_token() {
-				before_c.remove_definition();
-				Ok(())
-			} else {
-            	self.define2(&mut before_c, after)
-			}
+            if before.get_token() == after.get_token() {
+                before_c.remove_definition();
+                Ok(())
+            } else {
+                self.define2(&mut before_c, after)
+            }
         } else if let Some((app, arg)) = before.get_expansion() {
             if let Some(mut after_c) = after.get_concept() {
                 if let Some((mut ap, mut ar)) = after_c.get_definition() {
@@ -141,7 +134,7 @@ impl Context {
                         &mut try!(self.concept_from_ast(&app)),
                         &mut try!(self.concept_from_ast(&arg)),
                     );
-					Ok(())
+                    Ok(())
                 }
             } else {
                 try!(self.concept_from_ast(&try!(AbstractSyntaxTree::from_monad(
@@ -152,8 +145,10 @@ impl Context {
                 Ok(())
             }
         } else {
-            return Err(ZiaError::Redundancy("Refactoring a symbol that was \
-				never previously used is redundant".to_string(),
+            return Err(ZiaError::Redundancy(
+                "Refactoring a symbol that was \
+                 never previously used is redundant"
+                    .to_string(),
             ));
         }
     }
@@ -161,7 +156,7 @@ impl Context {
         &mut self,
         before_c: &mut ConceptRef,
         after: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<()> { 
+    ) -> ZiaResult<()> {
         if let Some(mut after_c) = after.get_concept() {
             self.refactor(before_c, &mut after_c)
         } else {
@@ -176,22 +171,19 @@ impl Context {
             }
         }
     }
-    fn concept_from_ast(
-		&mut self,
-		ast: &Rc<AbstractSyntaxTree>
-	) -> ZiaResult<ConceptRef> {
+    fn concept_from_ast(&mut self, ast: &Rc<AbstractSyntaxTree>) -> ZiaResult<ConceptRef> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
-			let mut c = match ast.get_token() {
-				Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
-				Token::Expression(_) => self.new_abstract(),
-			};
-			if let Some((mut app, mut arg)) = ast.get_expansion() {
-				let mut appc = try!(self.concept_from_ast(&app));
-            	let mut argc = try!(self.concept_from_ast(&arg));
-				c.insert_definition(&mut appc, &mut argc);
-			}
+            let mut c = match ast.get_token() {
+                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
+                Token::Expression(_) => self.new_abstract(),
+            };
+            if let Some((mut app, mut arg)) = ast.get_expansion() {
+                let mut appc = try!(self.concept_from_ast(&app));
+                let mut argc = try!(self.concept_from_ast(&arg));
+                c.insert_definition(&mut appc, &mut argc);
+            }
             Ok(c)
         }
     }
@@ -200,15 +192,9 @@ impl Context {
         try!(self.label(&mut new_abstract, string));
         Ok(new_abstract)
     }
-    fn label(
-		&mut self,
-		concept: &mut ConceptRef,
-		string: &str
-	) -> ZiaResult<()> {
+    fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
         let mut concepts = self.concepts.clone();
-        let mut definition = try!(
-			self.insert_definition(&mut concepts[LABEL], concept)
-		);
+        let mut definition = try!(self.insert_definition(&mut concepts[LABEL], concept));
         let string_ref = self.new_string(string);
         definition.insert_reduction(&mut ConceptRef::String(string_ref))
     }
@@ -244,10 +230,7 @@ impl Context {
     fn assign_new_id(&self) -> usize {
         self.concepts.len()
     }
-    pub fn ast_from_expression(
-		&mut self, 
-		s: &str
-	) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::Syntax(
@@ -256,14 +239,12 @@ impl Context {
             1 => self.ast_from_atom(&tokens[0]),
             2 => {
                 let parsed_tokens = parse_tokens(&tokens);
-                self.ast_from_monad(
-					parsed_tokens[0].clone(),
-					parsed_tokens[1].clone(),
-				)
+                self.ast_from_monad(parsed_tokens[0].clone(), parsed_tokens[1].clone())
             }
             _ => Err(ZiaError::Syntax(
-				"Expression composed of more than 2 tokens has not been \
-					implemented yet".to_string(),
+                "Expression composed of more than 2 tokens has not been \
+                 implemented yet"
+                    .to_string(),
             )),
         }
     }
@@ -283,19 +264,12 @@ impl Context {
             Some(c) => c.borrow().get_labellee(),
         }
     }
-    fn ast_from_monad(
-		&mut self, 
-		app: Token, 
-		arg: Token
-	) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let applicand = try!(self.ast_from_token(&app));
         let argument = try!(self.ast_from_token(&arg));
         AbstractSyntaxTree::from_monad(app + arg, &applicand, &argument)
     }
-    fn ast_from_token(
-		&mut self, 
-		t: &Token
-	) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         match *t {
             Token::Atom(ref s) => self.ast_from_atom(s),
             Token::Expression(ref s) => self.ast_from_expression(s),
@@ -327,10 +301,7 @@ impl Context {
             },
         }
     }
-    fn reduce_concept(
-		&mut self, 
-		c: &ConceptRef
-	) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
+    fn reduce_concept(&mut self, c: &ConceptRef) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
         match try!(c.get_normal_form()) {
             None => match c.get_definition() {
                 Some((mut app, mut arg)) => {
@@ -348,7 +319,7 @@ impl Context {
             Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
         }
     }
-    // Quite an ugly static method that I made to save myself from having to 
+    // Quite an ugly static method that I made to save myself from having to
     // write the same pattern twice in reduce and reduce_concept methods.
     fn match_app_arg(
         app: Option<Rc<AbstractSyntaxTree>>,
@@ -358,49 +329,34 @@ impl Context {
     ) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
         match (app, arg) {
             (None, None) => Ok(None),
-            (Some(new_app), None) => Ok(Some(try!(
-				AbstractSyntaxTree::from_monad(
-	                new_app.get_token() + original_app.get_token(),
-	                &new_app,
-	                &original_arg,
-				)
-            ))),
-            (None, Some(new_arg)) => Ok(Some(try!(
-				AbstractSyntaxTree::from_monad(
-	                original_app.get_token() + new_arg.get_token(),
-	                &original_app,
-	                &new_arg,
-				)
-            ))),
-            (Some(new_app), Some(new_arg)) => Ok(Some(try!(
-				AbstractSyntaxTree::from_monad(
-	                new_app.get_token() + new_arg.get_token(),
-	                &new_app,
-	                &new_arg,	
-				)
-            ))),
+            (Some(new_app), None) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
+                new_app.get_token() + original_app.get_token(),
+                &new_app,
+                &original_arg,
+            )))),
+            (None, Some(new_arg)) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
+                original_app.get_token() + new_arg.get_token(),
+                &original_app,
+                &new_arg,
+            )))),
+            (Some(new_app), Some(new_arg)) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
+                new_app.get_token() + new_arg.get_token(),
+                &new_app,
+                &new_arg,
+            )))),
         }
     }
-    fn ast_from_concept(
-		&self, 
-		c: &ConceptRef
-	) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         Ok(AbstractSyntaxTree::from_token_and_concept(
             &try!(self.get_token(c)),
             c,
         ))
     }
-    fn expand_ast_token(
-		&self, 
-		ast: &Rc<AbstractSyntaxTree>
-	) -> ZiaResult<Token> {
+    fn expand_ast_token(&self, ast: &Rc<AbstractSyntaxTree>) -> ZiaResult<Token> {
         if let Some(con) = ast.get_concept() {
             self.expand_as_token(&con)
         } else if let Some((app2, arg2)) = ast.get_expansion() {
-            Ok(
-				try!(self.expand_ast_token(&app2)) +
-				try!(self.expand_ast_token(&arg2))
-			)
+            Ok(try!(self.expand_ast_token(&app2)) + try!(self.expand_ast_token(&arg2)))
         } else {
             Ok(ast.get_token())
         }
@@ -422,10 +378,7 @@ impl Context {
             Some(s) => Ok(Token::Atom(s)),
         }
     }
-    fn join_tokens(&self, 
-		app: &ConceptRef,
-		arg: &ConceptRef
-	) -> ZiaResult<Token> {
+    fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
         Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
     }
     fn get_label(&self, c: &ConceptRef) -> ZiaResult<Option<String>> {
@@ -440,11 +393,7 @@ impl Context {
             },
         })
     }
-    fn refactor(
-		&mut self,
-		before: &mut ConceptRef,
-		after: &mut ConceptRef
-	) -> ZiaResult<()> {
+    fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         try!(self.unlabel(before));
         self.refactor_id(before, after)
     }
@@ -454,18 +403,14 @@ impl Context {
             Some(mut d) => d.delete_normal_form(),
         }
     }
-    fn refactor_id(
-		&mut self,
-	 	before: &mut ConceptRef, 
-		after: &mut ConceptRef
-	) -> ZiaResult<()> {
+    fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         if self.concepts.len() > before.get_id() {
             try!(after.refactor_from(before));
             self.concepts.remove(before.get_id());
             for id in before.get_id()..self.concepts.len() {
                 self.concepts[id].set_id(id);
             }
-			Ok(())
+            Ok(())
         } else {
             panic!("refactoring id has gone wrong!")
         }

@@ -36,8 +36,8 @@ where
     fn find_definition(&self, argument: &T) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
         for candidate in self.get_applicand_of() {
-			let has_argument = argument.get_argument_of().contains(&candidate);
-			let new_candidate = !candidates.contains(&candidate); 
+            let has_argument = argument.get_argument_of().contains(&candidate);
+            let new_candidate = !candidates.contains(&candidate);
             if has_argument && new_candidate {
                 candidates.push(candidate);
             }
@@ -47,7 +47,8 @@ where
             1 => Ok(Some(candidates[0].clone())),
             _ => Err(ZiaError::Ambiguity(
                 "Multiple definitions with the same applicand and argument pair 
-				exist.".to_string(),
+				exist."
+                    .to_string(),
             )),
         }
     }
@@ -74,9 +75,7 @@ where
             Some(n) => if n.get_id() != self.get_id() {
                 new_normal_form = n.clone()
             } else {
-                return Err(ZiaError::Loop(
-					"Cannot create a reduction loop".to_string()
-				));
+                return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
             },
         };
         self.insert_normal_form(&mut new_normal_form)
@@ -92,9 +91,9 @@ where
         self.update_normal_form(normal_form)
     }
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-		try!(self.set_normal_form(normal_form));
+        try!(self.set_normal_form(normal_form));
         normal_form.add_reduces_from(self);
-		Ok(())
+        Ok(())
     }
 }
 
@@ -118,8 +117,7 @@ where
             0 => Ok(None),
             1 => Ok(Some(candidates[0].clone())),
             _ => Err(ZiaError::Ambiguity(
-                "Multiple concepts are labelled with the same string"
-				.to_string(),
+                "Multiple concepts are labelled with the same string".to_string(),
             )),
         }
     }

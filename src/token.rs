@@ -124,12 +124,7 @@ fn parse_letter(
     };
 }
 
-fn push_token(
-	letter: char,
-	parenthesis_level: i8, 
-	token: &mut String, 
-	tokens: &mut Vec<String>
-) {
+fn push_token(letter: char, parenthesis_level: i8, token: &mut String, tokens: &mut Vec<String>) {
     if (token != "") & (parenthesis_level == 0) {
         tokens.push(token.clone());
         *token = String::new();
