@@ -184,4 +184,10 @@ mod definitions {
         assert_eq!(oracle("(a :=) a", &mut cont).unwrap(), "");
         assert_eq!(oracle("a :=", &mut cont).unwrap(), "a");
     }
+	#[test]
+    fn redundancy() {
+        let mut cont = Context::new().unwrap();
+        assert_eq!(oracle("(a :=) (b c)", &mut cont).unwrap(), "");
+        assert_matches!(oracle("(a :=) (b c)", &mut cont), Err(ZiaError::Redundancy(_)));
+    }
 }
