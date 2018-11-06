@@ -196,6 +196,8 @@ impl PartialEq for ConceptRef {
     }
 }
 
+impl Eq for ConceptRef {}
+
 pub struct StringConcept {
     abstract_concept: AbstractConcept,
     string: String,
@@ -372,10 +374,16 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         reduces_from
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-        match concept.get_normal_form() {
-            Ok(_) => (),
-            Err(_) => return Err(ZiaError::Loop("Cannot create a reduction loop".to_string())),
-        };
+        if let Err(_) = concept.get_normal_form() {
+            return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
+        }
+		if let Some(ref n) = try!(self.get_normal_form()) {
+			if n.get_id() == concept.get_id() {
+				return Err(ZiaError::Redundancy(
+					"Concept already has this normal form.".to_string(),
+				));	
+			}
+		}
         self.normal_form = Some(concept.clone());
         Ok(())
     }

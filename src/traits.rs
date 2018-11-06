@@ -68,28 +68,6 @@ pub trait Reduction
 where
     Self: NormalForm<Self> + Clone,
 {
-    fn insert_reduction(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        let mut new_normal_form = normal_form.clone();
-        match try!(normal_form.get_normal_form()) {
-            None => (),
-            Some(n) => if n.get_id() != self.get_id() {
-                new_normal_form = n.clone()
-            } else {
-                return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
-            },
-        };
-        self.insert_normal_form(&mut new_normal_form)
-    }
-    fn insert_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        for reduces_from_item in normal_form.get_reduces_from() {
-            if reduces_from_item.get_id() == self.get_id() {
-                return Err(ZiaError::Redundancy(
-                    "Normal form already reduces from this concept".to_string(),
-                ));
-            }
-        }
-        self.update_normal_form(normal_form)
-    }
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         try!(self.set_normal_form(normal_form));
         normal_form.add_reduces_from(self);

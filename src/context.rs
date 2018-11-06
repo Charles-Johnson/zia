@@ -77,9 +77,8 @@ impl Context {
                             Ok("".to_string())
                         } else {
                             Err(ZiaError::Redundancy(
-                                "Removing the normal form \
-                                 a symbol that was never previously used is \
-                                 redundant"
+                                "Removing the normal form a symbol that was never previously used \
+								is redundant"
                                     .to_string(),
                             ))
                         }
@@ -146,8 +145,7 @@ impl Context {
             }
         } else {
             return Err(ZiaError::Redundancy(
-                "Refactoring a symbol that was \
-                 never previously used is redundant"
+                "Refactoring a symbol that was never previously used is redundant"
                     .to_string(),
             ));
         }
@@ -196,7 +194,7 @@ impl Context {
         let mut concepts = self.concepts.clone();
         let mut definition = try!(self.insert_definition(&mut concepts[LABEL], concept));
         let string_ref = self.new_string(string);
-        definition.insert_reduction(&mut ConceptRef::String(string_ref))
+        definition.update_normal_form(&mut ConceptRef::String(string_ref))
     }
     fn insert_definition(
         &mut self,
@@ -242,8 +240,7 @@ impl Context {
                 self.ast_from_monad(parsed_tokens[0].clone(), parsed_tokens[1].clone())
             }
             _ => Err(ZiaError::Syntax(
-                "Expression composed of more than 2 tokens has not been \
-                 implemented yet"
+                "Expression composed of more than 2 tokens has not been implemented yet"
                     .to_string(),
             )),
         }
