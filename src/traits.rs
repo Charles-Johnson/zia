@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
 use utils::{ZiaError, ZiaResult};
@@ -36,7 +36,9 @@ where
     fn find_definition(&self, argument: &T) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
         for candidate in self.get_applicand_of() {
-            if argument.get_argument_of().contains(&candidate) && !candidates.contains(&candidate) {
+			let has_argument = argument.get_argument_of().contains(&candidate);
+			let new_candidate = !candidates.contains(&candidate); 
+            if has_argument && new_candidate {
                 candidates.push(candidate);
             }
         }
@@ -44,7 +46,8 @@ where
             0 => Ok(None),
             1 => Ok(Some(candidates[0].clone())),
             _ => Err(ZiaError::Ambiguity(
-                "Multiple definitions with the same applicand and argument pair exist.".to_string(),
+                "Multiple definitions with the same applicand and argument pair 
+				exist.".to_string(),
             )),
         }
     }
@@ -71,7 +74,9 @@ where
             Some(n) => if n.get_id() != self.get_id() {
                 new_normal_form = n.clone()
             } else {
-                return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
+                return Err(ZiaError::Loop(
+					"Cannot create a reduction loop".to_string()
+				));
             },
         };
         self.insert_normal_form(&mut new_normal_form)
@@ -113,7 +118,8 @@ where
             0 => Ok(None),
             1 => Ok(Some(candidates[0].clone())),
             _ => Err(ZiaError::Ambiguity(
-                "Multiple concepts are labelled with the same string".to_string(),
+                "Multiple concepts are labelled with the same string"
+				.to_string(),
             )),
         }
     }
