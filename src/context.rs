@@ -67,11 +67,11 @@ impl Context {
         arg: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<String> {
         match app.get_expansion() {
-            Some((ap, ar)) => if let Some(arc) = ar.get_concept() {
+            Some((ref ap, ref ar)) => if let Some(arc) = ar.get_concept() {
                 match arc.get_id() {
                     REDUCTION => if arg.contains(&ap) {
                         Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
-                    } else if arg.get_token() == ap.get_token() {
+                    } else if arg == ap {
                         if let Some(mut c) = arg.get_concept() {
                             try!(c.delete_normal_form());
                             Ok("".to_string())
@@ -117,7 +117,7 @@ impl Context {
         after: &Rc<AbstractSyntaxTree>,
     ) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
-            if before.get_token() == after.get_token() {
+            if before == after {
                 before_c.remove_definition();
                 Ok(())
             } else {

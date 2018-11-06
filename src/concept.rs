@@ -304,6 +304,9 @@ impl AbstractConcept {
         self.id = number;
     }
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+		if other.check_borrow_err() {
+			return Err(ZiaError::Redundancy("Concept already has this definition".to_string()));
+		}
         self.definition = other.get_definition();
         self.applicand_of = other.get_applicand_of();
         self.argument_of = other.get_argument_of();
