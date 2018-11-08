@@ -70,7 +70,7 @@ impl fmt::Display for ConceptRef {
             f,
             "{}",
             match *self {
-                ConceptRef::String(ref s) => s.borrow().get_string(),
+                ConceptRef::String(ref s) => s.borrow().to_string(),
                 _ => "".to_string(),
             },
         )
@@ -282,6 +282,16 @@ impl NormalForm<ConceptRef> for StringConcept {
 }
 
 impl Label<ConceptRef> for StringConcept {}
+
+impl fmt::Display for StringConcept {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.string
+        )
+    }
+}
 
 pub struct AbstractConcept {
     id: usize,

@@ -214,20 +214,23 @@ impl Context {
     }
     fn new_abstract(&mut self) -> ConceptRef {
         let new_id = self.assign_new_id();
-        let concept_ref = AbstractConcept::new_ref(new_id);
-        self.add_concept(ConceptRef::Abstract(concept_ref));
-        self.concepts[new_id].clone()
+		let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
+        self.add_concept(&concept_ref);
+        concept_ref
     }
     fn new_string(&mut self, string: &str) -> StringRef {
         let new_id = self.assign_new_id();
         let string_ref = StringConcept::new_ref(new_id, string);
-        self.string_map
-            .insert(string.to_string(), string_ref.clone());
-        self.add_concept(ConceptRef::String(string_ref.clone()));
+        self.add_string(&string_ref);
+        self.add_concept(&ConceptRef::String(string_ref.clone()));
         string_ref
     }
 	fn add_concept(&mut self, concept: &ConceptRef) {
-		self.concepts.push(concept)
+		self.concepts.push(concept.clone())
+	}
+	fn add_string(&mut self, string_ref: &StringRef) {
+		self.string_map
+            .insert(string_ref.borrow().to_string(), string_ref.clone());
 	}
     fn assign_new_id(&self) -> usize {
         self.concepts.len()
