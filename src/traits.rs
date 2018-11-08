@@ -115,3 +115,28 @@ pub trait Labeller<T: NormalForm<T> + fmt::Display>
         })
 	}
 }
+
+pub trait Unlabeller<T:NormalForm<T> + DeleteNormalForm + fmt::Display> where Self: Labeller<T> {
+	fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
+        match try!(self.get_label_concept(concept)) {
+            None => Ok(()),
+            Some(mut d) => d.delete_normal_form(),
+        }
+    }
+}
+
+pub trait DeleteNormalForm
+where
+	Self: NormalForm<Self> + Clone,
+{
+	fn delete_normal_form(&mut self) -> ZiaResult<()> {
+		match try!(self.get_normal_form()) {
+            None => (),
+            Some(mut n) => {
+                n.remove_reduces_from(self);
+                self.remove_normal_form();
+            }
+        };
+        Ok(())
+	}
+}

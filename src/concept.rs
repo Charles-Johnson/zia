@@ -17,7 +17,7 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{Application, Definition, Label, NormalForm, Reduction};
+use traits::{Application, Definition, DeleteNormalForm, Label, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
@@ -34,16 +34,6 @@ impl ConceptRef {
             ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
             ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
         }
-    }
-    pub fn delete_normal_form(&mut self) -> ZiaResult<()> {
-        match try!(self.get_normal_form()) {
-            None => (),
-            Some(mut n) => {
-                n.remove_reduces_from(self);
-                self.remove_normal_form();
-            }
-        };
-        Ok(())
     }
     pub fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         match *self {
@@ -201,6 +191,8 @@ impl NormalForm<ConceptRef> for ConceptRef {
 }
 
 impl Reduction for ConceptRef {}
+
+impl DeleteNormalForm for ConceptRef {}
 
 impl Label<ConceptRef> for ConceptRef {}
 

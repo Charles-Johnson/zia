@@ -20,7 +20,7 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
-use traits::{Application, Definition, Label, Labeller, NormalForm, Reduction};
+use traits::{Application, Definition, DeleteNormalForm, Label, Labeller, Unlabeller, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
@@ -382,12 +382,6 @@ impl Context {
         try!(self.unlabel(before));
         self.refactor_id(before, after)
     }
-    fn unlabel(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-        match try!(self.get_label_concept(concept)) {
-            None => Ok(()),
-            Some(mut d) => d.delete_normal_form(),
-        }
-    }
     fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         if self.concepts.len() > before.get_id() {
             try!(after.refactor_from(before));
@@ -407,6 +401,8 @@ impl Labeller<ConceptRef> for Context {
 		self.concepts[LABEL].find_definition(concept)
 	}
 }
+
+impl Unlabeller<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {
