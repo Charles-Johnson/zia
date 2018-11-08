@@ -18,16 +18,42 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
-pub trait Application<T> {
-    fn get_applicand_of(&self) -> Vec<T>;
-    fn get_argument_of(&self) -> Vec<T>;
-    fn get_definition(&self) -> Option<(T, T)>;
-    fn set_definition(&mut self, &T, &T);
-    fn add_applicand_of(&mut self, &T);
-    fn add_argument_of(&mut self, &T);
-    fn delete_definition(&mut self);
-    fn delete_applicand_of(&mut self, &T);
-    fn delete_argument_of(&mut self, &T);
+pub trait Unlabeller<
+    T: NormalForm<T>
+        + Definition<T>
+        + Application<T>
+        + Clone
+        + PartialEq
+        + DeleteNormalForm
+        + fmt::Display,
+> where
+    Self: LabelGetter<T>,
+{
+    fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
+        match try!(self.get_concept_of_label(concept)) {
+            None => Ok(()),
+            Some(mut d) => d.delete_normal_form(),
+        }
+    }
+}
+
+pub trait LabelGetter<
+    T: NormalForm<T> + Definition<T> + Application<T> + Clone + PartialEq + fmt::Display,
+>
+{
+    fn get_label_concept(&self) -> T;
+    fn get_concept_of_label(&self, concept: &T) -> ZiaResult<Option<T>> {
+        self.get_label_concept().find_definition(concept)
+    }
+    fn get_label(&self, concept: &T) -> ZiaResult<Option<String>> {
+        Ok(match try!(self.get_concept_of_label(concept)) {
+            None => None,
+            Some(d) => match try!(d.get_normal_form()) {
+                None => None,
+                Some(n) => Some(n.to_string()),
+            },
+        })
+    }
 }
 
 pub trait Definition<T: Application<T> + Clone + PartialEq>
@@ -52,27 +78,6 @@ where
                     .to_string(),
             )),
         }
-    }
-}
-
-pub trait NormalForm<T> {
-    fn get_id(&self) -> usize;
-    fn get_normal_form(&self) -> ZiaResult<Option<T>>;
-    fn get_reduces_from(&self) -> Vec<T>;
-    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
-    fn add_reduces_from(&mut self, &T);
-    fn remove_normal_form(&mut self);
-    fn remove_reduces_from(&mut self, &T);
-}
-
-pub trait Reduction
-where
-    Self: NormalForm<Self> + Clone,
-{
-    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        try!(self.set_normal_form(normal_form));
-        normal_form.add_reduces_from(self);
-        Ok(())
     }
 }
 
@@ -102,35 +107,35 @@ where
     }
 }
 
-pub trait LabelGetter<T: NormalForm<T> + fmt::Display> 
-{
-	fn get_label_concept(&self, &T) -> ZiaResult<Option<T>>;
-	fn get_label(&self, concept: &T) -> ZiaResult<Option<String>> {
-		Ok(match try!(self.get_label_concept(concept)) {
-            None => None,
-            Some(d) => match try!(d.get_normal_form()) {
-                None => None,
-                Some(n) => Some(n.to_string()),
-            },
-        })
-	}
+pub trait Application<T> {
+    fn get_applicand_of(&self) -> Vec<T>;
+    fn get_argument_of(&self) -> Vec<T>;
+    fn get_definition(&self) -> Option<(T, T)>;
+    fn set_definition(&mut self, &T, &T);
+    fn add_applicand_of(&mut self, &T);
+    fn add_argument_of(&mut self, &T);
+    fn delete_definition(&mut self);
+    fn delete_applicand_of(&mut self, &T);
+    fn delete_argument_of(&mut self, &T);
 }
 
-pub trait Unlabeller<T:NormalForm<T> + DeleteNormalForm + fmt::Display> where Self: LabelGetter<T> {
-	fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
-        match try!(self.get_label_concept(concept)) {
-            None => Ok(()),
-            Some(mut d) => d.delete_normal_form(),
-        }
+pub trait Reduction
+where
+    Self: NormalForm<Self> + Clone,
+{
+    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
+        try!(self.set_normal_form(normal_form));
+        normal_form.add_reduces_from(self);
+        Ok(())
     }
 }
 
 pub trait DeleteNormalForm
 where
-	Self: NormalForm<Self> + Clone,
+    Self: NormalForm<Self> + Clone,
 {
-	fn delete_normal_form(&mut self) -> ZiaResult<()> {
-		match try!(self.get_normal_form()) {
+    fn delete_normal_form(&mut self) -> ZiaResult<()> {
+        match try!(self.get_normal_form()) {
             None => (),
             Some(mut n) => {
                 n.remove_reduces_from(self);
@@ -138,5 +143,15 @@ where
             }
         };
         Ok(())
-	}
+    }
+}
+
+pub trait NormalForm<T> {
+    fn get_id(&self) -> usize;
+    fn get_normal_form(&self) -> ZiaResult<Option<T>>;
+    fn get_reduces_from(&self) -> Vec<T>;
+    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
+    fn add_reduces_from(&mut self, &T);
+    fn remove_normal_form(&mut self);
+    fn remove_reduces_from(&mut self, &T);
 }

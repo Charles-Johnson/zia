@@ -20,7 +20,10 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
-use traits::{Application, Definition, DeleteNormalForm, Label, LabelGetter, Unlabeller, NormalForm, Reduction};
+use traits::{
+    Application, Definition, DeleteNormalForm, Label, LabelGetter, NormalForm, Reduction,
+    Unlabeller,
+};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
@@ -39,11 +42,10 @@ impl Context {
     }
     fn setup(&mut self) -> ZiaResult<()> {
         self.new_abstract(); // for LABEL
-        self.new_abstract(); // for DEFINE
-        self.new_abstract(); // for REDUCTION
-        let mut concepts = self.concepts.clone();
-        try!(self.label(&mut concepts[DEFINE], ":=")); //two more ids occupied
-        self.label(&mut concepts[REDUCTION], "->") //two more ids occupied
+		let mut define_concept = self.new_abstract(); // for DEFINE;
+        let mut reduction_concept = self.new_abstract(); // for REDUCTION
+        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
+        self.label(&mut reduction_concept, "->") //two more ids occupied
     }
     pub fn call(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<String> {
         match ast.get_expansion() {
@@ -78,7 +80,7 @@ impl Context {
                         } else {
                             Err(ZiaError::Redundancy(
                                 "Removing the normal form a symbol that was never previously used \
-								is redundant"
+                                 is redundant"
                                     .to_string(),
                             ))
                         }
@@ -145,8 +147,7 @@ impl Context {
             }
         } else {
             return Err(ZiaError::Redundancy(
-                "Refactoring a symbol that was never previously used is redundant"
-                    .to_string(),
+                "Refactoring a symbol that was never previously used is redundant".to_string(),
             ));
         }
     }
@@ -191,8 +192,8 @@ impl Context {
         Ok(new_abstract)
     }
     fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
-        let mut concepts = self.concepts.clone();
-        let mut definition = try!(self.insert_definition(&mut concepts[LABEL], concept));
+		let mut label_concept = self.get_label_concept();
+        let mut definition = try!(self.insert_definition(&mut label_concept, concept));
         let string_ref = self.new_string(string);
         definition.update_normal_form(&mut ConceptRef::String(string_ref))
     }
@@ -397,9 +398,9 @@ impl Context {
 }
 
 impl LabelGetter<ConceptRef> for Context {
-	fn get_label_concept(&self, concept: &ConceptRef) -> ZiaResult<Option<ConceptRef>> {
-		self.concepts[LABEL].find_definition(concept)
-	}
+    fn get_label_concept(&self) -> ConceptRef {
+        self.concepts[LABEL].clone()
+    }
 }
 
 impl Unlabeller<ConceptRef> for Context {}

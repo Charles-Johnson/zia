@@ -65,16 +65,16 @@ impl ConceptRef {
 }
 
 impl fmt::Display for ConceptRef {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(
-			f,
-		 	"{}",
-			match *self {
-            	ConceptRef::String(ref s) => s.borrow().get_string(),
-           		_ => "".to_string(),
-        	},
-	 	)
-	}
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                ConceptRef::String(ref s) => s.borrow().get_string(),
+                _ => "".to_string(),
+            },
+        )
+    }
 }
 
 impl Clone for ConceptRef {
@@ -310,11 +310,13 @@ impl AbstractConcept {
         self.id = number;
     }
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-		// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-		// then borrowing `other` will panic because `other` is already mutably borrowed. 
-		if other.check_borrow_err() {
-			return Err(ZiaError::Redundancy("Concept already has this definition".to_string()));
-		}
+        // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+        // then borrowing `other` will panic because `other` is already mutably borrowed.
+        if other.check_borrow_err() {
+            return Err(ZiaError::Redundancy(
+                "Concept already has this definition".to_string(),
+            ));
+        }
         self.definition = other.get_definition();
         self.applicand_of = other.get_applicand_of();
         self.argument_of = other.get_argument_of();
@@ -385,18 +387,18 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         reduces_from
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-		// If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will 
-		// raise an error due to borrowing self which has already been mutably borrowed.
+        // If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will
+        // raise an error due to borrowing self which has already been mutably borrowed.
         if let Err(_) = concept.get_normal_form() {
             return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
         }
-		if let Some(ref n) = try!(self.get_normal_form()) {
-			if n == concept {
-				return Err(ZiaError::Redundancy(
-					"Concept already has this normal form.".to_string(),
-				));	
-			}
-		}
+        if let Some(ref n) = try!(self.get_normal_form()) {
+            if n == concept {
+                return Err(ZiaError::Redundancy(
+                    "Concept already has this normal form.".to_string(),
+                ));
+            }
+        }
         self.normal_form = Some(concept.clone());
         Ok(())
     }
