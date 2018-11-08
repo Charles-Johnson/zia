@@ -327,7 +327,7 @@ impl Context {
         match (app, arg) {
             (None, None) => Ok(None),
             (Some(new_app), None) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
-                new_app.get_token() + original_app.get_token(),
+                new_app.get_token() + original_arg.get_token(),
                 &new_app,
                 &original_arg,
             )))),
