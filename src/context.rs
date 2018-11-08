@@ -213,13 +213,13 @@ impl Context {
         }
     }
     fn new_abstract(&mut self) -> ConceptRef {
-        let new_id = self.assign_new_id();
+        let new_id = self.number_of_concepts();
 		let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
         self.add_concept(&concept_ref);
         concept_ref
     }
     fn new_string(&mut self, string: &str) -> StringRef {
-        let new_id = self.assign_new_id();
+        let new_id = self.number_of_concepts();
         let string_ref = StringConcept::new_ref(new_id, string);
         self.add_string(&string_ref);
         self.add_concept(&ConceptRef::String(string_ref.clone()));
@@ -232,7 +232,7 @@ impl Context {
 		self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
 	}
-    fn assign_new_id(&self) -> usize {
+    fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
     pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<Rc<AbstractSyntaxTree>> {
@@ -263,11 +263,14 @@ impl Context {
         }
     }
     fn concept_from_label(&self, s: &str) -> ZiaResult<Option<ConceptRef>> {
-        match self.string_map.get(s) {
+        match self.get_string_concept(s) {
             None => Ok(None),
             Some(c) => c.borrow().get_labellee(),
         }
     }
+	fn get_string_concept(&self, s: &str) -> Option<&StringRef> {
+		self.string_map.get(s)
+	}
     fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let applicand = try!(self.ast_from_token(&app));
         let argument = try!(self.ast_from_token(&arg));
@@ -390,17 +393,23 @@ impl Context {
         self.refactor_id(before, after)
     }
     fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
-        if self.concepts.len() > before.get_id() {
+        if self.number_of_concepts() > before.get_id() {
             try!(after.refactor_from(before));
-            self.concepts.remove(before.get_id());
-            for id in before.get_id()..self.concepts.len() {
-                self.concepts[id].set_id(id);
+            self.remove_concept(before);
+            for id in before.get_id()..self.number_of_concepts() {
+                self.correct_id(id);
             }
             Ok(())
         } else {
             panic!("refactoring id has gone wrong!")
         }
     }
+	fn correct_id(&mut self, id: usize) {
+		self.concepts[id].set_id(id);
+	}
+	fn remove_concept(&mut self, concept: &ConceptRef) {
+		self.concepts.remove(concept.get_id());
+	}
 }
 
 impl LabelGetter<ConceptRef> for Context {
