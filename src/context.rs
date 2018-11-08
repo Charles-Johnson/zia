@@ -20,7 +20,7 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
-use traits::{Application, Definition, DeleteNormalForm, Label, Labeller, Unlabeller, NormalForm, Reduction};
+use traits::{Application, Definition, DeleteNormalForm, Label, LabelGetter, Unlabeller, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
@@ -396,7 +396,7 @@ impl Context {
     }
 }
 
-impl Labeller<ConceptRef> for Context {
+impl LabelGetter<ConceptRef> for Context {
 	fn get_label_concept(&self, concept: &ConceptRef) -> ZiaResult<Option<ConceptRef>> {
 		self.concepts[LABEL].find_definition(concept)
 	}

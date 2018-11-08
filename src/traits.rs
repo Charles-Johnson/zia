@@ -102,7 +102,7 @@ where
     }
 }
 
-pub trait Labeller<T: NormalForm<T> + fmt::Display> 
+pub trait LabelGetter<T: NormalForm<T> + fmt::Display> 
 {
 	fn get_label_concept(&self, &T) -> ZiaResult<Option<T>>;
 	fn get_label(&self, concept: &T) -> ZiaResult<Option<String>> {
@@ -116,7 +116,7 @@ pub trait Labeller<T: NormalForm<T> + fmt::Display>
 	}
 }
 
-pub trait Unlabeller<T:NormalForm<T> + DeleteNormalForm + fmt::Display> where Self: Labeller<T> {
+pub trait Unlabeller<T:NormalForm<T> + DeleteNormalForm + fmt::Display> where Self: LabelGetter<T> {
 	fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
         match try!(self.get_label_concept(concept)) {
             None => Ok(()),
