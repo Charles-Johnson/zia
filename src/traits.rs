@@ -15,6 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
+use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
 pub trait Application<T> {
@@ -99,4 +100,18 @@ where
             )),
         }
     }
+}
+
+pub trait Labeller<T: NormalForm<T> + fmt::Display> 
+{
+	fn get_label_concept(&self, &T) -> ZiaResult<Option<T>>;
+	fn get_label(&self, concept: &T) -> ZiaResult<Option<String>> {
+		Ok(match try!(self.get_label_concept(concept)) {
+            None => None,
+            Some(d) => match try!(d.get_normal_form()) {
+                None => None,
+                Some(n) => Some(n.to_string()),
+            },
+        })
+	}
 }

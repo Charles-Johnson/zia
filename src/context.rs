@@ -20,7 +20,7 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
-use traits::{Application, Definition, Label, NormalForm, Reduction};
+use traits::{Application, Definition, Label, Labeller, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
 
 pub struct Context {
@@ -378,24 +378,12 @@ impl Context {
     fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
         Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
     }
-    fn get_label(&self, c: &ConceptRef) -> ZiaResult<Option<String>> {
-        Ok(match try!(self.concepts[LABEL].find_definition(c)) {
-            None => None,
-            Some(d) => match try!(d.get_normal_form()) {
-                None => None,
-                Some(n) => match n {
-                    ConceptRef::String(s) => Some(s.borrow().get_string()),
-                    _ => None,
-                },
-            },
-        })
-    }
     fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
         try!(self.unlabel(before));
         self.refactor_id(before, after)
     }
     fn unlabel(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-        match try!(self.concepts[LABEL].find_definition(concept)) {
+        match try!(self.get_label_concept(concept)) {
             None => Ok(()),
             Some(mut d) => d.delete_normal_form(),
         }
@@ -412,6 +400,12 @@ impl Context {
             panic!("refactoring id has gone wrong!")
         }
     }
+}
+
+impl Labeller<ConceptRef> for Context {
+	fn get_label_concept(&self, concept: &ConceptRef) -> ZiaResult<Option<ConceptRef>> {
+		self.concepts[LABEL].find_definition(concept)
+	}
 }
 
 #[cfg(test)]

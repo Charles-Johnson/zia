@@ -15,6 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 use traits::{Application, Definition, Label, NormalForm, Reduction};
 use utils::{ZiaError, ZiaResult};
@@ -71,6 +72,19 @@ impl ConceptRef {
             }
         };
     }
+}
+
+impl fmt::Display for ConceptRef {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(
+			f,
+		 	"{}",
+			match *self {
+            	ConceptRef::String(ref s) => s.borrow().get_string(),
+           		_ => "".to_string(),
+        	},
+	 	)
+	}
 }
 
 impl Clone for ConceptRef {
@@ -304,6 +318,8 @@ impl AbstractConcept {
         self.id = number;
     }
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+		// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+		// then borrowing `other` will panic because `other` is already mutably borrowed. 
 		if other.check_borrow_err() {
 			return Err(ZiaError::Redundancy("Concept already has this definition".to_string()));
 		}
@@ -377,11 +393,13 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         reduces_from
     }
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+		// If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will 
+		// raise an error due to borrowing self which has already been mutably borrowed.
         if let Err(_) = concept.get_normal_form() {
             return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
         }
 		if let Some(ref n) = try!(self.get_normal_form()) {
-			if n.get_id() == concept.get_id() {
+			if n == concept {
 				return Err(ZiaError::Redundancy(
 					"Concept already has this normal form.".to_string(),
 				));	
