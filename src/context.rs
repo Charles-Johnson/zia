@@ -15,7 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concepts::{AbstractConcept, ConceptRef, StringConcept, StringRef};
+use concepts::{AbstractConcept, ConceptRef, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -195,8 +195,8 @@ impl Context {
     fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
         let mut definition = try!(self.insert_definition(&mut label_concept, concept));
-        let string_ref = self.new_string(string);
-        definition.update_normal_form(&mut ConceptRef::String(string_ref))
+        let mut string_ref = self.new_string(string);
+        definition.update_normal_form(&mut string_ref)
     }
     fn insert_definition(
         &mut self,
@@ -218,12 +218,6 @@ impl Context {
         let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
         self.add_concept(&concept_ref);
         concept_ref
-    }
-    fn new_string(&mut self, string: &str) -> StringRef {
-        let new_id = self.number_of_concepts();
-        let string_ref = StringConcept::new_ref(new_id, string);
-        self.add_concept(&ConceptRef::String(string_ref.clone()));
-        string_ref
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
