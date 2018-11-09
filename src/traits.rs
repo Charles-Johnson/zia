@@ -19,10 +19,7 @@ use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
 pub trait Unlabeller<
-    T: NormalForm<T>
-        + Definition<T>
-        + Application<T>
-        + Clone
+    T: Definition<T>
         + PartialEq
         + ModifyNormalForm
         + fmt::Display,
@@ -38,7 +35,7 @@ pub trait Unlabeller<
 }
 
 pub trait LabelGetter<
-    T: NormalForm<T> + Definition<T> + Application<T> + Clone + PartialEq + fmt::Display,
+    T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
 >
 {
     fn get_label_concept(&self) -> T;
