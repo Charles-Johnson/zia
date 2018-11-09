@@ -24,7 +24,7 @@ pub trait Unlabeller<
         + Application<T>
         + Clone
         + PartialEq
-        + DeleteNormalForm
+        + ModifyNormalForm
         + fmt::Display,
 > where
     Self: LabelGetter<T>,
@@ -119,7 +119,7 @@ pub trait Application<T> {
     fn delete_argument_of(&mut self, &T);
 }
 
-pub trait Reduction
+pub trait ModifyNormalForm
 where
     Self: NormalForm<Self> + Clone,
 {
@@ -128,12 +128,6 @@ where
         normal_form.add_reduces_from(self);
         Ok(())
     }
-}
-
-pub trait DeleteNormalForm
-where
-    Self: NormalForm<Self> + Clone,
-{
     fn delete_normal_form(&mut self) -> ZiaResult<()> {
         match try!(self.get_normal_form()) {
             None => (),

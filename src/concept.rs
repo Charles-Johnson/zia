@@ -17,7 +17,7 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{Application, Definition, DeleteNormalForm, Label, NormalForm, Reduction};
+use traits::{Application, Definition, Label, ModifyNormalForm, NormalForm};
 use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
@@ -190,9 +190,7 @@ impl NormalForm<ConceptRef> for ConceptRef {
     }
 }
 
-impl Reduction for ConceptRef {}
-
-impl DeleteNormalForm for ConceptRef {}
+impl ModifyNormalForm for ConceptRef {}
 
 impl Label<ConceptRef> for ConceptRef {}
 
@@ -285,11 +283,7 @@ impl Label<ConceptRef> for StringConcept {}
 
 impl fmt::Display for StringConcept {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.string
-        )
+        write!(f, "{}", self.string)
     }
 }
 
@@ -399,7 +393,7 @@ impl NormalForm<ConceptRef> for AbstractConcept {
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         // If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will
         // raise an error due to borrowing self which has already been mutably borrowed.
-        if let Err(_) = concept.get_normal_form() {
+        if concept.get_normal_form().is_err() {
             return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
         }
         if let Some(ref n) = try!(self.get_normal_form()) {

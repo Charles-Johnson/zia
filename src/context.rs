@@ -21,8 +21,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    Application, Definition, DeleteNormalForm, Label, LabelGetter, NormalForm, Reduction,
-    Unlabeller,
+    Application, Definition, Label, LabelGetter, ModifyNormalForm, NormalForm, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -42,7 +41,7 @@ impl Context {
     }
     fn setup(&mut self) -> ZiaResult<()> {
         self.new_abstract(); // for LABEL
-		let mut define_concept = self.new_abstract(); // for DEFINE;
+        let mut define_concept = self.new_abstract(); // for DEFINE;
         let mut reduction_concept = self.new_abstract(); // for REDUCTION
         try!(self.label(&mut define_concept, ":=")); //two more ids occupied
         self.label(&mut reduction_concept, "->") //two more ids occupied
@@ -192,7 +191,7 @@ impl Context {
         Ok(new_abstract)
     }
     fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
-		let mut label_concept = self.get_label_concept();
+        let mut label_concept = self.get_label_concept();
         let mut definition = try!(self.insert_definition(&mut label_concept, concept));
         let string_ref = self.new_string(string);
         definition.update_normal_form(&mut ConceptRef::String(string_ref))
@@ -214,7 +213,7 @@ impl Context {
     }
     fn new_abstract(&mut self) -> ConceptRef {
         let new_id = self.number_of_concepts();
-		let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
+        let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
         self.add_concept(&concept_ref);
         concept_ref
     }
@@ -225,13 +224,13 @@ impl Context {
         self.add_concept(&ConceptRef::String(string_ref.clone()));
         string_ref
     }
-	fn add_concept(&mut self, concept: &ConceptRef) {
-		self.concepts.push(concept.clone())
-	}
-	fn add_string(&mut self, string_ref: &StringRef) {
-		self.string_map
+    fn add_concept(&mut self, concept: &ConceptRef) {
+        self.concepts.push(concept.clone())
+    }
+    fn add_string(&mut self, string_ref: &StringRef) {
+        self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
-	}
+    }
     fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
@@ -268,9 +267,9 @@ impl Context {
             Some(c) => c.borrow().get_labellee(),
         }
     }
-	fn get_string_concept(&self, s: &str) -> Option<&StringRef> {
-		self.string_map.get(s)
-	}
+    fn get_string_concept(&self, s: &str) -> Option<&StringRef> {
+        self.string_map.get(s)
+    }
     fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let applicand = try!(self.ast_from_token(&app));
         let argument = try!(self.ast_from_token(&arg));
@@ -404,12 +403,12 @@ impl Context {
             panic!("refactoring id has gone wrong!")
         }
     }
-	fn correct_id(&mut self, id: usize) {
-		self.concepts[id].set_id(id);
-	}
-	fn remove_concept(&mut self, concept: &ConceptRef) {
-		self.concepts.remove(concept.get_id());
-	}
+    fn correct_id(&mut self, id: usize) {
+        self.concepts[id].set_id(id);
+    }
+    fn remove_concept(&mut self, concept: &ConceptRef) {
+        self.concepts.remove(concept.get_id());
+    }
 }
 
 impl LabelGetter<ConceptRef> for Context {
