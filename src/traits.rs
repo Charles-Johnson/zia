@@ -18,6 +18,27 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait DefinitionModifyer 
+where
+	Self: Definition<Self>,
+{
+	fn insert_definition(&mut self, applicand: &mut Self, argument: &mut Self) {
+        self.set_definition(applicand, argument);
+        applicand.add_applicand_of(self);
+        argument.add_argument_of(self);
+    }
+    fn remove_definition(&mut self) {
+        match self.get_definition() {
+            None => panic!("No definition to remove!"),
+            Some((mut app, mut arg)) => {
+                app.delete_applicand_of(self);
+                arg.delete_argument_of(self);
+                self.delete_definition();
+            }
+        };
+    }
+}
+
 pub trait RefactorId<T: Id + RefactorFrom<T>>
 where
 	Self: ConceptTidyer<T> + ConceptNumber
