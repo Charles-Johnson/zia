@@ -22,8 +22,8 @@ use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer,
-    DefinitionModifier, Id, Label, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
-    NormalFormModifier, Refactor, RefactorId, StringMaker, Unlabeller,
+    DefinitionModifier, Id, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
+    NormalFormModifier, Refactor, RefactorId, StringMaker, SyntaxFinder, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -211,15 +211,6 @@ impl Context {
             )),
         }
     }
-    fn concept_from_label(&self, s: &str) -> ZiaResult<Option<ConceptRef>> {
-        match self.get_string_concept(s) {
-            None => Ok(None),
-            Some(c) => c.borrow().get_labellee(),
-        }
-    }
-    fn get_string_concept(&self, s: &str) -> Option<&StringRef> {
-        self.string_map.get(s)
-    }
     fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let applicand = try!(self.ast_from_token(&app));
         let argument = try!(self.ast_from_token(&arg));
@@ -384,6 +375,15 @@ impl Definer<ConceptRef> for Context {}
 impl Labeller<ConceptRef> for Context {}
 
 impl LabelledAbstractMaker<ConceptRef> for Context {}
+
+impl SyntaxFinder<ConceptRef> for Context {
+	fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {
+        match self.string_map.get(s) {
+			None => None,
+			Some(sc) => Some(ConceptRef::String(sc.clone())),
+		}
+    }
+}
 
 #[cfg(test)]
 mod context {

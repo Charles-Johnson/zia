@@ -18,6 +18,16 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait SyntaxFinder<T: Label<T> + Application<T> + Clone + Id> {
+	fn get_string_concept(&self, &str) -> Option<T>;
+	fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
+        match self.get_string_concept(s) {
+            None => Ok(None),
+            Some(c) => c.get_labellee(),
+        }
+    }
+}
+
 pub trait LabelledAbstractMaker<
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
 > where
