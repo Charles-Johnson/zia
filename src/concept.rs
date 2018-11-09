@@ -17,7 +17,10 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{Application, Definition, Id, Label, ModifyNormalForm, NormalForm, RefactorFrom};
+use traits::{
+    Application, Definition, DefinitionModifier, Id, Label, ModifyNormalForm, NormalForm,
+    RefactorFrom,
+};
 use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
@@ -41,22 +44,9 @@ impl ConceptRef {
             ConceptRef::String(ref r) => r.try_borrow().is_err(),
         }
     }
-    pub fn insert_definition(&mut self, applicand: &mut ConceptRef, argument: &mut ConceptRef) {
-        self.set_definition(applicand, argument);
-        applicand.add_applicand_of(self);
-        argument.add_argument_of(self);
-    }
-    pub fn remove_definition(&mut self) {
-        match self.get_definition() {
-            None => panic!("No definition to remove!"),
-            Some((mut app, mut arg)) => {
-                app.delete_applicand_of(self);
-                arg.delete_argument_of(self);
-                self.delete_definition();
-            }
-        };
-    }
 }
+
+impl DefinitionModifier for ConceptRef {}
 
 impl RefactorFrom<ConceptRef> for ConceptRef {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
@@ -149,7 +139,7 @@ impl Application<ConceptRef> for ConceptRef {
 impl Definition<ConceptRef> for ConceptRef {}
 
 impl Id for ConceptRef {
-	fn get_id(&self) -> usize {
+    fn get_id(&self) -> usize {
         match *self {
             ConceptRef::Abstract(ref r) => r.borrow().get_id(),
             ConceptRef::String(ref r) => r.borrow().get_id(),
@@ -265,7 +255,7 @@ impl Application<ConceptRef> for StringConcept {
 }
 
 impl Id for StringConcept {
-	fn get_id(&self) -> usize {
+    fn get_id(&self) -> usize {
         self.abstract_concept.get_id()
     }
 }
@@ -328,7 +318,7 @@ impl AbstractConcept {
 }
 
 impl RefactorFrom<ConceptRef> for AbstractConcept {
-	fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
         // then borrowing `other` will panic because `other` is already mutably borrowed.
         if other.check_borrow_err() {
@@ -376,7 +366,7 @@ impl Application<ConceptRef> for AbstractConcept {
 }
 
 impl Id for AbstractConcept {
-	fn get_id(&self) -> usize {
+    fn get_id(&self) -> usize {
         self.id
     }
 }

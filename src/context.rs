@@ -21,7 +21,8 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    Application, ConceptNumber, ConceptTidyer,  Definition, Id, Label, LabelGetter, ModifyNormalForm, NormalForm, RefactorId, Unlabeller,
+    Application, ConceptNumber, ConceptTidyer, Definition, DefinitionModifier, Id, Label,
+    LabelGetter, ModifyNormalForm, NormalForm, RefactorId, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -391,16 +392,16 @@ impl Context {
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
-	fn remove_concept(&mut self, concept: &ConceptRef) {
+    fn remove_concept(&mut self, concept: &ConceptRef) {
         self.concepts.remove(concept.get_id());
     }
-	fn correct_id(&mut self, id: usize) {
+    fn correct_id(&mut self, id: usize) {
         self.concepts[id].set_id(id);
     }
 }
 
 impl ConceptNumber for Context {
-	fn number_of_concepts(&self) -> usize {
+    fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
 }

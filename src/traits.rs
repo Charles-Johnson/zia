@@ -18,11 +18,11 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
-pub trait DefinitionModifyer 
+pub trait DefinitionModifier
 where
-	Self: Definition<Self>,
+    Self: Definition<Self> + PartialEq + Clone,
 {
-	fn insert_definition(&mut self, applicand: &mut Self, argument: &mut Self) {
+    fn insert_definition(&mut self, applicand: &mut Self, argument: &mut Self) {
         self.set_definition(applicand, argument);
         applicand.add_applicand_of(self);
         argument.add_argument_of(self);
@@ -41,10 +41,10 @@ where
 
 pub trait RefactorId<T: Id + RefactorFrom<T>>
 where
-	Self: ConceptTidyer<T> + ConceptNumber
+    Self: ConceptTidyer<T> + ConceptNumber,
 {
-	fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-		if self.number_of_concepts() > before.get_id() {
+    fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+        if self.number_of_concepts() > before.get_id() {
             try!(after.refactor_from(before));
             self.remove_concept(before);
             for id in before.get_id()..self.number_of_concepts() {
@@ -54,28 +54,24 @@ where
         } else {
             panic!("refactoring id has gone wrong!")
         }
-	}
+    }
 }
 
 pub trait RefactorFrom<T> {
-	fn refactor_from(&mut self, &T) -> ZiaResult<()>;
+    fn refactor_from(&mut self, &T) -> ZiaResult<()>;
 }
 
 pub trait ConceptTidyer<T> {
-	fn remove_concept(&mut self, &T);
-	fn correct_id(&mut self, usize);
+    fn remove_concept(&mut self, &T);
+    fn correct_id(&mut self, usize);
 }
 
 pub trait ConceptNumber {
-	fn number_of_concepts(&self) -> usize;
+    fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Unlabeller<
-    T: Definition<T>
-        + PartialEq
-        + ModifyNormalForm
-        + fmt::Display,
-> where
+pub trait Unlabeller<T: Definition<T> + PartialEq + ModifyNormalForm + fmt::Display>
+where
     Self: LabelGetter<T>,
 {
     fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
@@ -86,10 +82,7 @@ pub trait Unlabeller<
     }
 }
 
-pub trait LabelGetter<
-    T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
->
-{
+pub trait LabelGetter<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display> {
     fn get_label_concept(&self) -> T;
     fn get_concept_of_label(&self, concept: &T) -> ZiaResult<Option<T>> {
         self.get_label_concept().find_definition(concept)
@@ -199,5 +192,5 @@ pub trait NormalForm<T> {
 }
 
 pub trait Id {
-	fn get_id(&self) -> usize;
+    fn get_id(&self) -> usize;
 }
