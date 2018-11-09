@@ -18,6 +18,52 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait Labeller<
+    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+> where
+    Self: StringMaker<T> + LabelGetter<T> + Definer<T>,
+{
+    fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
+        let mut label_concept = self.get_label_concept();
+        let mut definition = try!(self.insert_definition(&mut label_concept, concept));
+        let mut string_ref = self.new_string(string);
+        definition.update_normal_form(&mut string_ref)
+    }
+}
+
+pub trait Definer<T: AbstractFactory + DefinitionModifier>
+where
+    Self: AbstractMaker<T>,
+{
+    fn insert_definition(&mut self, applicand: &mut T, argument: &mut T) -> ZiaResult<T> {
+        let application = try!(applicand.find_definition(&argument));
+        match application {
+            None => {
+                let mut definition = self.new_abstract();
+                definition.insert_definition(applicand, argument);
+                Ok(definition.clone())
+            }
+            Some(def) => Ok(def),
+        }
+    }
+}
+
+pub trait AbstractMaker<T: AbstractFactory>
+where
+    Self: ConceptAdder<T> + ConceptNumber,
+{
+    fn new_abstract(&mut self) -> T {
+        let new_id = self.number_of_concepts();
+        let concept_ref = T::new_abstract(new_id);
+        self.add_concept(&concept_ref);
+        concept_ref
+    }
+}
+
+pub trait AbstractFactory {
+    fn new_abstract(usize) -> Self;
+}
+
 pub trait StringMaker<T: StringFactory>
 where
     Self: ConceptAdder<T> + ConceptNumber,
@@ -39,7 +85,7 @@ pub trait ConceptAdder<T> {
 }
 
 pub trait Refactor<
-    T: RefactorFrom<T> + Id + ModifyNormalForm + fmt::Display + PartialEq + Definition<T>,
+    T: RefactorFrom<T> + Id + NormalFormModifier + fmt::Display + PartialEq + Definition<T>,
 > where
     Self: RefactorId<T> + Unlabeller<T>,
 {
@@ -101,7 +147,7 @@ pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Unlabeller<T: Definition<T> + PartialEq + ModifyNormalForm + fmt::Display>
+pub trait Unlabeller<T: Definition<T> + PartialEq + NormalFormModifier + fmt::Display>
 where
     Self: LabelGetter<T>,
 {
@@ -192,7 +238,7 @@ pub trait Application<T> {
     fn delete_argument_of(&mut self, &T);
 }
 
-pub trait ModifyNormalForm
+pub trait NormalFormModifier
 where
     Self: NormalForm<Self> + Clone,
 {

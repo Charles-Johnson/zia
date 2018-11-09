@@ -20,8 +20,8 @@ mod string_concept;
 pub use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
 use super::traits::{
-    Application, Definition, DefinitionModifier, Id, Label, ModifyNormalForm, NormalForm,
-    RefactorFrom, StringFactory,
+    AbstractFactory, Application, Definition, DefinitionModifier, Id, Label, NormalForm,
+    NormalFormModifier, RefactorFrom, StringFactory,
 };
 use super::utils::ZiaResult;
 use std::cell::RefCell;
@@ -191,7 +191,7 @@ impl NormalForm<ConceptRef> for ConceptRef {
     }
 }
 
-impl ModifyNormalForm for ConceptRef {}
+impl NormalFormModifier for ConceptRef {}
 
 impl Label<ConceptRef> for ConceptRef {}
 
@@ -206,5 +206,11 @@ impl Eq for ConceptRef {}
 impl StringFactory for ConceptRef {
     fn new_string(id: usize, string: &str) -> ConceptRef {
         ConceptRef::String(StringConcept::new_ref(id, string))
+    }
+}
+
+impl AbstractFactory for ConceptRef {
+    fn new_abstract(id: usize) -> ConceptRef {
+        ConceptRef::Abstract(AbstractConcept::new_ref(id))
     }
 }

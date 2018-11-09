@@ -15,14 +15,14 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concepts::{AbstractConcept, ConceptRef, StringRef};
+use concepts::{ConceptRef, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definition, DefinitionModifier, Id,
-    Label, LabelGetter, ModifyNormalForm, NormalForm, Refactor, RefactorId, StringMaker,
+    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, DefinitionModifier, Id,
+    Label, LabelGetter, Labeller, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
     Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
@@ -191,33 +191,6 @@ impl Context {
         let mut new_abstract = self.new_abstract();
         try!(self.label(&mut new_abstract, string));
         Ok(new_abstract)
-    }
-    fn label(&mut self, concept: &mut ConceptRef, string: &str) -> ZiaResult<()> {
-        let mut label_concept = self.get_label_concept();
-        let mut definition = try!(self.insert_definition(&mut label_concept, concept));
-        let mut string_ref = self.new_string(string);
-        definition.update_normal_form(&mut string_ref)
-    }
-    fn insert_definition(
-        &mut self,
-        applicand: &mut ConceptRef,
-        argument: &mut ConceptRef,
-    ) -> ZiaResult<ConceptRef> {
-        let application = try!(applicand.find_definition(&argument));
-        match application {
-            None => {
-                let mut definition = self.new_abstract();
-                definition.insert_definition(applicand, argument);
-                Ok(definition.clone())
-            }
-            Some(def) => Ok(def),
-        }
-    }
-    fn new_abstract(&mut self) -> ConceptRef {
-        let new_id = self.number_of_concepts();
-        let concept_ref = ConceptRef::Abstract(AbstractConcept::new_ref(new_id));
-        self.add_concept(&concept_ref);
-        concept_ref
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
@@ -415,6 +388,12 @@ impl ConceptAdder<ConceptRef> for Context {
 }
 
 impl StringMaker<ConceptRef> for Context {}
+
+impl AbstractMaker<ConceptRef> for Context {}
+
+impl Definer<ConceptRef> for Context {}
+
+impl Labeller<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {
