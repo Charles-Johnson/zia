@@ -21,7 +21,7 @@ pub use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
 use super::traits::{
     Application, Definition, DefinitionModifier, Id, Label, ModifyNormalForm, NormalForm,
-    RefactorFrom,
+    RefactorFrom, StringFactory,
 };
 use super::utils::ZiaResult;
 use std::cell::RefCell;
@@ -202,3 +202,9 @@ impl PartialEq for ConceptRef {
 }
 
 impl Eq for ConceptRef {}
+
+impl StringFactory for ConceptRef {
+    fn new_string(id: usize, string: &str) -> ConceptRef {
+        ConceptRef::String(StringConcept::new_ref(id, string))
+    }
+}

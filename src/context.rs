@@ -21,8 +21,9 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    Application, ConceptNumber, ConceptTidyer, Definition, DefinitionModifier, Id, Label,
-    LabelGetter, ModifyNormalForm, NormalForm, Refactor, RefactorId, Unlabeller,
+    Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definition, DefinitionModifier, Id,
+    Label, LabelGetter, ModifyNormalForm, NormalForm, Refactor, RefactorId, StringMaker,
+    Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -221,12 +222,8 @@ impl Context {
     fn new_string(&mut self, string: &str) -> StringRef {
         let new_id = self.number_of_concepts();
         let string_ref = StringConcept::new_ref(new_id, string);
-        self.add_string(&string_ref);
         self.add_concept(&ConceptRef::String(string_ref.clone()));
         string_ref
-    }
-    fn add_concept(&mut self, concept: &ConceptRef) {
-        self.concepts.push(concept.clone())
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
@@ -413,6 +410,17 @@ impl LabelGetter<ConceptRef> for Context {
 impl Unlabeller<ConceptRef> for Context {}
 
 impl Refactor<ConceptRef> for Context {}
+
+impl ConceptAdder<ConceptRef> for Context {
+    fn add_concept(&mut self, concept: &ConceptRef) {
+        self.concepts.push(concept.clone());
+        if let ConceptRef::String(ref s) = concept {
+            self.add_string(s);
+        }
+    }
+}
+
+impl StringMaker<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {

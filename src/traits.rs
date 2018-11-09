@@ -18,6 +18,26 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait StringMaker<T: StringFactory>
+where
+    Self: ConceptAdder<T> + ConceptNumber,
+{
+    fn new_string(&mut self, string: &str) -> T {
+        let new_id = self.number_of_concepts();
+        let string_ref = T::new_string(new_id, string);
+        self.add_concept(&string_ref);
+        string_ref
+    }
+}
+
+pub trait StringFactory {
+    fn new_string(usize, &str) -> Self;
+}
+
+pub trait ConceptAdder<T> {
+    fn add_concept(&mut self, &T);
+}
+
 pub trait Refactor<
     T: RefactorFrom<T> + Id + ModifyNormalForm + fmt::Display + PartialEq + Definition<T>,
 > where
