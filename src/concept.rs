@@ -17,7 +17,7 @@
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{Application, Definition, Label, ModifyNormalForm, NormalForm};
+use traits::{Application, Definition, Id, Label, ModifyNormalForm, NormalForm, RefactorFrom};
 use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
@@ -33,12 +33,6 @@ impl ConceptRef {
         match *self {
             ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
             ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
-        }
-    }
-    pub fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-        match *self {
-            ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
-            ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
         }
     }
     pub fn check_borrow_err(&self) -> bool {
@@ -61,6 +55,15 @@ impl ConceptRef {
                 self.delete_definition();
             }
         };
+    }
+}
+
+impl RefactorFrom<ConceptRef> for ConceptRef {
+    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+        match *self {
+            ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
+            ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
+        }
     }
 }
 
@@ -145,13 +148,16 @@ impl Application<ConceptRef> for ConceptRef {
 
 impl Definition<ConceptRef> for ConceptRef {}
 
-impl NormalForm<ConceptRef> for ConceptRef {
-    fn get_id(&self) -> usize {
+impl Id for ConceptRef {
+	fn get_id(&self) -> usize {
         match *self {
             ConceptRef::Abstract(ref r) => r.borrow().get_id(),
             ConceptRef::String(ref r) => r.borrow().get_id(),
         }
     }
+}
+
+impl NormalForm<ConceptRef> for ConceptRef {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match *self {
             ConceptRef::Abstract(ref c) => c.borrow().get_normal_form(),
@@ -220,6 +226,9 @@ impl StringConcept {
     pub fn get_string(&self) -> String {
         self.string.clone()
     }
+}
+
+impl RefactorFrom<ConceptRef> for StringConcept {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         self.abstract_concept.refactor_from(other)
     }
@@ -255,10 +264,13 @@ impl Application<ConceptRef> for StringConcept {
     }
 }
 
-impl NormalForm<ConceptRef> for StringConcept {
-    fn get_id(&self) -> usize {
+impl Id for StringConcept {
+	fn get_id(&self) -> usize {
         self.abstract_concept.get_id()
     }
+}
+
+impl NormalForm<ConceptRef> for StringConcept {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         self.abstract_concept.get_normal_form()
     }
@@ -313,7 +325,10 @@ impl AbstractConcept {
     fn set_id(&mut self, number: usize) {
         self.id = number;
     }
-    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
+}
+
+impl RefactorFrom<ConceptRef> for AbstractConcept {
+	fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
         // then borrowing `other` will panic because `other` is already mutably borrowed.
         if other.check_borrow_err() {
@@ -360,10 +375,13 @@ impl Application<ConceptRef> for AbstractConcept {
     }
 }
 
-impl NormalForm<ConceptRef> for AbstractConcept {
-    fn get_id(&self) -> usize {
+impl Id for AbstractConcept {
+	fn get_id(&self) -> usize {
         self.id
     }
+}
+
+impl NormalForm<ConceptRef> for AbstractConcept {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match self.normal_form {
             None => Ok(None),

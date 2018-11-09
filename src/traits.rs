@@ -18,6 +18,37 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait RefactorId<T: Id + RefactorFrom<T>>
+where
+	Self: ConceptTidyer<T> + ConceptNumber
+{
+	fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+		if self.number_of_concepts() > before.get_id() {
+            try!(after.refactor_from(before));
+            self.remove_concept(before);
+            for id in before.get_id()..self.number_of_concepts() {
+                self.correct_id(id);
+            }
+            Ok(())
+        } else {
+            panic!("refactoring id has gone wrong!")
+        }
+	}
+}
+
+pub trait RefactorFrom<T> {
+	fn refactor_from(&mut self, &T) -> ZiaResult<()>;
+}
+
+pub trait ConceptTidyer<T> {
+	fn remove_concept(&mut self, &T);
+	fn correct_id(&mut self, usize);
+}
+
+pub trait ConceptNumber {
+	fn number_of_concepts(&self) -> usize;
+}
+
 pub trait Unlabeller<
     T: Definition<T>
         + PartialEq
@@ -78,7 +109,7 @@ where
     }
 }
 
-pub trait Label<T: Application<T> + NormalForm<T> + Clone>
+pub trait Label<T: Application<T> + NormalForm<T> + Clone + Id>
 where
     Self: NormalForm<T>,
 {
@@ -138,11 +169,14 @@ where
 }
 
 pub trait NormalForm<T> {
-    fn get_id(&self) -> usize;
     fn get_normal_form(&self) -> ZiaResult<Option<T>>;
     fn get_reduces_from(&self) -> Vec<T>;
     fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
     fn add_reduces_from(&mut self, &T);
     fn remove_normal_form(&mut self);
     fn remove_reduces_from(&mut self, &T);
+}
+
+pub trait Id {
+	fn get_id(&self) -> usize;
 }

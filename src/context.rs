@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    Application, Definition, Label, LabelGetter, ModifyNormalForm, NormalForm, Unlabeller,
+    Application, ConceptNumber, ConceptTidyer,  Definition, Id, Label, LabelGetter, ModifyNormalForm, NormalForm, RefactorId, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -231,9 +231,6 @@ impl Context {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
     }
-    fn number_of_concepts(&self) -> usize {
-        self.concepts.len()
-    }
     pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<Rc<AbstractSyntaxTree>> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
@@ -391,25 +388,24 @@ impl Context {
         try!(self.unlabel(before));
         self.refactor_id(before, after)
     }
-    fn refactor_id(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
-        if self.number_of_concepts() > before.get_id() {
-            try!(after.refactor_from(before));
-            self.remove_concept(before);
-            for id in before.get_id()..self.number_of_concepts() {
-                self.correct_id(id);
-            }
-            Ok(())
-        } else {
-            panic!("refactoring id has gone wrong!")
-        }
-    }
-    fn correct_id(&mut self, id: usize) {
-        self.concepts[id].set_id(id);
-    }
-    fn remove_concept(&mut self, concept: &ConceptRef) {
+}
+
+impl ConceptTidyer<ConceptRef> for Context {
+	fn remove_concept(&mut self, concept: &ConceptRef) {
         self.concepts.remove(concept.get_id());
     }
+	fn correct_id(&mut self, id: usize) {
+        self.concepts[id].set_id(id);
+    }
 }
+
+impl ConceptNumber for Context {
+	fn number_of_concepts(&self) -> usize {
+        self.concepts.len()
+    }
+}
+
+impl RefactorId<ConceptRef> for Context {}
 
 impl LabelGetter<ConceptRef> for Context {
     fn get_label_concept(&self) -> ConceptRef {
