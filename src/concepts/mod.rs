@@ -14,19 +14,19 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod string_concept;
 mod abstract_concept;
+mod string_concept;
 
 pub use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
-use std::cell::RefCell;
-use std::fmt;
-use std::rc::Rc;
 use super::traits::{
     Application, Definition, DefinitionModifier, Id, Label, ModifyNormalForm, NormalForm,
     RefactorFrom,
 };
 use super::utils::ZiaResult;
+use std::cell::RefCell;
+use std::fmt;
+use std::rc::Rc;
 
 pub enum ConceptRef {
     Abstract(AbstractRef),

@@ -14,13 +14,11 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::{ConceptRef, AbstractRef};
+use concepts::{AbstractRef, ConceptRef};
 use std::cell::RefCell;
 use std::rc::Rc;
-use traits::{
-    Application, Id, Label, NormalForm, RefactorFrom,
-};
-use utils::{ZiaError,ZiaResult};
+use traits::{Application, Id, Label, NormalForm, RefactorFrom};
+use utils::{ZiaError, ZiaResult};
 
 pub struct AbstractConcept {
     id: usize,

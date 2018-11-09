@@ -18,6 +18,17 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait Refactor<
+    T: RefactorFrom<T> + Id + ModifyNormalForm + fmt::Display + PartialEq + Definition<T>,
+> where
+    Self: RefactorId<T> + Unlabeller<T>,
+{
+    fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+        try!(self.unlabel(before));
+        self.refactor_id(before, after)
+    }
+}
+
 pub trait DefinitionModifier
 where
     Self: Definition<Self> + PartialEq + Clone,

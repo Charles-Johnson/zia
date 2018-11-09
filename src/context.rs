@@ -22,7 +22,7 @@ use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
     Application, ConceptNumber, ConceptTidyer, Definition, DefinitionModifier, Id, Label,
-    LabelGetter, ModifyNormalForm, NormalForm, RefactorId, Unlabeller,
+    LabelGetter, ModifyNormalForm, NormalForm, Refactor, RefactorId, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -385,10 +385,6 @@ impl Context {
     fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
         Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
     }
-    fn refactor(&mut self, before: &mut ConceptRef, after: &mut ConceptRef) -> ZiaResult<()> {
-        try!(self.unlabel(before));
-        self.refactor_id(before, after)
-    }
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
@@ -415,6 +411,8 @@ impl LabelGetter<ConceptRef> for Context {
 }
 
 impl Unlabeller<ConceptRef> for Context {}
+
+impl Refactor<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {

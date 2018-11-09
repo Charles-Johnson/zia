@@ -16,12 +16,10 @@
 */
 use concepts::abstract_concept::AbstractConcept;
 use concepts::{ConceptRef, StringRef};
-use std::fmt;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
-use traits::{
-    Application, Id, Label, NormalForm, RefactorFrom,
-};
+use traits::{Application, Id, Label, NormalForm, RefactorFrom};
 use utils::ZiaResult;
 
 pub struct StringConcept {
