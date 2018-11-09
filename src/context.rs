@@ -21,9 +21,9 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, DefinitionModifier, Id,
-    Label, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
-    Unlabeller,
+    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer,
+    DefinitionModifier, Id, Label, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
+    NormalFormModifier, Refactor, RefactorId, StringMaker, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -40,13 +40,6 @@ impl Context {
         };
         try!(cont.setup());
         Ok(cont)
-    }
-    fn setup(&mut self) -> ZiaResult<()> {
-        self.new_abstract(); // for LABEL
-        let mut define_concept = self.new_abstract(); // for DEFINE;
-        let mut reduction_concept = self.new_abstract(); // for REDUCTION
-        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
-        self.label(&mut reduction_concept, "->") //two more ids occupied
     }
     pub fn call(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<String> {
         match ast.get_expansion() {

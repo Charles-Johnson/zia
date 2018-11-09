@@ -19,15 +19,21 @@ use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
 pub trait LabelledAbstractMaker<
-	T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
->
-where
-	Self: AbstractMaker<T> + Labeller<T>,
+    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+> where
+    Self: AbstractMaker<T> + Labeller<T>,
 {
-	fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
+    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
         let mut new_abstract = self.new_abstract();
         try!(self.label(&mut new_abstract, string));
         Ok(new_abstract)
+    }
+	fn setup(&mut self) -> ZiaResult<()> {
+        self.new_abstract(); // for LABEL
+        let mut define_concept = self.new_abstract(); // for DEFINE;
+        let mut reduction_concept = self.new_abstract(); // for REDUCTION
+        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
+        self.label(&mut reduction_concept, "->") //two more ids occupied
     }
 }
 
