@@ -19,7 +19,7 @@
 extern crate matches;
 
 mod ast;
-mod concept;
+mod concepts;
 mod constants;
 mod context;
 mod token;

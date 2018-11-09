@@ -15,7 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concept::{AbstractConcept, ConceptRef, StringConcept, StringRef};
+use concepts::{AbstractConcept, ConceptRef, StringConcept, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use std::rc::Rc;

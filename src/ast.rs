@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concept::ConceptRef;
+use concepts::ConceptRef;
 use std::rc::Rc;
 use token::Token;
 use traits::{Application, Definition};
