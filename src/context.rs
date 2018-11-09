@@ -22,7 +22,7 @@ use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, DefinitionModifier, Id,
-    Label, LabelGetter, Labeller, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
+    Label, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
     Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
@@ -186,11 +186,6 @@ impl Context {
             }
             Ok(c)
         }
-    }
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<ConceptRef> {
-        let mut new_abstract = self.new_abstract();
-        try!(self.label(&mut new_abstract, string));
-        Ok(new_abstract)
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
@@ -394,6 +389,8 @@ impl AbstractMaker<ConceptRef> for Context {}
 impl Definer<ConceptRef> for Context {}
 
 impl Labeller<ConceptRef> for Context {}
+
+impl LabelledAbstractMaker<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {

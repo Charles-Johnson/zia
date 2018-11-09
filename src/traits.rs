@@ -18,6 +18,19 @@ use constants::LABEL;
 use std::fmt;
 use utils::{ZiaError, ZiaResult};
 
+pub trait LabelledAbstractMaker<
+	T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+>
+where
+	Self: AbstractMaker<T> + Labeller<T>,
+{
+	fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
+        let mut new_abstract = self.new_abstract();
+        try!(self.label(&mut new_abstract, string));
+        Ok(new_abstract)
+    }
+}
+
 pub trait Labeller<
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
 > where
