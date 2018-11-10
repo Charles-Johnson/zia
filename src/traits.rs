@@ -16,12 +16,60 @@
 */
 use constants::LABEL;
 use std::fmt;
+use std::marker;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
+pub trait Definer3<T: fmt::Display + Id + NormalFormModifier + RefactorFrom<T> + DefinitionModifier + StringFactory + AbstractFactory, U: MightExpand + MaybeConcept<T> + HasToken + Clone + Pair + PartialEq>
+where
+	Self: Definer2<T,U> + ConceptMaker<T,U>,
+{
+    fn define(&mut self, before: &U, after: &U) -> ZiaResult<()> {
+        if let Some(mut before_c) = before.get_concept() {
+            if before == after {
+                before_c.remove_definition();
+                Ok(())
+            } else {
+                self.define2(&mut before_c, after)
+            }
+        } else if let Some((left, right)) = before.get_expansion() {
+            if let Some(mut after_c) = after.get_concept() {
+                if let Some((mut ap, mut ar)) = after_c.get_definition() {
+                    try!(self.define2(&mut ap, &left));
+                    self.define2(&mut ar, &right)
+                } else {
+                    after_c.insert_definition(
+                        &mut try!(self.concept_from_ast(&left)),
+                        &mut try!(self.concept_from_ast(&right)),
+                    );
+                    Ok(())
+                }
+            } else {
+                try!(self.concept_from_ast(&try!(U::from_pair(
+                    after.get_token(),
+                    left.clone(),
+                    right.clone(),
+                ))));
+                Ok(())
+            }
+        } else {
+            return Err(ZiaError::Redundancy(
+                "Refactoring a symbol that was never previously used is redundant".to_string(),
+            ));
+        }
+    }
+}
+
+pub trait Pair
+where
+    Self: marker::Sized,
+{
+    fn from_pair(Token, Self, Self) -> ZiaResult<Self>;
+}
+
 pub trait ConceptMaker<
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-    U: MaybeConcept<T> + HasToken + MightExpand<U>,
+    U: MaybeConcept<T> + HasToken + MightExpand,
 > where
     Self: LabelledAbstractMaker<T>,
 {
@@ -45,7 +93,7 @@ pub trait ConceptMaker<
 
 pub trait Expander<
     T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
-    U: MaybeConcept<T> + HasToken + MightExpand<U>,
+    U: MaybeConcept<T> + HasToken + MightExpand,
 > where
     Self: TokenHandler<T>,
 {
@@ -60,8 +108,11 @@ pub trait Expander<
     }
 }
 
-pub trait MightExpand<T> {
-    fn get_expansion(&self) -> Option<(T, T)>;
+pub trait MightExpand
+where
+	Self: marker::Sized,
+{
+    fn get_expansion(&self) -> Option<(Self, Self)>;
 }
 
 pub trait TokenHandler<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display>

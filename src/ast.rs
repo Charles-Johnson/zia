@@ -17,7 +17,7 @@
 use concepts::ConceptRef;
 use std::borrow::Borrow;
 use token::Token;
-use traits::{Application, Definition, HasToken, MaybeConcept, MightExpand};
+use traits::{Application, Definition, HasToken, MaybeConcept, MightExpand, Pair};
 use utils::ZiaResult;
 
 pub struct AbstractSyntaxTree {
@@ -41,14 +41,24 @@ impl AbstractSyntaxTree {
             expansion: None,
         }
     }
-    pub fn from_pair(
+    pub fn contains(&self, ast: &AbstractSyntaxTree) -> bool {
+        if let Some((ref left, ref right)) = self.get_expansion() {
+            left == ast || right == ast || left.contains(ast) || right.contains(ast)
+        } else {
+            false
+        }
+    }
+}
+
+impl Pair for AbstractSyntaxTree {
+    fn from_pair(
         token: Token,
         lefthand: AbstractSyntaxTree,
         righthand: AbstractSyntaxTree,
     ) -> ZiaResult<AbstractSyntaxTree> {
         let mut concept: Option<ConceptRef> = None;
-        if let Some(argc) = righthand.get_concept() {
-            if let Some(def) = try!(lefthand.find_definition(&argc)) {
+        if let Some(rc) = righthand.get_concept() {
+            if let Some(def) = try!(lefthand.find_definition(&rc)) {
                 concept = Some(def.clone());
             }
         }
@@ -57,13 +67,6 @@ impl AbstractSyntaxTree {
             concept,
             expansion: Some((Box::new(lefthand), Box::new(righthand))),
         })
-    }
-    pub fn contains(&self, ast: &AbstractSyntaxTree) -> bool {
-        if let Some((ref app, ref arg)) = self.get_expansion() {
-            app == ast || arg == ast || app.contains(ast) || arg.contains(ast)
-        } else {
-            false
-        }
     }
 }
 
@@ -79,14 +82,14 @@ impl MaybeConcept<ConceptRef> for AbstractSyntaxTree {
     }
 }
 
-impl MightExpand<AbstractSyntaxTree> for AbstractSyntaxTree {
+impl MightExpand for AbstractSyntaxTree {
     fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
         match self.expansion {
             None => None,
-            Some((ref app, ref arg)) => {
-                let borrowed_app: &AbstractSyntaxTree = app.borrow();
-                let borrowed_arg: &AbstractSyntaxTree = arg.borrow();
-                Some((borrowed_app.clone(), borrowed_arg.clone()))
+            Some((ref left, ref right)) => {
+                let borrowed_left: &AbstractSyntaxTree = left.borrow();
+                let borrowed_right: &AbstractSyntaxTree = right.borrow();
+                Some((borrowed_left.clone(), borrowed_right.clone()))
             }
         }
     }
@@ -96,9 +99,9 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         match self.get_concept() {
             None => match self.get_expansion() {
-                Some((app, arg)) => {
-                    if let (Some(appc), Some(argc)) = (app.get_concept(), arg.get_concept()) {
-                        Some((appc, argc))
+                Some((left, right)) => {
+                    if let (Some(lc), Some(rc)) = (left.get_concept(), right.get_concept()) {
+                        Some((lc, rc))
                     } else {
                         None
                     }
@@ -169,7 +172,7 @@ impl Clone for AbstractSyntaxTree {
             concept: self.get_concept(),
             expansion: match self.get_expansion() {
                 None => None,
-                Some((app, arg)) => Some((Box::new(app), Box::new(arg))),
+                Some((left, right)) => Some((Box::new(left), Box::new(right))),
             },
         }
     }

@@ -21,9 +21,9 @@ use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, DefinitionModifier, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker,
-    Labeller, MaybeConcept, MightExpand, NormalForm, NormalFormModifier, Refactor, RefactorId,
-    StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
+    Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker,
+    Labeller, MaybeConcept, MightExpand, NormalForm, NormalFormModifier, Pair, Refactor,
+    RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -105,40 +105,6 @@ impl Context {
             None => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
             )),
-        }
-    }
-    fn define(&mut self, before: &AbstractSyntaxTree, after: &AbstractSyntaxTree) -> ZiaResult<()> {
-        if let Some(mut before_c) = before.get_concept() {
-            if before == after {
-                before_c.remove_definition();
-                Ok(())
-            } else {
-                self.define2(&mut before_c, after)
-            }
-        } else if let Some((left, right)) = before.get_expansion() {
-            if let Some(mut after_c) = after.get_concept() {
-                if let Some((mut ap, mut ar)) = after_c.get_definition() {
-                    try!(self.define2(&mut ap, &left));
-                    self.define2(&mut ar, &right)
-                } else {
-                    after_c.insert_definition(
-                        &mut try!(self.concept_from_ast(&left)),
-                        &mut try!(self.concept_from_ast(&right)),
-                    );
-                    Ok(())
-                }
-            } else {
-                try!(self.concept_from_ast(&try!(AbstractSyntaxTree::from_pair(
-                    after.get_token(),
-                    left.clone(),
-                    right.clone(),
-                ))));
-                Ok(())
-            }
-        } else {
-            return Err(ZiaError::Redundancy(
-                "Refactoring a symbol that was never previously used is redundant".to_string(),
-            ));
         }
     }
     fn add_string(&mut self, string_ref: &StringRef) {
@@ -312,6 +278,8 @@ impl SyntaxFinder<ConceptRef> for Context {
 }
 
 impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl Definer3<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl TokenHandler<ConceptRef> for Context {}
 
