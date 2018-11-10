@@ -37,6 +37,12 @@ where
     fn join_tokens(&self, app: &T, arg: &T) -> ZiaResult<Token> {
         Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
     }
+	fn expand_as_token(&self, c: &T) -> ZiaResult<Token> {
+        match c.get_definition() {
+            Some((app, arg)) => self.join_tokens(&app, &arg),
+            None => self.get_token(c),
+        }
+    }
 }
 
 pub trait Definer2<

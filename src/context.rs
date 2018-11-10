@@ -288,12 +288,6 @@ impl Context {
             Ok(ast.get_token())
         }
     }
-    fn expand_as_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
-        match c.get_definition() {
-            Some((app, arg)) => self.join_tokens(&app, &arg),
-            None => self.get_token(c),
-        }
-    }
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
