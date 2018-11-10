@@ -20,7 +20,7 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, Definer2,
+    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
     DefinitionModifier, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
     MaybeConcept, MightExpand, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
     SyntaxFinder, TokenHandler, Unlabeller,
@@ -139,22 +139,6 @@ impl Context {
             return Err(ZiaError::Redundancy(
                 "Refactoring a symbol that was never previously used is redundant".to_string(),
             ));
-        }
-    }
-    fn concept_from_ast(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<ConceptRef> {
-        if let Some(c) = ast.get_concept() {
-            Ok(c)
-        } else {
-            let mut c = match ast.get_token() {
-                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
-                Token::Expression(_) => self.new_abstract(),
-            };
-            if let Some((mut app, mut arg)) = ast.get_expansion() {
-                let mut appc = try!(self.concept_from_ast(&app));
-                let mut argc = try!(self.concept_from_ast(&arg));
-                c.insert_definition(&mut appc, &mut argc);
-            }
-            Ok(c)
         }
     }
     fn add_string(&mut self, string_ref: &StringRef) {
@@ -332,6 +316,8 @@ impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
 impl TokenHandler<ConceptRef> for Context {}
 
 impl Expander<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

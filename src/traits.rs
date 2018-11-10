@@ -19,6 +19,30 @@ use std::fmt;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
+pub trait ConceptMaker<
+	T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+	U: MaybeConcept<T> + HasToken + MightExpand<U>
+>
+where
+	Self: LabelledAbstractMaker<T> {
+	fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
+        if let Some(c) = ast.get_concept() {
+            Ok(c)
+        } else {
+            let mut c = match ast.get_token() {
+                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
+                Token::Expression(_) => self.new_abstract(),
+            };
+            if let Some((mut app, mut arg)) = ast.get_expansion() {
+                let mut appc = try!(self.concept_from_ast(&app));
+                let mut argc = try!(self.concept_from_ast(&arg));
+                c.insert_definition(&mut appc, &mut argc);
+            }
+            Ok(c)
+        }
+    }
+}
+
 pub trait Expander<
     T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
     U: MaybeConcept<T> + HasToken + MightExpand<U>,
