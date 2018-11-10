@@ -23,8 +23,8 @@ use utils::{ZiaError, ZiaResult};
 pub struct AbstractConcept {
     id: usize,
     definition: Option<(ConceptRef, ConceptRef)>,
-    applicand_of: Vec<ConceptRef>,
-    argument_of: Vec<ConceptRef>,
+    lefthand_of: Vec<ConceptRef>,
+    righthand_of: Vec<ConceptRef>,
     normal_form: Option<ConceptRef>,
     reduces_from: Vec<ConceptRef>,
 }
@@ -37,8 +37,8 @@ impl AbstractConcept {
         AbstractConcept {
             id,
             definition: None,
-            applicand_of: Vec::new(),
-            argument_of: Vec::new(),
+            lefthand_of: Vec::new(),
+            righthand_of: Vec::new(),
             normal_form: None,
             reduces_from: Vec::new(),
         }
@@ -58,8 +58,8 @@ impl RefactorFrom<ConceptRef> for AbstractConcept {
             ));
         }
         self.definition = other.get_definition();
-        self.applicand_of = other.get_applicand_of();
-        self.argument_of = other.get_argument_of();
+        self.lefthand_of = other.get_lefthand_of();
+        self.righthand_of = other.get_righthand_of();
         self.normal_form = try!(other.get_normal_form());
         self.reduces_from = other.get_reduces_from();
         Ok(())
@@ -67,32 +67,32 @@ impl RefactorFrom<ConceptRef> for AbstractConcept {
 }
 
 impl Application<ConceptRef> for AbstractConcept {
-    fn get_applicand_of(&self) -> Vec<ConceptRef> {
-        self.applicand_of.clone()
+    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
+        self.lefthand_of.clone()
     }
-    fn get_argument_of(&self) -> Vec<ConceptRef> {
-        self.argument_of.clone()
+    fn get_righthand_of(&self) -> Vec<ConceptRef> {
+        self.righthand_of.clone()
     }
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.definition.clone()
     }
-    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
-        self.definition = Some((applicand.clone(), argument.clone()));
+    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
+        self.definition = Some((lefthand.clone(), righthand.clone()));
     }
-    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
-        self.applicand_of.push(applicand.clone());
+    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
+        self.lefthand_of.push(lefthand.clone());
     }
-    fn add_argument_of(&mut self, argument: &ConceptRef) {
-        self.argument_of.push(argument.clone());
+    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
+        self.righthand_of.push(righthand.clone());
     }
     fn delete_definition(&mut self) {
         self.definition = None
     }
-    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-        self.applicand_of.remove_item(definition);
+    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
+        self.lefthand_of.remove_item(definition);
     }
-    fn delete_argument_of(&mut self, definition: &ConceptRef) {
-        self.argument_of.remove_item(definition);
+    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
+        self.righthand_of.remove_item(definition);
     }
 }
 

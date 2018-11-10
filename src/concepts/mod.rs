@@ -85,16 +85,16 @@ impl Clone for ConceptRef {
 }
 
 impl Application<ConceptRef> for ConceptRef {
-    fn get_argument_of(&self) -> Vec<ConceptRef> {
+    fn get_righthand_of(&self) -> Vec<ConceptRef> {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_argument_of(),
-            ConceptRef::String(ref c) => c.borrow().get_argument_of(),
+            ConceptRef::Abstract(ref c) => c.borrow().get_righthand_of(),
+            ConceptRef::String(ref c) => c.borrow().get_righthand_of(),
         }
     }
-    fn get_applicand_of(&self) -> Vec<ConceptRef> {
+    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_applicand_of(),
-            ConceptRef::String(ref c) => c.borrow().get_applicand_of(),
+            ConceptRef::Abstract(ref c) => c.borrow().get_lefthand_of(),
+            ConceptRef::String(ref c) => c.borrow().get_lefthand_of(),
         }
     }
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
@@ -103,22 +103,22 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref c) => c.borrow().get_definition(),
         }
     }
-    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
+    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
-            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(applicand, argument),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
         }
     }
-    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
+    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_applicand_of(applicand),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_lefthand_of(lefthand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_lefthand_of(lefthand),
         }
     }
-    fn add_argument_of(&mut self, argument: &ConceptRef) {
+    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_argument_of(argument),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_argument_of(argument),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
         }
     }
     fn delete_definition(&mut self) {
@@ -127,16 +127,16 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().delete_definition(),
         }
     }
-    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().delete_applicand_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_lefthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_lefthand_of(definition),
         }
     }
-    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_argument_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().delete_argument_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_righthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().delete_righthand_of(definition),
         }
     }
 }

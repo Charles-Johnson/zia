@@ -41,21 +41,21 @@ impl AbstractSyntaxTree {
             expansion: None,
         }
     }
-    pub fn from_monad(
+    pub fn from_pair(
         token: Token,
-        applicand: AbstractSyntaxTree,
-        argument: AbstractSyntaxTree,
+        lefthand: AbstractSyntaxTree,
+        righthand: AbstractSyntaxTree,
     ) -> ZiaResult<AbstractSyntaxTree> {
         let mut concept: Option<ConceptRef> = None;
-        if let Some(argc) = argument.get_concept() {
-            if let Some(def) = try!(applicand.find_definition(&argc)) {
+        if let Some(argc) = righthand.get_concept() {
+            if let Some(def) = try!(lefthand.find_definition(&argc)) {
                 concept = Some(def.clone());
             }
         }
         Ok(AbstractSyntaxTree {
             token,
             concept,
-            expansion: Some((Box::new(applicand), Box::new(argument))),
+            expansion: Some((Box::new(lefthand), Box::new(righthand))),
         })
     }
     pub fn contains(&self, ast: &AbstractSyntaxTree) -> bool {
@@ -108,31 +108,31 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             Some(c) => c.get_definition(),
         }
     }
-    fn get_applicand_of(&self) -> Vec<ConceptRef> {
+    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         match self.get_concept() {
             None => Vec::new(),
-            Some(c) => c.get_applicand_of(),
+            Some(c) => c.get_lefthand_of(),
         }
     }
-    fn get_argument_of(&self) -> Vec<ConceptRef> {
+    fn get_righthand_of(&self) -> Vec<ConceptRef> {
         match self.get_concept() {
             None => Vec::new(),
-            Some(c) => c.get_argument_of(),
+            Some(c) => c.get_righthand_of(),
         }
     }
-    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
+    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.set_definition(applicand, argument)
+            c.set_definition(lefthand, righthand)
         }
     }
-    fn add_applicand_of(&mut self, concept: &ConceptRef) {
+    fn add_lefthand_of(&mut self, concept: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.add_applicand_of(concept)
+            c.add_lefthand_of(concept)
         }
     }
-    fn add_argument_of(&mut self, concept: &ConceptRef) {
+    fn add_righthand_of(&mut self, concept: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.add_argument_of(concept)
+            c.add_righthand_of(concept)
         }
     }
     fn delete_definition(&mut self) {
@@ -140,14 +140,14 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             c.delete_definition()
         }
     }
-    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
+    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.delete_applicand_of(definition)
+            c.delete_lefthand_of(definition)
         }
     }
-    fn delete_argument_of(&mut self, definition: &ConceptRef) {
+    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.delete_argument_of(definition)
+            c.delete_righthand_of(definition)
         }
     }
 }

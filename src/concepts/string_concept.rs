@@ -49,32 +49,32 @@ impl RefactorFrom<ConceptRef> for StringConcept {
 }
 
 impl Application<ConceptRef> for StringConcept {
-    fn get_applicand_of(&self) -> Vec<ConceptRef> {
-        self.abstract_concept.get_applicand_of()
+    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_lefthand_of()
     }
-    fn get_argument_of(&self) -> Vec<ConceptRef> {
-        self.abstract_concept.get_argument_of()
+    fn get_righthand_of(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_righthand_of()
     }
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.abstract_concept.get_definition()
     }
-    fn set_definition(&mut self, applicand: &ConceptRef, argument: &ConceptRef) {
-        self.abstract_concept.set_definition(applicand, argument);
+    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
+        self.abstract_concept.set_definition(lefthand, righthand);
     }
-    fn add_applicand_of(&mut self, applicand: &ConceptRef) {
-        self.abstract_concept.add_applicand_of(applicand);
+    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
+        self.abstract_concept.add_lefthand_of(lefthand);
     }
-    fn add_argument_of(&mut self, argument: &ConceptRef) {
-        self.abstract_concept.add_argument_of(argument);
+    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
+        self.abstract_concept.add_righthand_of(righthand);
     }
     fn delete_definition(&mut self) {
         self.abstract_concept.delete_definition();
     }
-    fn delete_applicand_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.delete_applicand_of(definition)
+    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.delete_lefthand_of(definition)
     }
-    fn delete_argument_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.delete_argument_of(definition)
+    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.delete_righthand_of(definition)
     }
 }
 

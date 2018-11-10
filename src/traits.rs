@@ -20,12 +20,12 @@ use token::Token;
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptMaker<
-	T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-	U: MaybeConcept<T> + HasToken + MightExpand<U>
->
-where
-	Self: LabelledAbstractMaker<T> {
-	fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
+    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+    U: MaybeConcept<T> + HasToken + MightExpand<U>,
+> where
+    Self: LabelledAbstractMaker<T>,
+{
+    fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
@@ -173,12 +173,12 @@ pub trait Definer<T: AbstractFactory + DefinitionModifier>
 where
     Self: AbstractMaker<T>,
 {
-    fn insert_definition(&mut self, applicand: &mut T, argument: &mut T) -> ZiaResult<T> {
-        let application = try!(applicand.find_definition(&argument));
+    fn insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
+        let application = try!(lefthand.find_definition(righthand));
         match application {
             None => {
                 let mut definition = self.new_abstract();
-                definition.insert_definition(applicand, argument);
+                definition.insert_definition(lefthand, righthand);
                 Ok(definition.clone())
             }
             Some(def) => Ok(def),
@@ -237,17 +237,17 @@ pub trait DefinitionModifier
 where
     Self: Definition<Self> + PartialEq + Clone,
 {
-    fn insert_definition(&mut self, applicand: &mut Self, argument: &mut Self) {
-        self.set_definition(applicand, argument);
-        applicand.add_applicand_of(self);
-        argument.add_argument_of(self);
+    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) {
+        self.set_definition(lefthand, righthand);
+        lefthand.add_lefthand_of(self);
+        righthand.add_righthand_of(self);
     }
     fn remove_definition(&mut self) {
         match self.get_definition() {
             None => panic!("No definition to remove!"),
             Some((mut app, mut arg)) => {
-                app.delete_applicand_of(self);
-                arg.delete_argument_of(self);
+                app.delete_lefthand_of(self);
+                arg.delete_righthand_of(self);
                 self.delete_definition();
             }
         };
@@ -317,12 +317,12 @@ pub trait Definition<T: Application<T> + Clone + PartialEq>
 where
     Self: Application<T>,
 {
-    fn find_definition(&self, argument: &T) -> ZiaResult<Option<T>> {
+    fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
-        for candidate in self.get_applicand_of() {
-            let has_argument = argument.get_argument_of().contains(&candidate);
+        for candidate in self.get_lefthand_of() {
+            let has_righthand = righthand.get_righthand_of().contains(&candidate);
             let new_candidate = !candidates.contains(&candidate);
-            if has_argument && new_candidate {
+            if has_righthand && new_candidate {
                 candidates.push(candidate);
             }
         }
@@ -330,7 +330,7 @@ where
             0 => Ok(None),
             1 => Ok(Some(candidates[0].clone())),
             _ => Err(ZiaError::Ambiguity(
-                "Multiple definitions with the same applicand and argument pair 
+                "Multiple definitions with the same lefthand and righthand pair 
 				exist."
                     .to_string(),
             )),
@@ -365,15 +365,15 @@ where
 }
 
 pub trait Application<T> {
-    fn get_applicand_of(&self) -> Vec<T>;
-    fn get_argument_of(&self) -> Vec<T>;
+    fn get_lefthand_of(&self) -> Vec<T>;
+    fn get_righthand_of(&self) -> Vec<T>;
     fn get_definition(&self) -> Option<(T, T)>;
     fn set_definition(&mut self, &T, &T);
-    fn add_applicand_of(&mut self, &T);
-    fn add_argument_of(&mut self, &T);
+    fn add_lefthand_of(&mut self, &T);
+    fn add_righthand_of(&mut self, &T);
     fn delete_definition(&mut self);
-    fn delete_applicand_of(&mut self, &T);
-    fn delete_argument_of(&mut self, &T);
+    fn delete_lefthand_of(&mut self, &T);
+    fn delete_righthand_of(&mut self, &T);
 }
 
 pub trait NormalFormModifier
