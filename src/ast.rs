@@ -17,7 +17,7 @@
 use concepts::ConceptRef;
 use std::borrow::Borrow;
 use token::Token;
-use traits::{Application, Definition, HasToken, HasConcept};
+use traits::{Application, Definition, HasToken, MaybeConcept, MightExpand};
 use utils::ZiaResult;
 
 pub struct AbstractSyntaxTree {
@@ -58,16 +58,6 @@ impl AbstractSyntaxTree {
             expansion: Some((Box::new(applicand), Box::new(argument))),
         })
     }
-    pub fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
-        match self.expansion {
-			None => None,
-			Some((ref app, ref arg)) => {
-				let borrowed_app: &AbstractSyntaxTree = app.borrow();
-				let borrowed_arg: &AbstractSyntaxTree = arg.borrow();
-				Some((borrowed_app.clone(), borrowed_arg.clone()))
-			},
-		}
-    }
     pub fn contains(&self, ast: &AbstractSyntaxTree) -> bool {
         if let Some((ref app, ref arg)) = self.get_expansion() {
             app == ast || arg == ast || app.contains(ast) || arg.contains(ast)
@@ -78,14 +68,27 @@ impl AbstractSyntaxTree {
 }
 
 impl HasToken for AbstractSyntaxTree {
-	fn get_token(&self) -> Token {
+    fn get_token(&self) -> Token {
         self.token.clone()
     }
 }
 
-impl HasConcept<ConceptRef> for AbstractSyntaxTree {
+impl MaybeConcept<ConceptRef> for AbstractSyntaxTree {
     fn get_concept(&self) -> Option<ConceptRef> {
         self.concept.clone()
+    }
+}
+
+impl MightExpand<AbstractSyntaxTree> for AbstractSyntaxTree {
+    fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
+        match self.expansion {
+            None => None,
+            Some((ref app, ref arg)) => {
+                let borrowed_app: &AbstractSyntaxTree = app.borrow();
+                let borrowed_arg: &AbstractSyntaxTree = arg.borrow();
+                Some((borrowed_app.clone(), borrowed_arg.clone()))
+            }
+        }
     }
 }
 
@@ -160,14 +163,14 @@ impl PartialEq for AbstractSyntaxTree {
 impl Eq for AbstractSyntaxTree {}
 
 impl Clone for AbstractSyntaxTree {
-	fn clone(&self) -> AbstractSyntaxTree {
-		AbstractSyntaxTree{
-			token: self.get_token(),
-			concept: self.get_concept(),
-			expansion: match self.get_expansion() {
-				None => None,
-				Some((app, arg)) => Some((Box::new(app), Box::new(arg))),
-			}
-		}
-	}
+    fn clone(&self) -> AbstractSyntaxTree {
+        AbstractSyntaxTree {
+            token: self.get_token(),
+            concept: self.get_concept(),
+            expansion: match self.get_expansion() {
+                None => None,
+                Some((app, arg)) => Some((Box::new(app), Box::new(arg))),
+            },
+        }
+    }
 }

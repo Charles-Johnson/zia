@@ -19,11 +19,32 @@ use std::fmt;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
-pub trait TokenHandler<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display> 
-where
-	Self: LabelGetter<T>,
+pub trait Expander<
+    T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
+    U: MaybeConcept<T> + HasToken + MightExpand<U>,
+> where
+    Self: TokenHandler<T>,
 {
-	fn get_token(&self, c: &T) -> ZiaResult<Token> {
+    fn expand_ast_token(&self, ast: &U) -> ZiaResult<Token> {
+        if let Some(con) = ast.get_concept() {
+            self.expand_as_token(&con)
+        } else if let Some((ref app2, ref arg2)) = ast.get_expansion() {
+            Ok(try!(self.expand_ast_token(app2)) + try!(self.expand_ast_token(arg2)))
+        } else {
+            Ok(ast.get_token())
+        }
+    }
+}
+
+pub trait MightExpand<T> {
+    fn get_expansion(&self) -> Option<(T, T)>;
+}
+
+pub trait TokenHandler<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display>
+where
+    Self: LabelGetter<T>,
+{
+    fn get_token(&self, c: &T) -> ZiaResult<Token> {
         match try!(self.get_label(c)) {
             None => match c.get_definition() {
                 Some((app, arg)) => self.join_tokens(&app, &arg),
@@ -37,7 +58,7 @@ where
     fn join_tokens(&self, app: &T, arg: &T) -> ZiaResult<Token> {
         Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
     }
-	fn expand_as_token(&self, c: &T) -> ZiaResult<Token> {
+    fn expand_as_token(&self, c: &T) -> ZiaResult<Token> {
         match c.get_definition() {
             Some((app, arg)) => self.join_tokens(&app, &arg),
             None => self.get_token(c),
@@ -46,20 +67,19 @@ where
 }
 
 pub trait Definer2<
-	T: DefinitionModifier 
-		+ StringFactory 
-		+ AbstractFactory 
-		+ fmt::Display 
-		+ NormalFormModifier 
-		+ Id
-		+ RefactorFrom<T>, 
-	U: HasToken + HasConcept<T>,
-> 
-where
-	Self: Refactor<T> + Labeller<T>,
+    T: DefinitionModifier
+        + StringFactory
+        + AbstractFactory
+        + fmt::Display
+        + NormalFormModifier
+        + Id
+        + RefactorFrom<T>,
+    U: HasToken + MaybeConcept<T>,
+> where
+    Self: Refactor<T> + Labeller<T>,
 {
-	fn define2(&mut self, before_c: &mut T, after: &U) -> ZiaResult<()> {
-		if let Some(mut after_c) = after.get_concept() {
+    fn define2(&mut self, before_c: &mut T, after: &U) -> ZiaResult<()> {
+        if let Some(mut after_c) = after.get_concept() {
             self.refactor(before_c, &mut after_c)
         } else {
             match after.get_token() {
@@ -72,20 +92,20 @@ where
                 )),
             }
         }
-	}
+    }
 }
 
 pub trait HasToken {
-	fn get_token(&self) -> Token;
+    fn get_token(&self) -> Token;
 }
 
-pub trait HasConcept<T> {
-	fn get_concept(&self) -> Option<T>;
+pub trait MaybeConcept<T> {
+    fn get_concept(&self) -> Option<T>;
 }
 
 pub trait SyntaxFinder<T: Label<T> + Application<T> + Clone + Id> {
-	fn get_string_concept(&self, &str) -> Option<T>;
-	fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
+    fn get_string_concept(&self, &str) -> Option<T>;
+    fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
         match self.get_string_concept(s) {
             None => Ok(None),
             Some(c) => c.get_labellee(),
@@ -103,7 +123,7 @@ pub trait LabelledAbstractMaker<
         try!(self.label(&mut new_abstract, string));
         Ok(new_abstract)
     }
-	fn setup(&mut self) -> ZiaResult<()> {
+    fn setup(&mut self) -> ZiaResult<()> {
         self.new_abstract(); // for LABEL
         let mut define_concept = self.new_abstract(); // for DEFINE;
         let mut reduction_concept = self.new_abstract(); // for REDUCTION

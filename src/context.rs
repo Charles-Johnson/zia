@@ -21,8 +21,9 @@ use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, Definer2,
-    DefinitionModifier, HasToken, HasConcept, Id, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
-    NormalFormModifier, Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
+    DefinitionModifier, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
+    MaybeConcept, MightExpand, NormalForm, NormalFormModifier, Refactor, RefactorId, StringMaker,
+    SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -106,11 +107,7 @@ impl Context {
             )),
         }
     }
-    fn define(
-        &mut self,
-        before: &AbstractSyntaxTree,
-        after: &AbstractSyntaxTree,
-    ) -> ZiaResult<()> {
+    fn define(&mut self, before: &AbstractSyntaxTree, after: &AbstractSyntaxTree) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
             if before == after {
                 before_c.remove_definition();
@@ -202,19 +199,13 @@ impl Context {
             Token::Expression(ref s) => self.ast_from_expression(s),
         }
     }
-    fn recursively_reduce(
-        &mut self,
-        ast: &AbstractSyntaxTree,
-    ) -> ZiaResult<AbstractSyntaxTree> {
+    fn recursively_reduce(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
         match try!(self.reduce(ast)) {
             Some(ref a) => self.recursively_reduce(a),
             None => Ok(ast.clone()),
         }
     }
-    fn reduce(
-        &mut self,
-        ast: &AbstractSyntaxTree,
-    ) -> ZiaResult<Option<AbstractSyntaxTree>> {
+    fn reduce(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match ast.get_concept() {
             Some(ref c) => self.reduce_concept(c),
             None => match ast.get_expansion() {
@@ -279,15 +270,6 @@ impl Context {
             c,
         ))
     }
-    fn expand_ast_token(&self, ast: &AbstractSyntaxTree) -> ZiaResult<Token> {
-        if let Some(con) = ast.get_concept() {
-            self.expand_as_token(&con)
-        } else if let Some((app2, arg2)) = ast.get_expansion() {
-            Ok(try!(self.expand_ast_token(&app2)) + try!(self.expand_ast_token(&arg2)))
-        } else {
-            Ok(ast.get_token())
-        }
-    }
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
@@ -337,17 +319,19 @@ impl Labeller<ConceptRef> for Context {}
 impl LabelledAbstractMaker<ConceptRef> for Context {}
 
 impl SyntaxFinder<ConceptRef> for Context {
-	fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {
+    fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {
         match self.string_map.get(s) {
-			None => None,
-			Some(sc) => Some(ConceptRef::String(sc.clone())),
-		}
+            None => None,
+            Some(sc) => Some(ConceptRef::String(sc.clone())),
+        }
     }
 }
 
 impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl TokenHandler<ConceptRef> for Context {}
+
+impl Expander<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {
