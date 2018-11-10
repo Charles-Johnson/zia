@@ -16,7 +16,46 @@
 */
 use constants::LABEL;
 use std::fmt;
+use token::Token;
 use utils::{ZiaError, ZiaResult};
+
+pub trait Definer2<
+	T: DefinitionModifier 
+		+ StringFactory 
+		+ AbstractFactory 
+		+ fmt::Display 
+		+ NormalFormModifier 
+		+ Id
+		+ RefactorFrom<T>, 
+	U: HasToken + HasConcept<T>,
+> 
+where
+	Self: Refactor<T> + Labeller<T>,
+{
+	fn define2(&mut self, before_c: &mut T, after: &U) -> ZiaResult<()> {
+		if let Some(mut after_c) = after.get_concept() {
+            self.refactor(before_c, &mut after_c)
+        } else {
+            match after.get_token() {
+                Token::Atom(s) => {
+                    try!(self.unlabel(before_c));
+                    self.label(before_c, &s)
+                }
+                Token::Expression(_) => Err(ZiaError::Syntax(
+                    "Only symbols can have definitions".to_string(),
+                )),
+            }
+        }
+	}
+}
+
+pub trait HasToken {
+	fn get_token(&self) -> Token;
+}
+
+pub trait HasConcept<T> {
+	fn get_concept(&self) -> Option<T>;
+}
 
 pub trait SyntaxFinder<T: Label<T> + Application<T> + Clone + Id> {
 	fn get_string_concept(&self, &str) -> Option<T>;

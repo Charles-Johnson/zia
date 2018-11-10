@@ -18,11 +18,10 @@ use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
-use std::rc::Rc;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer,
-    DefinitionModifier, Id, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
+    AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, Definer2,
+    DefinitionModifier, HasToken, HasConcept, Id, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
     NormalFormModifier, Refactor, RefactorId, StringMaker, SyntaxFinder, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
@@ -43,14 +42,14 @@ impl Context {
     }
     pub fn call(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<String> {
         match ast.get_expansion() {
-            Some((app, arg)) => if let Some(c) = arg.get_concept() {
+            Some((ref app, ref arg)) => if let Some(c) = arg.get_concept() {
                 match c.get_id() {
-                    REDUCTION => Ok(try!(self.recursively_reduce(&app)).get_token().as_string()),
-                    DEFINE => Ok(try!(self.expand_ast_token(&app)).as_string()),
-                    _ => self.call_as_applicand(&app, &arg),
+                    REDUCTION => Ok(try!(self.recursively_reduce(app)).get_token().as_string()),
+                    DEFINE => Ok(try!(self.expand_ast_token(app)).as_string()),
+                    _ => self.call_as_applicand(app, arg),
                 }
             } else {
-                self.call_as_applicand(&app, &arg)
+                self.call_as_applicand(app, arg)
             },
             _ => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
@@ -60,7 +59,7 @@ impl Context {
     fn call_as_applicand(
         &mut self,
         app: &AbstractSyntaxTree,
-        arg: &Rc<AbstractSyntaxTree>,
+        arg: &AbstractSyntaxTree,
     ) -> ZiaResult<String> {
         match app.get_expansion() {
             Some((ref ap, ref ar)) => if let Some(arc) = ar.get_concept() {
@@ -109,8 +108,8 @@ impl Context {
     }
     fn define(
         &mut self,
-        before: &Rc<AbstractSyntaxTree>,
-        after: &Rc<AbstractSyntaxTree>,
+        before: &AbstractSyntaxTree,
+        after: &AbstractSyntaxTree,
     ) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
             if before == after {
@@ -134,8 +133,8 @@ impl Context {
             } else {
                 try!(self.concept_from_ast(&try!(AbstractSyntaxTree::from_monad(
                     after.get_token(),
-                    &app,
-                    &arg,
+                    app.clone(),
+                    arg.clone(),
                 ))));
                 Ok(())
             }
@@ -145,26 +144,7 @@ impl Context {
             ));
         }
     }
-    fn define2(
-        &mut self,
-        before_c: &mut ConceptRef,
-        after: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<()> {
-        if let Some(mut after_c) = after.get_concept() {
-            self.refactor(before_c, &mut after_c)
-        } else {
-            match after.get_token() {
-                Token::Atom(s) => {
-                    try!(self.unlabel(before_c));
-                    self.label(before_c, &s)
-                }
-                Token::Expression(_) => Err(ZiaError::Syntax(
-                    "Only symbols can have definitions".to_string(),
-                )),
-            }
-        }
-    }
-    fn concept_from_ast(&mut self, ast: &Rc<AbstractSyntaxTree>) -> ZiaResult<ConceptRef> {
+    fn concept_from_ast(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<ConceptRef> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
@@ -184,7 +164,7 @@ impl Context {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
     }
-    pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<AbstractSyntaxTree> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::Syntax(
@@ -201,7 +181,7 @@ impl Context {
             )),
         }
     }
-    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<AbstractSyntaxTree> {
         let concept_if_exists = try!(self.concept_from_label(s));
         match concept_if_exists {
             None => Ok(AbstractSyntaxTree::from_atom(s)),
@@ -211,12 +191,12 @@ impl Context {
             )),
         }
     }
-    fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_monad(&mut self, app: Token, arg: Token) -> ZiaResult<AbstractSyntaxTree> {
         let applicand = try!(self.ast_from_token(&app));
         let argument = try!(self.ast_from_token(&arg));
-        AbstractSyntaxTree::from_monad(app + arg, &applicand, &argument)
+        AbstractSyntaxTree::from_monad(app + arg, applicand, argument)
     }
-    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<AbstractSyntaxTree> {
         match *t {
             Token::Atom(ref s) => self.ast_from_atom(s),
             Token::Expression(ref s) => self.ast_from_expression(s),
@@ -224,17 +204,17 @@ impl Context {
     }
     fn recursively_reduce(
         &mut self,
-        ast: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+        ast: &AbstractSyntaxTree,
+    ) -> ZiaResult<AbstractSyntaxTree> {
         match try!(self.reduce(ast)) {
-            Some(a) => self.recursively_reduce(&a),
+            Some(ref a) => self.recursively_reduce(a),
             None => Ok(ast.clone()),
         }
     }
     fn reduce(
         &mut self,
-        ast: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
+        ast: &AbstractSyntaxTree,
+    ) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match ast.get_concept() {
             Some(ref c) => self.reduce_concept(c),
             None => match ast.get_expansion() {
@@ -242,23 +222,23 @@ impl Context {
                 Some((app, arg)) => Context::match_app_arg(
                     try!(self.reduce(&app)),
                     try!(self.reduce(&arg)),
-                    &app,
-                    &arg,
+                    app.clone(),
+                    arg.clone(),
                 ),
             },
         }
     }
-    fn reduce_concept(&mut self, c: &ConceptRef) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
+    fn reduce_concept(&mut self, c: &ConceptRef) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match try!(c.get_normal_form()) {
             None => match c.get_definition() {
                 Some((mut app, mut arg)) => {
                     let app_result = try!(self.reduce_concept(&app));
                     let arg_result = try!(self.reduce_concept(&arg));
                     Context::match_app_arg(
-                        app_result.clone(),
-                        arg_result.clone(),
-                        &try!(self.ast_from_concept(&app)),
-                        &try!(self.ast_from_concept(&arg)),
+                        app_result,
+                        arg_result,
+                        try!(self.ast_from_concept(&app)),
+                        try!(self.ast_from_concept(&arg)),
                     )
                 }
                 None => Ok(None),
@@ -269,37 +249,37 @@ impl Context {
     // Quite an ugly static method that I made to save myself from having to
     // write the same pattern twice in reduce and reduce_concept methods.
     fn match_app_arg(
-        app: Option<Rc<AbstractSyntaxTree>>,
-        arg: Option<Rc<AbstractSyntaxTree>>,
-        original_app: &Rc<AbstractSyntaxTree>,
-        original_arg: &Rc<AbstractSyntaxTree>,
-    ) -> ZiaResult<Option<Rc<AbstractSyntaxTree>>> {
+        app: Option<AbstractSyntaxTree>,
+        arg: Option<AbstractSyntaxTree>,
+        original_app: AbstractSyntaxTree,
+        original_arg: AbstractSyntaxTree,
+    ) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match (app, arg) {
             (None, None) => Ok(None),
             (Some(new_app), None) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
                 new_app.get_token() + original_arg.get_token(),
-                &new_app,
-                &original_arg,
+                new_app,
+                original_arg,
             )))),
             (None, Some(new_arg)) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
                 original_app.get_token() + new_arg.get_token(),
-                &original_app,
-                &new_arg,
+                original_app,
+                new_arg,
             )))),
             (Some(new_app), Some(new_arg)) => Ok(Some(try!(AbstractSyntaxTree::from_monad(
                 new_app.get_token() + new_arg.get_token(),
-                &new_app,
-                &new_arg,
+                new_app,
+                new_arg,
             )))),
         }
     }
-    fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<Rc<AbstractSyntaxTree>> {
+    fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<AbstractSyntaxTree> {
         Ok(AbstractSyntaxTree::from_token_and_concept(
             &try!(self.get_token(c)),
             c,
         ))
     }
-    fn expand_ast_token(&self, ast: &Rc<AbstractSyntaxTree>) -> ZiaResult<Token> {
+    fn expand_ast_token(&self, ast: &AbstractSyntaxTree) -> ZiaResult<Token> {
         if let Some(con) = ast.get_concept() {
             self.expand_as_token(&con)
         } else if let Some((app2, arg2)) = ast.get_expansion() {
@@ -384,6 +364,8 @@ impl SyntaxFinder<ConceptRef> for Context {
 		}
     }
 }
+
+impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {
