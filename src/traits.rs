@@ -19,6 +19,26 @@ use std::fmt;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
+pub trait TokenHandler<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display> 
+where
+	Self: LabelGetter<T>,
+{
+	fn get_token(&self, c: &T) -> ZiaResult<Token> {
+        match try!(self.get_label(c)) {
+            None => match c.get_definition() {
+                Some((app, arg)) => self.join_tokens(&app, &arg),
+                None => Err(ZiaError::Absence(
+                    "Unlabelled concept with no definition".to_string(),
+                )),
+            },
+            Some(s) => Ok(Token::Atom(s)),
+        }
+    }
+    fn join_tokens(&self, app: &T, arg: &T) -> ZiaResult<Token> {
+        Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
+    }
+}
+
 pub trait Definer2<
 	T: DefinitionModifier 
 		+ StringFactory 

@@ -22,7 +22,7 @@ use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptNumber, ConceptTidyer, Definer, Definer2,
     DefinitionModifier, HasToken, HasConcept, Id, LabelGetter, LabelledAbstractMaker, Labeller, NormalForm,
-    NormalFormModifier, Refactor, RefactorId, StringMaker, SyntaxFinder, Unlabeller,
+    NormalFormModifier, Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -294,20 +294,6 @@ impl Context {
             None => self.get_token(c),
         }
     }
-    fn get_token(&self, c: &ConceptRef) -> ZiaResult<Token> {
-        match try!(self.get_label(c)) {
-            None => match c.get_definition() {
-                Some((app, arg)) => self.join_tokens(&app, &arg),
-                None => Err(ZiaError::Absence(
-                    "Unlabelled concept with no definition".to_string(),
-                )),
-            },
-            Some(s) => Ok(Token::Atom(s)),
-        }
-    }
-    fn join_tokens(&self, app: &ConceptRef, arg: &ConceptRef) -> ZiaResult<Token> {
-        Ok(try!(self.get_token(&app)) + try!(self.get_token(&arg)))
-    }
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
@@ -366,6 +352,8 @@ impl SyntaxFinder<ConceptRef> for Context {
 }
 
 impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl TokenHandler<ConceptRef> for Context {}
 
 #[cfg(test)]
 mod context {
