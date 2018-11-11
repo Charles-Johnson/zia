@@ -14,18 +14,83 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use constants::LABEL;
+use constants::{DEFINE, LABEL, REDUCTION};
 use std::fmt;
 use std::marker;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
-pub trait Definer3<T,U>
+pub trait LeftHandCall<T, U>
 where
-	T: fmt::Display + Id + NormalFormModifier + RefactorFrom<T> + DefinitionModifier 
-		+ StringFactory + AbstractFactory, 
-	U: MightExpand + MaybeConcept<T> + HasToken + Clone + Pair + PartialEq,
-	Self: Definer2<T,U> + ConceptMaker<T,U>,
+    T: NormalFormModifier
+        + DefinitionModifier
+        + Id
+        + AbstractFactory
+        + StringFactory
+        + RefactorFrom<T>
+        + fmt::Display,
+    U: MaybeConcept<T> + Container + Pair + HasToken,
+    Self: Definer3<T, U>,
+{
+    fn call_as_lefthand(&mut self, left: &U, right: &U) -> ZiaResult<String> {
+        match left.get_expansion() {
+            Some((ref leftleft, ref leftright)) => if let Some(lrc) = leftright.get_concept() {
+                match lrc.get_id() {
+                    REDUCTION => if right.contains(leftleft) {
+                        Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
+                    } else if right == leftleft {
+                        if let Some(mut rc) = right.get_concept() {
+                            try!(rc.delete_normal_form());
+                            Ok("".to_string())
+                        } else {
+                            Err(ZiaError::Redundancy(
+                                "Removing the normal form a symbol that was never previously used \
+                                 is redundant"
+                                    .to_string(),
+                            ))
+                        }
+                    } else {
+                        try!(
+                            try!(self.concept_from_ast(leftleft))
+                                .update_normal_form(&mut try!(self.concept_from_ast(right)))
+                        );
+                        Ok("".to_string())
+                    },
+                    DEFINE => {
+                        if right.contains(leftleft) {
+                            Err(ZiaError::Loop("Definition is infinite".to_string()))
+                        } else {
+                            try!(self.define(right, leftleft));
+                            Ok("".to_string())
+                        }
+                    }
+                    _ => Err(ZiaError::Absence(
+                        "This concept is not a program".to_string(),
+                    )),
+                }
+            } else {
+                Err(ZiaError::Absence(
+                    "This concept is not a program".to_string(),
+                ))
+            },
+            None => Err(ZiaError::Absence(
+                "This concept is not a program".to_string(),
+            )),
+        }
+    }
+}
+
+pub trait Definer3<T, U>
+where
+    T: fmt::Display
+        + Id
+        + NormalFormModifier
+        + RefactorFrom<T>
+        + DefinitionModifier
+        + StringFactory
+        + AbstractFactory,
+    U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
+    Self: Definer2<T, U> + ConceptMaker<T, U>,
 {
     fn define(&mut self, before: &U, after: &U) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
@@ -35,24 +100,20 @@ where
             } else {
                 self.define2(&mut before_c, after)
             }
-        } else if let Some((left, right)) = before.get_expansion() {
+        } else if let Some((ref left, ref right)) = before.get_expansion() {
             if let Some(mut after_c) = after.get_concept() {
-                if let Some((mut ap, mut ar)) = after_c.get_definition() {
-                    try!(self.define2(&mut ap, &left));
-                    self.define2(&mut ar, &right)
+                if let Some((ref mut ap, ref mut ar)) = after_c.get_definition() {
+                    try!(self.define2(ap, left));
+                    self.define2(ar, right)
                 } else {
                     after_c.insert_definition(
-                        &mut try!(self.concept_from_ast(&left)),
-                        &mut try!(self.concept_from_ast(&right)),
+                        &mut try!(self.concept_from_ast(left)),
+                        &mut try!(self.concept_from_ast(right)),
                     );
                     Ok(())
                 }
             } else {
-                try!(self.concept_from_ast(&try!(U::from_pair(
-                    after.get_token(),
-                    left.clone(),
-                    right.clone(),
-                ))));
+                try!(self.concept_from_ast(&try!(U::from_pair(after.get_token(), left, right,))));
                 Ok(())
             }
         } else {
@@ -63,11 +124,24 @@ where
     }
 }
 
+pub trait Container
+where
+    Self: PartialEq + MightExpand,
+{
+    fn contains(&self, other: &Self) -> bool {
+        if let Some((ref left, ref right)) = self.get_expansion() {
+            left == other || right == other || left.contains(other) || right.contains(other)
+        } else {
+            false
+        }
+    }
+}
+
 pub trait Pair
 where
-    Self: marker::Sized,
+    Self: marker::Sized + Clone,
 {
-    fn from_pair(Token, Self, Self) -> ZiaResult<Self>;
+    fn from_pair(Token, &Self, &Self) -> ZiaResult<Self>;
 }
 
 pub trait ConceptMaker<T, U>
@@ -113,14 +187,14 @@ where
 
 pub trait MightExpand
 where
-	Self: marker::Sized,
+    Self: marker::Sized,
 {
     fn get_expansion(&self) -> Option<(Self, Self)>;
 }
 
 pub trait TokenHandler<T>
 where
-	T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
+    T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
     Self: LabelGetter<T>,
 {
     fn get_token(&self, c: &T) -> ZiaResult<Token> {
@@ -147,8 +221,13 @@ where
 
 pub trait Definer2<T, U>
 where
-    T: DefinitionModifier + StringFactory + AbstractFactory + fmt::Display + NormalFormModifier
-        + Id + RefactorFrom<T>,
+    T: DefinitionModifier
+        + StringFactory
+        + AbstractFactory
+        + fmt::Display
+        + NormalFormModifier
+        + Id
+        + RefactorFrom<T>,
     U: HasToken + MaybeConcept<T>,
     Self: Refactor<T> + Labeller<T>,
 {
@@ -179,7 +258,7 @@ pub trait MaybeConcept<T> {
 
 pub trait SyntaxFinder<T>
 where
-	T: Label<T> + Application<T> + Clone + Id,
+    T: Label<T> + Application<T> + Clone + Id,
 {
     fn get_string_concept(&self, &str) -> Option<T>;
     fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
@@ -223,8 +302,8 @@ where
 }
 
 pub trait Definer<T>
-where 
-	T: AbstractFactory + DefinitionModifier,
+where
+    T: AbstractFactory + DefinitionModifier,
     Self: AbstractMaker<T>,
 {
     fn insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
@@ -242,7 +321,7 @@ where
 
 pub trait AbstractMaker<T>
 where
-	T: AbstractFactory,
+    T: AbstractFactory,
     Self: ConceptAdder<T> + ConceptNumber,
 {
     fn new_abstract(&mut self) -> T {
@@ -259,7 +338,7 @@ pub trait AbstractFactory {
 
 pub trait StringMaker<T>
 where
-	T: StringFactory,
+    T: StringFactory,
     Self: ConceptAdder<T> + ConceptNumber,
 {
     fn new_string(&mut self, string: &str) -> T {
@@ -312,7 +391,7 @@ where
 
 pub trait RefactorId<T>
 where
-	T: Id + RefactorFrom<T>,
+    T: Id + RefactorFrom<T>,
     Self: ConceptTidyer<T> + ConceptNumber,
 {
     fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -344,7 +423,7 @@ pub trait ConceptNumber {
 
 pub trait Unlabeller<T>
 where
-	T: Definition<T> + PartialEq + NormalFormModifier + fmt::Display,
+    T: Definition<T> + PartialEq + NormalFormModifier + fmt::Display,
     Self: LabelGetter<T>,
 {
     fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
@@ -355,9 +434,9 @@ where
     }
 }
 
-pub trait LabelGetter<T> 
+pub trait LabelGetter<T>
 where
-	T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
+    T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
 {
     fn get_label_concept(&self) -> T;
     fn get_concept_of_label(&self, concept: &T) -> ZiaResult<Option<T>> {
@@ -376,7 +455,7 @@ where
 
 pub trait Definition<T>
 where
-	T: Application<T> + Clone + PartialEq,
+    T: Application<T> + Clone + PartialEq,
     Self: Application<T>,
 {
     fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
@@ -402,7 +481,7 @@ where
 
 pub trait Label<T>
 where
-	T: Application<T> + NormalForm<T> + Clone + Id,
+    T: Application<T> + NormalForm<T> + Clone + Id,
     Self: NormalForm<T>,
 {
     fn get_labellee(&self) -> ZiaResult<Option<T>> {

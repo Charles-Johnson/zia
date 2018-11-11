@@ -20,10 +20,10 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker,
-    Labeller, MaybeConcept, MightExpand, NormalForm, NormalFormModifier, Pair, Refactor,
-    RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
+    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
+    Definer, Definer2, Definer3, Expander, HasToken, Id, LabelGetter,
+    LabelledAbstractMaker, Labeller, LeftHandCall, MaybeConcept, MightExpand, NormalForm,
+    Pair, Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -53,56 +53,6 @@ impl Context {
                 self.call_as_lefthand(left, right)
             },
             _ => Err(ZiaError::Absence(
-                "This concept is not a program".to_string(),
-            )),
-        }
-    }
-    fn call_as_lefthand(
-        &mut self,
-        left: &AbstractSyntaxTree,
-        right: &AbstractSyntaxTree,
-    ) -> ZiaResult<String> {
-        match left.get_expansion() {
-            Some((ref leftleft, ref leftright)) => if let Some(lrc) = leftright.get_concept() {
-                match lrc.get_id() {
-                    REDUCTION => if right.contains(leftleft) {
-                        Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
-                    } else if right == leftleft {
-                        if let Some(mut rc) = right.get_concept() {
-                            try!(rc.delete_normal_form());
-                            Ok("".to_string())
-                        } else {
-                            Err(ZiaError::Redundancy(
-                                "Removing the normal form a symbol that was never previously used \
-                                 is redundant"
-                                    .to_string(),
-                            ))
-                        }
-                    } else {
-                        try!(
-                            try!(self.concept_from_ast(leftleft))
-                                .update_normal_form(&mut try!(self.concept_from_ast(right)))
-                        );
-                        Ok("".to_string())
-                    },
-                    DEFINE => {
-                        if right.contains(leftleft) {
-                            Err(ZiaError::Loop("Definition is infinite".to_string()))
-                        } else {
-                            try!(self.define(right, &leftleft));
-                            Ok("".to_string())
-                        }
-                    }
-                    _ => Err(ZiaError::Absence(
-                        "This concept is not a program".to_string(),
-                    )),
-                }
-            } else {
-                Err(ZiaError::Absence(
-                    "This concept is not a program".to_string(),
-                ))
-            },
-            None => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
             )),
         }
@@ -141,7 +91,7 @@ impl Context {
     fn ast_from_pair(&mut self, left: Token, right: Token) -> ZiaResult<AbstractSyntaxTree> {
         let lefthand = try!(self.ast_from_token(&left));
         let righthand = try!(self.ast_from_token(&right));
-        AbstractSyntaxTree::from_pair(left + right, lefthand, righthand)
+        AbstractSyntaxTree::from_pair(left + right, &lefthand, &righthand)
     }
     fn ast_from_token(&mut self, t: &Token) -> ZiaResult<AbstractSyntaxTree> {
         match *t {
@@ -163,8 +113,8 @@ impl Context {
                 Some((left, right)) => Context::match_left_right(
                     try!(self.reduce(&left)),
                     try!(self.reduce(&right)),
-                    left.clone(),
-                    right.clone(),
+                    &left,
+                    &right,
                 ),
             },
         }
@@ -178,8 +128,8 @@ impl Context {
                     Context::match_left_right(
                         left_result,
                         right_result,
-                        try!(self.ast_from_concept(&left)),
-                        try!(self.ast_from_concept(&right)),
+                        &try!(self.ast_from_concept(&left)),
+                        &try!(self.ast_from_concept(&right)),
                     )
                 }
                 None => Ok(None),
@@ -192,26 +142,28 @@ impl Context {
     fn match_left_right(
         left: Option<AbstractSyntaxTree>,
         right: Option<AbstractSyntaxTree>,
-        original_left: AbstractSyntaxTree,
-        original_right: AbstractSyntaxTree,
+        original_left: &AbstractSyntaxTree,
+        original_right: &AbstractSyntaxTree,
     ) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match (left, right) {
             (None, None) => Ok(None),
-            (Some(new_left), None) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
+            (Some(ref new_left), None) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
                 new_left.get_token() + original_right.get_token(),
                 new_left,
                 original_right,
             )))),
-            (None, Some(new_right)) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
+            (None, Some(ref new_right)) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
                 original_left.get_token() + new_right.get_token(),
                 original_left,
                 new_right,
             )))),
-            (Some(new_left), Some(new_right)) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
-                new_left.get_token() + new_right.get_token(),
-                new_left,
-                new_right,
-            )))),
+            (Some(ref new_left), Some(ref new_right)) => {
+                Ok(Some(try!(AbstractSyntaxTree::from_pair(
+                    new_left.get_token() + new_right.get_token(),
+                    new_left,
+                    new_right,
+                ))))
+            }
         }
     }
     fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<AbstractSyntaxTree> {
@@ -286,6 +238,8 @@ impl TokenHandler<ConceptRef> for Context {}
 impl Expander<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

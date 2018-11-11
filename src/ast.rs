@@ -17,7 +17,7 @@
 use concepts::ConceptRef;
 use std::borrow::Borrow;
 use token::Token;
-use traits::{Application, Definition, HasToken, MaybeConcept, MightExpand, Pair};
+use traits::{Application, Container, Definition, HasToken, MaybeConcept, MightExpand, Pair};
 use utils::ZiaResult;
 
 pub struct AbstractSyntaxTree {
@@ -41,20 +41,15 @@ impl AbstractSyntaxTree {
             expansion: None,
         }
     }
-    pub fn contains(&self, ast: &AbstractSyntaxTree) -> bool {
-        if let Some((ref left, ref right)) = self.get_expansion() {
-            left == ast || right == ast || left.contains(ast) || right.contains(ast)
-        } else {
-            false
-        }
-    }
 }
+
+impl Container for AbstractSyntaxTree {}
 
 impl Pair for AbstractSyntaxTree {
     fn from_pair(
         token: Token,
-        lefthand: AbstractSyntaxTree,
-        righthand: AbstractSyntaxTree,
+        lefthand: &AbstractSyntaxTree,
+        righthand: &AbstractSyntaxTree,
     ) -> ZiaResult<AbstractSyntaxTree> {
         let mut concept: Option<ConceptRef> = None;
         if let Some(rc) = righthand.get_concept() {
@@ -65,7 +60,7 @@ impl Pair for AbstractSyntaxTree {
         Ok(AbstractSyntaxTree {
             token,
             concept,
-            expansion: Some((Box::new(lefthand), Box::new(righthand))),
+            expansion: Some((Box::new(lefthand.clone()), Box::new(righthand.clone()))),
         })
     }
 }
