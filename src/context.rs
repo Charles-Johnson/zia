@@ -147,23 +147,9 @@ impl Context {
     ) -> ZiaResult<Option<AbstractSyntaxTree>> {
         match (left, right) {
             (None, None) => Ok(None),
-            (Some(ref new_left), None) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
-                new_left.get_token() + original_right.get_token(),
-                new_left,
-                original_right,
-            )))),
-            (None, Some(ref new_right)) => Ok(Some(try!(AbstractSyntaxTree::from_pair(
-                original_left.get_token() + new_right.get_token(),
-                original_left,
-                new_right,
-            )))),
-            (Some(ref new_left), Some(ref new_right)) => {
-                Ok(Some(try!(AbstractSyntaxTree::from_pair(
-                    new_left.get_token() + new_right.get_token(),
-                    new_left,
-                    new_right,
-                ))))
-            }
+            (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
+            (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
+            (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
         }
     }
     fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<AbstractSyntaxTree> {

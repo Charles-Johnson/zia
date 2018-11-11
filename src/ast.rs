@@ -16,6 +16,7 @@
 */
 use concepts::ConceptRef;
 use std::borrow::Borrow;
+use std::ops::Add;
 use token::Token;
 use traits::{Application, Container, Definition, HasToken, MaybeConcept, MightExpand, Pair};
 use utils::ZiaResult;
@@ -171,4 +172,15 @@ impl Clone for AbstractSyntaxTree {
             },
         }
     }
+}
+
+impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
+	type Output = ZiaResult<AbstractSyntaxTree>;
+	fn add(self, other: AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
+		AbstractSyntaxTree::from_pair(
+            self.get_token() + other.get_token(),
+            &self,
+            &other,
+        )
+	}
 }
