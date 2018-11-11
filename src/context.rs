@@ -23,7 +23,7 @@ use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
     Definer, Definer2, Definer3, Expander, HasToken, Id, LabelGetter,
     LabelledAbstractMaker, Labeller, LeftHandCall, MaybeConcept, MightExpand, NormalForm,
-    Pair, Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
+    Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -70,7 +70,7 @@ impl Context {
             1 => self.ast_from_atom(&tokens[0]),
             2 => {
                 let parsed_tokens = parse_tokens(&tokens);
-                self.ast_from_pair(parsed_tokens[0].clone(), parsed_tokens[1].clone())
+                self.ast_from_pair(&parsed_tokens[0], &parsed_tokens[1])
             }
             _ => Err(ZiaError::Syntax(
                 "Expression composed of more than 2 tokens has not been implemented yet"
@@ -88,10 +88,10 @@ impl Context {
             )),
         }
     }
-    fn ast_from_pair(&mut self, left: Token, right: Token) -> ZiaResult<AbstractSyntaxTree> {
-        let lefthand = try!(self.ast_from_token(&left));
-        let righthand = try!(self.ast_from_token(&right));
-        AbstractSyntaxTree::from_pair(left + right, &lefthand, &righthand)
+    fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<AbstractSyntaxTree> {
+        let lefthand = try!(self.ast_from_token(left));
+        let righthand = try!(self.ast_from_token(right));
+        lefthand + righthand
     }
     fn ast_from_token(&mut self, t: &Token) -> ZiaResult<AbstractSyntaxTree> {
         match *t {
