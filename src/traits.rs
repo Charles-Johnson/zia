@@ -20,8 +20,11 @@ use std::marker;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
-pub trait Definer3<T: fmt::Display + Id + NormalFormModifier + RefactorFrom<T> + DefinitionModifier + StringFactory + AbstractFactory, U: MightExpand + MaybeConcept<T> + HasToken + Clone + Pair + PartialEq>
+pub trait Definer3<T,U>
 where
+	T: fmt::Display + Id + NormalFormModifier + RefactorFrom<T> + DefinitionModifier 
+		+ StringFactory + AbstractFactory, 
+	U: MightExpand + MaybeConcept<T> + HasToken + Clone + Pair + PartialEq,
 	Self: Definer2<T,U> + ConceptMaker<T,U>,
 {
     fn define(&mut self, before: &U, after: &U) -> ZiaResult<()> {
@@ -67,10 +70,10 @@ where
     fn from_pair(Token, Self, Self) -> ZiaResult<Self>;
 }
 
-pub trait ConceptMaker<
+pub trait ConceptMaker<T, U>
+where
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
     U: MaybeConcept<T> + HasToken + MightExpand,
-> where
     Self: LabelledAbstractMaker<T>,
 {
     fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
@@ -91,10 +94,10 @@ pub trait ConceptMaker<
     }
 }
 
-pub trait Expander<
+pub trait Expander<T, U>
+where
     T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
     U: MaybeConcept<T> + HasToken + MightExpand,
-> where
     Self: TokenHandler<T>,
 {
     fn expand_ast_token(&self, ast: &U) -> ZiaResult<Token> {
@@ -115,8 +118,9 @@ where
     fn get_expansion(&self) -> Option<(Self, Self)>;
 }
 
-pub trait TokenHandler<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display>
+pub trait TokenHandler<T>
 where
+	T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
     Self: LabelGetter<T>,
 {
     fn get_token(&self, c: &T) -> ZiaResult<Token> {
@@ -141,16 +145,11 @@ where
     }
 }
 
-pub trait Definer2<
-    T: DefinitionModifier
-        + StringFactory
-        + AbstractFactory
-        + fmt::Display
-        + NormalFormModifier
-        + Id
-        + RefactorFrom<T>,
+pub trait Definer2<T, U>
+where
+    T: DefinitionModifier + StringFactory + AbstractFactory + fmt::Display + NormalFormModifier
+        + Id + RefactorFrom<T>,
     U: HasToken + MaybeConcept<T>,
-> where
     Self: Refactor<T> + Labeller<T>,
 {
     fn define2(&mut self, before_c: &mut T, after: &U) -> ZiaResult<()> {
@@ -178,7 +177,10 @@ pub trait MaybeConcept<T> {
     fn get_concept(&self) -> Option<T>;
 }
 
-pub trait SyntaxFinder<T: Label<T> + Application<T> + Clone + Id> {
+pub trait SyntaxFinder<T>
+where
+	T: Label<T> + Application<T> + Clone + Id,
+{
     fn get_string_concept(&self, &str) -> Option<T>;
     fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
         match self.get_string_concept(s) {
@@ -188,9 +190,9 @@ pub trait SyntaxFinder<T: Label<T> + Application<T> + Clone + Id> {
     }
 }
 
-pub trait LabelledAbstractMaker<
+pub trait LabelledAbstractMaker<T>
+where
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-> where
     Self: AbstractMaker<T> + Labeller<T>,
 {
     fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
@@ -207,9 +209,9 @@ pub trait LabelledAbstractMaker<
     }
 }
 
-pub trait Labeller<
+pub trait Labeller<T>
+where
     T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-> where
     Self: StringMaker<T> + LabelGetter<T> + Definer<T>,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
@@ -220,8 +222,9 @@ pub trait Labeller<
     }
 }
 
-pub trait Definer<T: AbstractFactory + DefinitionModifier>
-where
+pub trait Definer<T>
+where 
+	T: AbstractFactory + DefinitionModifier,
     Self: AbstractMaker<T>,
 {
     fn insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
@@ -237,8 +240,9 @@ where
     }
 }
 
-pub trait AbstractMaker<T: AbstractFactory>
+pub trait AbstractMaker<T>
 where
+	T: AbstractFactory,
     Self: ConceptAdder<T> + ConceptNumber,
 {
     fn new_abstract(&mut self) -> T {
@@ -253,8 +257,9 @@ pub trait AbstractFactory {
     fn new_abstract(usize) -> Self;
 }
 
-pub trait StringMaker<T: StringFactory>
+pub trait StringMaker<T>
 where
+	T: StringFactory,
     Self: ConceptAdder<T> + ConceptNumber,
 {
     fn new_string(&mut self, string: &str) -> T {
@@ -273,9 +278,9 @@ pub trait ConceptAdder<T> {
     fn add_concept(&mut self, &T);
 }
 
-pub trait Refactor<
+pub trait Refactor<T>
+where
     T: RefactorFrom<T> + Id + NormalFormModifier + fmt::Display + PartialEq + Definition<T>,
-> where
     Self: RefactorId<T> + Unlabeller<T>,
 {
     fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -305,8 +310,9 @@ where
     }
 }
 
-pub trait RefactorId<T: Id + RefactorFrom<T>>
+pub trait RefactorId<T>
 where
+	T: Id + RefactorFrom<T>,
     Self: ConceptTidyer<T> + ConceptNumber,
 {
     fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -336,8 +342,9 @@ pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Unlabeller<T: Definition<T> + PartialEq + NormalFormModifier + fmt::Display>
+pub trait Unlabeller<T>
 where
+	T: Definition<T> + PartialEq + NormalFormModifier + fmt::Display,
     Self: LabelGetter<T>,
 {
     fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
@@ -348,7 +355,10 @@ where
     }
 }
 
-pub trait LabelGetter<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display> {
+pub trait LabelGetter<T> 
+where
+	T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt::Display,
+{
     fn get_label_concept(&self) -> T;
     fn get_concept_of_label(&self, concept: &T) -> ZiaResult<Option<T>> {
         self.get_label_concept().find_definition(concept)
@@ -364,8 +374,9 @@ pub trait LabelGetter<T: NormalForm<T> + Definition<T> + Clone + PartialEq + fmt
     }
 }
 
-pub trait Definition<T: Application<T> + Clone + PartialEq>
+pub trait Definition<T>
 where
+	T: Application<T> + Clone + PartialEq,
     Self: Application<T>,
 {
     fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
@@ -389,8 +400,9 @@ where
     }
 }
 
-pub trait Label<T: Application<T> + NormalForm<T> + Clone + Id>
+pub trait Label<T>
 where
+	T: Application<T> + NormalForm<T> + Clone + Id,
     Self: NormalForm<T>,
 {
     fn get_labellee(&self) -> ZiaResult<Option<T>> {
