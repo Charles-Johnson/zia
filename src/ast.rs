@@ -28,17 +28,10 @@ pub struct AbstractSyntaxTree {
 }
 
 impl AbstractSyntaxTree {
-    pub fn from_token_and_concept(t: &Token, c: &ConceptRef) -> AbstractSyntaxTree {
-        AbstractSyntaxTree {
-            token: t.clone(),
-            concept: Some(c.clone()),
-            expansion: None,
-        }
-    }
-    pub fn from_atom(s: &str) -> AbstractSyntaxTree {
+    pub fn new(s: &str, concept: Option<ConceptRef>) -> AbstractSyntaxTree {
         AbstractSyntaxTree {
             token: Token::Atom(s.to_string()),
-            concept: None,
+            concept,
             expansion: None,
         }
     }
@@ -175,12 +168,8 @@ impl Clone for AbstractSyntaxTree {
 }
 
 impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
-	type Output = ZiaResult<AbstractSyntaxTree>;
-	fn add(self, other: AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
-		AbstractSyntaxTree::from_pair(
-            self.get_token() + other.get_token(),
-            &self,
-            &other,
-        )
-	}
+    type Output = ZiaResult<AbstractSyntaxTree>;
+    fn add(self, other: AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
+        AbstractSyntaxTree::from_pair(self.get_token() + other.get_token(), &self, &other)
+    }
 }

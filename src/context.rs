@@ -20,10 +20,10 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
-    Definer, Definer2, Definer3, Expander, HasToken, Id, LabelGetter,
-    LabelledAbstractMaker, Labeller, LeftHandCall, MaybeConcept, MightExpand, NormalForm,
-    Refactor, RefactorId, StringMaker, SyntaxFinder, TokenHandler, Unlabeller,
+    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
+    Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
+    LeftHandCall, MaybeConcept, MightExpand, NormalForm, Refactor, RefactorId, StringMaker,
+    SyntaxFinder, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -80,13 +80,7 @@ impl Context {
     }
     fn ast_from_atom(&mut self, s: &str) -> ZiaResult<AbstractSyntaxTree> {
         let concept_if_exists = try!(self.concept_from_label(s));
-        match concept_if_exists {
-            None => Ok(AbstractSyntaxTree::from_atom(s)),
-            Some(c) => Ok(AbstractSyntaxTree::from_token_and_concept(
-                &Token::Atom(s.to_string()),
-                &c,
-            )),
-        }
+        Ok(AbstractSyntaxTree::new(s, concept_if_exists))
     }
     fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<AbstractSyntaxTree> {
         let lefthand = try!(self.ast_from_token(left));
@@ -153,10 +147,17 @@ impl Context {
         }
     }
     fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<AbstractSyntaxTree> {
-        Ok(AbstractSyntaxTree::from_token_and_concept(
-            &try!(self.get_token(c)),
-            c,
-        ))
+        match try!(self.get_label(c)) {
+            Some(ref s) => Ok(AbstractSyntaxTree::new(s, Some(c.clone()))),
+            None => match c.get_definition() {
+                Some((ref left, ref right)) => {
+                    try!(self.ast_from_concept(left)) + try!(self.ast_from_concept(right))
+                }
+                None => Err(ZiaError::Absence(
+                    "Unlabelled concept with no definition".to_string(),
+                )),
+            },
+        }
     }
 }
 

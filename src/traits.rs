@@ -200,7 +200,7 @@ where
     fn get_token(&self, c: &T) -> ZiaResult<Token> {
         match try!(self.get_label(c)) {
             None => match c.get_definition() {
-                Some((app, arg)) => self.join_tokens(&app, &arg),
+                Some((ref left, ref right)) => self.join_tokens(left, right),
                 None => Err(ZiaError::Absence(
                     "Unlabelled concept with no definition".to_string(),
                 )),
