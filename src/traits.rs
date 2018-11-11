@@ -17,8 +17,34 @@
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::fmt;
 use std::marker;
+use std::ops::Add;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
+
+pub trait SyntaxFromConcept<T, U>
+where
+    Self: LabelGetter<T>,
+    T: Clone + Application<T> + fmt::Display + PartialEq + Definition<T> + NormalForm<T>,
+    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+{
+    fn ast_from_concept(&self, c: &T) -> ZiaResult<U> {
+        match try!(self.get_label(c)) {
+            Some(ref s) => Ok(U::new(s, Some(c.clone()))),
+            None => match c.get_definition() {
+                Some((ref left, ref right)) => {
+                    try!(self.ast_from_concept(left)) + try!(self.ast_from_concept(right))
+                }
+                None => Err(ZiaError::Absence(
+                    "Unlabelled concept with no definition".to_string(),
+                )),
+            },
+        }
+    }
+}
+
+pub trait SyntaxFactory<T> {
+    fn new(&str, Option<T>) -> Self;
+}
 
 pub trait LeftHandCall<T, U>
 where

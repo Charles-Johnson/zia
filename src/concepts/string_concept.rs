@@ -37,9 +37,6 @@ impl StringConcept {
     pub fn set_id(&mut self, number: usize) {
         self.abstract_concept.set_id(number);
     }
-    pub fn get_string(&self) -> String {
-        self.string.clone()
-    }
 }
 
 impl RefactorFrom<ConceptRef> for StringConcept {

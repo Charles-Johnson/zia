@@ -23,7 +23,7 @@ use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
     Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
     LeftHandCall, MaybeConcept, MightExpand, NormalForm, Refactor, RefactorId, StringMaker,
-    SyntaxFinder, TokenHandler, Unlabeller,
+    SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -104,7 +104,7 @@ impl Context {
             Some(ref c) => self.reduce_concept(c),
             None => match ast.get_expansion() {
                 None => Ok(None),
-                Some((left, right)) => Context::match_left_right(
+                Some((left, right)) => AbstractSyntaxTree::match_left_right(
                     try!(self.reduce(&left)),
                     try!(self.reduce(&right)),
                     &left,
@@ -119,7 +119,7 @@ impl Context {
                 Some((mut left, mut right)) => {
                     let left_result = try!(self.reduce_concept(&left));
                     let right_result = try!(self.reduce_concept(&right));
-                    Context::match_left_right(
+                    AbstractSyntaxTree::match_left_right(
                         left_result,
                         right_result,
                         &try!(self.ast_from_concept(&left)),
@@ -129,34 +129,6 @@ impl Context {
                 None => Ok(None),
             },
             Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
-        }
-    }
-    // Quite an ugly static method that I made to save myself from having to
-    // write the same pattern twice in reduce and reduce_concept methods.
-    fn match_left_right(
-        left: Option<AbstractSyntaxTree>,
-        right: Option<AbstractSyntaxTree>,
-        original_left: &AbstractSyntaxTree,
-        original_right: &AbstractSyntaxTree,
-    ) -> ZiaResult<Option<AbstractSyntaxTree>> {
-        match (left, right) {
-            (None, None) => Ok(None),
-            (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
-            (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
-            (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
-        }
-    }
-    fn ast_from_concept(&self, c: &ConceptRef) -> ZiaResult<AbstractSyntaxTree> {
-        match try!(self.get_label(c)) {
-            Some(ref s) => Ok(AbstractSyntaxTree::new(s, Some(c.clone()))),
-            None => match c.get_definition() {
-                Some((ref left, ref right)) => {
-                    try!(self.ast_from_concept(left)) + try!(self.ast_from_concept(right))
-                }
-                None => Err(ZiaError::Absence(
-                    "Unlabelled concept with no definition".to_string(),
-                )),
-            },
         }
     }
 }
@@ -227,6 +199,8 @@ impl Expander<ConceptRef, AbstractSyntaxTree> for Context {}
 impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {
