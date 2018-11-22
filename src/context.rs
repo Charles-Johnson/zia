@@ -22,8 +22,8 @@ use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
     Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
-    MatchLeftRight, MaybeConcept, MightExpand, ReduceConcept, Refactor, RefactorId, StringMaker,
-    SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
+    MaybeConcept, MightExpand, Reduce, Refactor, RefactorId, StringMaker, SyntaxFactory,
+    SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -91,26 +91,6 @@ impl Context {
         match *t {
             Token::Atom(ref s) => self.ast_from_atom(s),
             Token::Expression(ref s) => self.ast_from_expression(s),
-        }
-    }
-    fn recursively_reduce(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
-        match try!(self.reduce(ast)) {
-            Some(ref a) => self.recursively_reduce(a),
-            None => Ok(ast.clone()),
-        }
-    }
-    fn reduce(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<Option<AbstractSyntaxTree>> {
-        match ast.get_concept() {
-            Some(ref c) => self.reduce_concept(c),
-            None => match ast.get_expansion() {
-                None => Ok(None),
-                Some((left, right)) => AbstractSyntaxTree::match_left_right(
-                    try!(self.reduce(&left)),
-                    try!(self.reduce(&right)),
-                    &left,
-                    &right,
-                ),
-            },
         }
     }
 }
@@ -184,7 +164,7 @@ impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
 
-impl ReduceConcept<ConceptRef, AbstractSyntaxTree> for Context {}
+impl Reduce<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

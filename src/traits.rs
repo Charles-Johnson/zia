@@ -21,11 +21,11 @@ use std::ops::Add;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
-pub trait ReduceConcept<T, U>
+pub trait Reduce<T, U>
 where
     Self: SyntaxFromConcept<T, U>,
     T: Clone + Application<T> + fmt::Display + PartialEq + Definition<T> + NormalForm<T>,
-    U: SyntaxFactory<T> + MatchLeftRight,
+    U: SyntaxFactory<T> + MatchLeftRight + MaybeConcept<T> + MightExpand,
 {
     fn reduce_concept(&mut self, c: &T) -> ZiaResult<Option<U>> {
         match try!(c.get_normal_form()) {
@@ -43,6 +43,26 @@ where
                 None => Ok(None),
             },
             Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
+        }
+    }
+    fn recursively_reduce(&mut self, ast: &U) -> ZiaResult<U> {
+        match try!(self.reduce(ast)) {
+            Some(ref a) => self.recursively_reduce(a),
+            None => Ok(ast.clone()),
+        }
+    }
+    fn reduce(&mut self, ast: &U) -> ZiaResult<Option<U>> {
+        match ast.get_concept() {
+            Some(ref c) => self.reduce_concept(c),
+            None => match ast.get_expansion() {
+                None => Ok(None),
+                Some((left, right)) => U::match_left_right(
+                    try!(self.reduce(&left)),
+                    try!(self.reduce(&right)),
+                    &left,
+                    &right,
+                ),
+            },
         }
     }
 }
