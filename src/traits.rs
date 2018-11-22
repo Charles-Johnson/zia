@@ -21,6 +21,25 @@ use std::ops::Add;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
+pub trait MatchLeftRight
+where
+    Self: Clone + Add<Self, Output = ZiaResult<Self>>,
+{
+    fn match_left_right(
+        left: Option<Self>,
+        right: Option<Self>,
+        original_left: &Self,
+        original_right: &Self,
+    ) -> ZiaResult<Option<Self>> {
+        match (left, right) {
+            (None, None) => Ok(None),
+            (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
+            (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
+            (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
+        }
+    }
+}
+
 pub trait SyntaxFromConcept<T, U>
 where
     Self: LabelGetter<T>,

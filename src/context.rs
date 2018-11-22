@@ -22,8 +22,8 @@ use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
     Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
-    LeftHandCall, MaybeConcept, MightExpand, NormalForm, Refactor, RefactorId, StringMaker,
-    SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
+    LeftHandCall, MatchLeftRight, MaybeConcept, MightExpand, NormalForm, Refactor, RefactorId,
+    StringMaker, SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 

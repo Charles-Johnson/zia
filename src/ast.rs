@@ -19,7 +19,8 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::{
-    Application, Container, Definition, HasToken, MaybeConcept, MightExpand, Pair, SyntaxFactory,
+    Application, Container, Definition, HasToken, MatchLeftRight, MaybeConcept, MightExpand, Pair,
+    SyntaxFactory,
 };
 use utils::ZiaResult;
 
@@ -29,23 +30,7 @@ pub struct AbstractSyntaxTree {
     expansion: Option<(Box<AbstractSyntaxTree>, Box<AbstractSyntaxTree>)>,
 }
 
-impl AbstractSyntaxTree {
-    // Quite an ugly static method that I made to save myself from having to
-    // write the same pattern twice in Context::reduce and Context::reduce_concept methods.
-    pub fn match_left_right(
-        left: Option<AbstractSyntaxTree>,
-        right: Option<AbstractSyntaxTree>,
-        original_left: &AbstractSyntaxTree,
-        original_right: &AbstractSyntaxTree,
-    ) -> ZiaResult<Option<AbstractSyntaxTree>> {
-        match (left, right) {
-            (None, None) => Ok(None),
-            (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
-            (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
-            (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
-        }
-    }
-}
+impl MatchLeftRight for AbstractSyntaxTree {}
 
 impl SyntaxFactory<ConceptRef> for AbstractSyntaxTree {
     fn new(s: &str, concept: Option<ConceptRef>) -> AbstractSyntaxTree {
