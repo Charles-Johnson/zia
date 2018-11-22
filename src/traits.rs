@@ -18,8 +18,48 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::fmt;
 use std::marker;
 use std::ops::Add;
-use token::Token;
+use token::{parse_line, parse_tokens, Token};
 use utils::{ZiaError, ZiaResult};
+
+pub trait SyntaxConverter<T, U>
+where
+    Self: SyntaxFinder<T>,
+    T: Clone + Id + Application<T> + Label<T>,
+    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+{
+    fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
+        let tokens: Vec<String> = parse_line(s);
+        match tokens.len() {
+            0 => Err(ZiaError::Syntax(
+                "Parentheses need to contain an expression".to_string(),
+            )),
+            1 => self.ast_from_atom(&tokens[0]),
+            2 => {
+                let parsed_tokens = parse_tokens(&tokens);
+                self.ast_from_pair(&parsed_tokens[0], &parsed_tokens[1])
+            }
+            _ => Err(ZiaError::Syntax(
+                "Expression composed of more than 2 tokens has not been implemented yet"
+                    .to_string(),
+            )),
+        }
+    }
+    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<U> {
+        let concept_if_exists = try!(self.concept_from_label(s));
+        Ok(U::new(s, concept_if_exists))
+    }
+    fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<U> {
+        let lefthand = try!(self.ast_from_token(left));
+        let righthand = try!(self.ast_from_token(right));
+        lefthand + righthand
+    }
+    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<U> {
+        match *t {
+            Token::Atom(ref s) => self.ast_from_atom(s),
+            Token::Expression(ref s) => self.ast_from_expression(s),
+        }
+    }
+}
 
 pub trait Reduce<T, U>
 where

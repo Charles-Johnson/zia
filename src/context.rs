@@ -18,11 +18,10 @@ use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
 use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
-use token::{parse_line, parse_tokens, Token};
 use traits::{
     AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
     Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
-    MaybeConcept, MightExpand, Reduce, Refactor, RefactorId, StringMaker, SyntaxFactory,
+    MaybeConcept, MightExpand, Reduce, Refactor, RefactorId, StringMaker, SyntaxConverter,
     SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
@@ -60,38 +59,6 @@ impl Context {
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
-    }
-    pub fn ast_from_expression(&mut self, s: &str) -> ZiaResult<AbstractSyntaxTree> {
-        let tokens: Vec<String> = parse_line(s);
-        match tokens.len() {
-            0 => Err(ZiaError::Syntax(
-                "Parentheses need to contain an expression".to_string(),
-            )),
-            1 => self.ast_from_atom(&tokens[0]),
-            2 => {
-                let parsed_tokens = parse_tokens(&tokens);
-                self.ast_from_pair(&parsed_tokens[0], &parsed_tokens[1])
-            }
-            _ => Err(ZiaError::Syntax(
-                "Expression composed of more than 2 tokens has not been implemented yet"
-                    .to_string(),
-            )),
-        }
-    }
-    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<AbstractSyntaxTree> {
-        let concept_if_exists = try!(self.concept_from_label(s));
-        Ok(AbstractSyntaxTree::new(s, concept_if_exists))
-    }
-    fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<AbstractSyntaxTree> {
-        let lefthand = try!(self.ast_from_token(left));
-        let righthand = try!(self.ast_from_token(right));
-        lefthand + righthand
-    }
-    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<AbstractSyntaxTree> {
-        match *t {
-            Token::Atom(ref s) => self.ast_from_atom(s),
-            Token::Expression(ref s) => self.ast_from_expression(s),
-        }
     }
 }
 
@@ -165,6 +132,8 @@ impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
 impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl Reduce<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl SyntaxConverter<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

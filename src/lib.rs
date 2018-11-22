@@ -27,6 +27,7 @@ mod traits;
 mod utils;
 
 pub use context::Context;
+use traits::SyntaxConverter;
 use utils::ZiaResult;
 
 pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String> {
