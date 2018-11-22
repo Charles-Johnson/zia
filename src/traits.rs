@@ -21,6 +21,36 @@ use std::ops::Add;
 use token::{parse_line, parse_tokens, Token};
 use utils::{ZiaError, ZiaResult};
 
+pub trait Call<T, U>
+where
+    Self: Reduce<T, U> + LeftHandCall<T, U> + Expander<T, U>,
+    T: RefactorFrom<T>
+        + StringFactory
+        + AbstractFactory
+        + Id
+        + DefinitionModifier
+        + NormalFormModifier
+        + fmt::Display,
+    U: HasToken + Pair + Container + MaybeConcept<T> + MatchLeftRight + SyntaxFactory<T>,
+{
+    fn call(&mut self, ast: &U) -> ZiaResult<String> {
+        match ast.get_expansion() {
+            Some((ref left, ref right)) => if let Some(c) = right.get_concept() {
+                match c.get_id() {
+                    REDUCTION => Ok(try!(self.recursively_reduce(left)).get_token().as_string()),
+                    DEFINE => Ok(try!(self.expand_ast_token(left)).as_string()),
+                    _ => self.call_as_lefthand(left, right),
+                }
+            } else {
+                self.call_as_lefthand(left, right)
+            },
+            _ => Err(ZiaError::Absence(
+                "This concept is not a program".to_string(),
+            )),
+        }
+    }
+}
+
 pub trait SyntaxConverter<T, U>
 where
     Self: SyntaxFinder<T>,

@@ -16,15 +16,15 @@
 */
 use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
-use constants::{DEFINE, LABEL, REDUCTION};
+use constants::LABEL;
 use std::collections::HashMap;
 use traits::{
-    AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
-    Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
-    MaybeConcept, MightExpand, Reduce, Refactor, RefactorId, StringMaker, SyntaxConverter,
-    SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
+    AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
+    Definer2, Definer3, Expander, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
+    Reduce, Refactor, RefactorId, StringMaker, SyntaxConverter, SyntaxFinder, SyntaxFromConcept,
+    TokenHandler, Unlabeller,
 };
-use utils::{ZiaError, ZiaResult};
+use utils::ZiaResult;
 
 pub struct Context {
     string_map: HashMap<String, StringRef>,
@@ -40,21 +40,9 @@ impl Context {
         try!(cont.setup());
         Ok(cont)
     }
-    pub fn call(&mut self, ast: &AbstractSyntaxTree) -> ZiaResult<String> {
-        match ast.get_expansion() {
-            Some((ref left, ref right)) => if let Some(c) = right.get_concept() {
-                match c.get_id() {
-                    REDUCTION => Ok(try!(self.recursively_reduce(left)).get_token().as_string()),
-                    DEFINE => Ok(try!(self.expand_ast_token(left)).as_string()),
-                    _ => self.call_as_lefthand(left, right),
-                }
-            } else {
-                self.call_as_lefthand(left, right)
-            },
-            _ => Err(ZiaError::Absence(
-                "This concept is not a program".to_string(),
-            )),
-        }
+    pub fn execute(&mut self, command: &str) -> ZiaResult<String> {
+        let ast = try!(self.ast_from_expression(command));
+        self.call(&ast)
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
@@ -134,6 +122,8 @@ impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
 impl Reduce<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl SyntaxConverter<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl Call<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {
