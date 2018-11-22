@@ -21,6 +21,32 @@ use std::ops::Add;
 use token::Token;
 use utils::{ZiaError, ZiaResult};
 
+pub trait ReduceConcept<T, U>
+where
+    Self: SyntaxFromConcept<T, U>,
+    T: Clone + Application<T> + fmt::Display + PartialEq + Definition<T> + NormalForm<T>,
+    U: SyntaxFactory<T> + MatchLeftRight,
+{
+    fn reduce_concept(&mut self, c: &T) -> ZiaResult<Option<U>> {
+        match try!(c.get_normal_form()) {
+            None => match c.get_definition() {
+                Some((mut left, mut right)) => {
+                    let left_result = try!(self.reduce_concept(&left));
+                    let right_result = try!(self.reduce_concept(&right));
+                    U::match_left_right(
+                        left_result,
+                        right_result,
+                        &try!(self.ast_from_concept(&left)),
+                        &try!(self.ast_from_concept(&right)),
+                    )
+                }
+                None => Ok(None),
+            },
+            Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
+        }
+    }
+}
+
 pub trait MatchLeftRight
 where
     Self: Clone + Add<Self, Output = ZiaResult<Self>>,

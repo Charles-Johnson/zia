@@ -20,10 +20,10 @@ use constants::{DEFINE, LABEL, REDUCTION};
 use std::collections::HashMap;
 use token::{parse_line, parse_tokens, Token};
 use traits::{
-    AbstractMaker, Application, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller,
-    LeftHandCall, MatchLeftRight, MaybeConcept, MightExpand, NormalForm, Refactor, RefactorId,
-    StringMaker, SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
+    AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
+    Definer3, Expander, HasToken, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
+    MatchLeftRight, MaybeConcept, MightExpand, ReduceConcept, Refactor, RefactorId, StringMaker,
+    SyntaxFactory, SyntaxFinder, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -113,24 +113,6 @@ impl Context {
             },
         }
     }
-    fn reduce_concept(&mut self, c: &ConceptRef) -> ZiaResult<Option<AbstractSyntaxTree>> {
-        match try!(c.get_normal_form()) {
-            None => match c.get_definition() {
-                Some((mut left, mut right)) => {
-                    let left_result = try!(self.reduce_concept(&left));
-                    let right_result = try!(self.reduce_concept(&right));
-                    AbstractSyntaxTree::match_left_right(
-                        left_result,
-                        right_result,
-                        &try!(self.ast_from_concept(&left)),
-                        &try!(self.ast_from_concept(&right)),
-                    )
-                }
-                None => Ok(None),
-            },
-            Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
-        }
-    }
 }
 
 impl ConceptTidyer<ConceptRef> for Context {
@@ -201,6 +183,8 @@ impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
 impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
 
 impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
+
+impl ReduceConcept<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {
