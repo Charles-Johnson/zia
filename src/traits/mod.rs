@@ -14,9 +14,23 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use constants::{DEFINE, LABEL, REDUCTION};
+
+mod base;
+mod definition_modifier;
+mod label;
+mod normal_form_modifier;
+
+pub use self::definition_modifier::{Definition, DefinitionModifier};
+pub use self::label::{Label, SyntaxFinder};
+pub use self::normal_form_modifier::NormalFormModifier;
+
+pub use self::base::{
+    AbstractFactory, Application, ConceptAdder, ConceptNumber, ConceptTidyer, HasToken, Id,
+    MatchLeftRight, MaybeConcept, MightExpand, NormalForm, Pair, RefactorFrom, StringFactory,
+    SyntaxFactory,
+};
+use constants::{DEFINE, REDUCTION};
 use std::fmt;
-use std::marker;
 use std::ops::Add;
 use token::{parse_line, parse_tokens, Token};
 use utils::{ZiaError, ZiaResult};
@@ -51,45 +65,7 @@ where
     }
 }
 
-pub trait SyntaxConverter<T, U>
-where
-    Self: SyntaxFinder<T>,
-    T: Clone + Id + Application<T> + Label<T>,
-    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
-{
-    fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
-        let tokens: Vec<String> = parse_line(s);
-        match tokens.len() {
-            0 => Err(ZiaError::Syntax(
-                "Parentheses need to contain an expression".to_string(),
-            )),
-            1 => self.ast_from_atom(&tokens[0]),
-            2 => {
-                let parsed_tokens = parse_tokens(&tokens);
-                self.ast_from_pair(&parsed_tokens[0], &parsed_tokens[1])
-            }
-            _ => Err(ZiaError::Syntax(
-                "Expression composed of more than 2 tokens has not been implemented yet"
-                    .to_string(),
-            )),
-        }
-    }
-    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<U> {
-        let concept_if_exists = try!(self.concept_from_label(s));
-        Ok(U::new(s, concept_if_exists))
-    }
-    fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<U> {
-        let lefthand = try!(self.ast_from_token(left));
-        let righthand = try!(self.ast_from_token(right));
-        lefthand + righthand
-    }
-    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<U> {
-        match *t {
-            Token::Atom(ref s) => self.ast_from_atom(s),
-            Token::Expression(ref s) => self.ast_from_expression(s),
-        }
-    }
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Reduce<T, U>
 where
@@ -137,25 +113,6 @@ where
     }
 }
 
-pub trait MatchLeftRight
-where
-    Self: Clone + Add<Self, Output = ZiaResult<Self>>,
-{
-    fn match_left_right(
-        left: Option<Self>,
-        right: Option<Self>,
-        original_left: &Self,
-        original_right: &Self,
-    ) -> ZiaResult<Option<Self>> {
-        match (left, right) {
-            (None, None) => Ok(None),
-            (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
-            (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
-            (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
-        }
-    }
-}
-
 pub trait SyntaxFromConcept<T, U>
 where
     Self: LabelGetter<T>,
@@ -177,9 +134,7 @@ where
     }
 }
 
-pub trait SyntaxFactory<T> {
-    fn new(&str, Option<T>) -> Self;
-}
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait LeftHandCall<T, U>
 where
@@ -298,36 +253,7 @@ where
     }
 }
 
-pub trait Pair
-where
-    Self: marker::Sized + Clone,
-{
-    fn from_pair(Token, &Self, &Self) -> ZiaResult<Self>;
-}
-
-pub trait ConceptMaker<T, U>
-where
-    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-    U: MaybeConcept<T> + HasToken + MightExpand,
-    Self: LabelledAbstractMaker<T>,
-{
-    fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
-        if let Some(c) = ast.get_concept() {
-            Ok(c)
-        } else {
-            let mut c = match ast.get_token() {
-                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
-                Token::Expression(_) => self.new_abstract(),
-            };
-            if let Some((mut app, mut arg)) = ast.get_expansion() {
-                let mut appc = try!(self.concept_from_ast(&app));
-                let mut argc = try!(self.concept_from_ast(&arg));
-                c.insert_definition(&mut appc, &mut argc);
-            }
-            Ok(c)
-        }
-    }
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Expander<T, U>
 where
@@ -344,13 +270,6 @@ where
             Ok(ast.get_token())
         }
     }
-}
-
-pub trait MightExpand
-where
-    Self: marker::Sized,
-{
-    fn get_expansion(&self) -> Option<(Self, Self)>;
 }
 
 pub trait TokenHandler<T>
@@ -379,6 +298,96 @@ where
         }
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+pub trait SyntaxConverter<T, U>
+where
+    Self: SyntaxFinder<T>,
+    T: Clone + Id + Application<T> + Label<T>,
+    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+{
+    fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
+        let tokens: Vec<String> = parse_line(s);
+        match tokens.len() {
+            0 => Err(ZiaError::Syntax(
+                "Parentheses need to contain an expression".to_string(),
+            )),
+            1 => self.ast_from_atom(&tokens[0]),
+            2 => {
+                let parsed_tokens = parse_tokens(&tokens);
+                self.ast_from_pair(&parsed_tokens[0], &parsed_tokens[1])
+            }
+            _ => Err(ZiaError::Syntax(
+                "Expression composed of more than 2 tokens has not been implemented yet"
+                    .to_string(),
+            )),
+        }
+    }
+    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<U> {
+        let concept_if_exists = try!(self.concept_from_label(s));
+        Ok(U::new(s, concept_if_exists))
+    }
+    fn ast_from_pair(&mut self, left: &Token, right: &Token) -> ZiaResult<U> {
+        let lefthand = try!(self.ast_from_token(left));
+        let righthand = try!(self.ast_from_token(right));
+        lefthand + righthand
+    }
+    fn ast_from_token(&mut self, t: &Token) -> ZiaResult<U> {
+        match *t {
+            Token::Atom(ref s) => self.ast_from_atom(s),
+            Token::Expression(ref s) => self.ast_from_expression(s),
+        }
+    }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+pub trait ConceptMaker<T, U>
+where
+    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+    U: MaybeConcept<T> + HasToken + MightExpand,
+    Self: LabelledAbstractMaker<T>,
+{
+    fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
+        if let Some(c) = ast.get_concept() {
+            Ok(c)
+        } else {
+            let mut c = match ast.get_token() {
+                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
+                Token::Expression(_) => self.new_abstract(),
+            };
+            if let Some((mut app, mut arg)) = ast.get_expansion() {
+                let mut appc = try!(self.concept_from_ast(&app));
+                let mut argc = try!(self.concept_from_ast(&arg));
+                c.insert_definition(&mut appc, &mut argc);
+            }
+            Ok(c)
+        }
+    }
+}
+
+pub trait LabelledAbstractMaker<T>
+where
+    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
+    Self: AbstractMaker<T> + Labeller<T>,
+{
+    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
+        let mut new_abstract = self.new_abstract();
+        try!(self.label(&mut new_abstract, string));
+        Ok(new_abstract)
+    }
+    fn setup(&mut self) -> ZiaResult<()> {
+        self.new_abstract(); // for LABEL
+        let mut define_concept = self.new_abstract(); // for DEFINE;
+        let mut reduction_concept = self.new_abstract(); // for REDUCTION
+        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
+        self.label(&mut reduction_concept, "->") //two more ids occupied
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Definer2<T, U>
 where
@@ -409,45 +418,7 @@ where
     }
 }
 
-pub trait HasToken {
-    fn get_token(&self) -> Token;
-}
-
-pub trait MaybeConcept<T> {
-    fn get_concept(&self) -> Option<T>;
-}
-
-pub trait SyntaxFinder<T>
-where
-    T: Label<T> + Application<T> + Clone + Id,
-{
-    fn get_string_concept(&self, &str) -> Option<T>;
-    fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
-        match self.get_string_concept(s) {
-            None => Ok(None),
-            Some(c) => c.get_labellee(),
-        }
-    }
-}
-
-pub trait LabelledAbstractMaker<T>
-where
-    T: StringFactory + AbstractFactory + fmt::Display + DefinitionModifier + NormalFormModifier,
-    Self: AbstractMaker<T> + Labeller<T>,
-{
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
-        let mut new_abstract = self.new_abstract();
-        try!(self.label(&mut new_abstract, string));
-        Ok(new_abstract)
-    }
-    fn setup(&mut self) -> ZiaResult<()> {
-        self.new_abstract(); // for LABEL
-        let mut define_concept = self.new_abstract(); // for DEFINE;
-        let mut reduction_concept = self.new_abstract(); // for REDUCTION
-        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
-        self.label(&mut reduction_concept, "->") //two more ids occupied
-    }
-}
+////////////////////////////////////////////////////////////////////////////////
 
 pub trait Labeller<T>
 where
@@ -461,6 +432,22 @@ where
         definition.update_normal_form(&mut string_ref)
     }
 }
+
+pub trait StringMaker<T>
+where
+    T: StringFactory,
+    Self: ConceptAdder<T> + ConceptNumber,
+{
+    fn new_string(&mut self, string: &str) -> T {
+        let new_id = self.number_of_concepts();
+        let string_ref = T::new_string(new_id, string);
+        self.add_concept(&string_ref);
+        string_ref
+    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Definer<T>
 where
@@ -493,30 +480,7 @@ where
     }
 }
 
-pub trait AbstractFactory {
-    fn new_abstract(usize) -> Self;
-}
-
-pub trait StringMaker<T>
-where
-    T: StringFactory,
-    Self: ConceptAdder<T> + ConceptNumber,
-{
-    fn new_string(&mut self, string: &str) -> T {
-        let new_id = self.number_of_concepts();
-        let string_ref = T::new_string(new_id, string);
-        self.add_concept(&string_ref);
-        string_ref
-    }
-}
-
-pub trait StringFactory {
-    fn new_string(usize, &str) -> Self;
-}
-
-pub trait ConceptAdder<T> {
-    fn add_concept(&mut self, &T);
-}
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 pub trait Refactor<T>
 where
@@ -529,26 +493,6 @@ where
     }
 }
 
-pub trait DefinitionModifier
-where
-    Self: Definition<Self> + PartialEq + Clone,
-{
-    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) {
-        self.set_definition(lefthand, righthand);
-        lefthand.add_lefthand_of(self);
-        righthand.add_righthand_of(self);
-    }
-    fn remove_definition(&mut self) {
-        match self.get_definition() {
-            None => panic!("No definition to remove!"),
-            Some((mut app, mut arg)) => {
-                app.delete_lefthand_of(self);
-                arg.delete_righthand_of(self);
-                self.delete_definition();
-            }
-        };
-    }
-}
 
 pub trait RefactorId<T>
 where
@@ -569,18 +513,7 @@ where
     }
 }
 
-pub trait RefactorFrom<T> {
-    fn refactor_from(&mut self, &T) -> ZiaResult<()>;
-}
-
-pub trait ConceptTidyer<T> {
-    fn remove_concept(&mut self, &T);
-    fn correct_id(&mut self, usize);
-}
-
-pub trait ConceptNumber {
-    fn number_of_concepts(&self) -> usize;
-}
+/////////////////////////////////////////////////////////////////////////////////
 
 pub trait Unlabeller<T>
 where
@@ -612,103 +545,4 @@ where
             },
         })
     }
-}
-
-pub trait Definition<T>
-where
-    T: Application<T> + Clone + PartialEq,
-    Self: Application<T>,
-{
-    fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
-        let mut candidates: Vec<T> = Vec::new();
-        for candidate in self.get_lefthand_of() {
-            let has_righthand = righthand.get_righthand_of().contains(&candidate);
-            let new_candidate = !candidates.contains(&candidate);
-            if has_righthand && new_candidate {
-                candidates.push(candidate);
-            }
-        }
-        match candidates.len() {
-            0 => Ok(None),
-            1 => Ok(Some(candidates[0].clone())),
-            _ => Err(ZiaError::Ambiguity(
-                "Multiple definitions with the same lefthand and righthand pair 
-				exist."
-                    .to_string(),
-            )),
-        }
-    }
-}
-
-pub trait Label<T>
-where
-    T: Application<T> + NormalForm<T> + Clone + Id,
-    Self: NormalForm<T>,
-{
-    fn get_labellee(&self) -> ZiaResult<Option<T>> {
-        let mut candidates: Vec<T> = Vec::new();
-        for label in self.get_reduces_from() {
-            match label.get_definition() {
-                None => continue,
-                Some((r, x)) => if r.get_id() == LABEL {
-                    candidates.push(x)
-                } else {
-                    continue;
-                },
-            };
-        }
-        match candidates.len() {
-            0 => Ok(None),
-            1 => Ok(Some(candidates[0].clone())),
-            _ => Err(ZiaError::Ambiguity(
-                "Multiple concepts are labelled with the same string".to_string(),
-            )),
-        }
-    }
-}
-
-pub trait Application<T> {
-    fn get_lefthand_of(&self) -> Vec<T>;
-    fn get_righthand_of(&self) -> Vec<T>;
-    fn get_definition(&self) -> Option<(T, T)>;
-    fn set_definition(&mut self, &T, &T);
-    fn add_lefthand_of(&mut self, &T);
-    fn add_righthand_of(&mut self, &T);
-    fn delete_definition(&mut self);
-    fn delete_lefthand_of(&mut self, &T);
-    fn delete_righthand_of(&mut self, &T);
-}
-
-pub trait NormalFormModifier
-where
-    Self: NormalForm<Self> + Clone,
-{
-    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        try!(self.set_normal_form(normal_form));
-        normal_form.add_reduces_from(self);
-        Ok(())
-    }
-    fn delete_normal_form(&mut self) -> ZiaResult<()> {
-        match try!(self.get_normal_form()) {
-            None => (),
-            Some(mut n) => {
-                n.remove_reduces_from(self);
-                self.remove_normal_form();
-            }
-        };
-        Ok(())
-    }
-}
-
-pub trait NormalForm<T> {
-    fn get_normal_form(&self) -> ZiaResult<Option<T>>;
-    fn get_reduces_from(&self) -> Vec<T>;
-    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
-    fn add_reduces_from(&mut self, &T);
-    fn remove_normal_form(&mut self);
-    fn remove_reduces_from(&mut self, &T);
-}
-
-pub trait Id {
-    fn get_id(&self) -> usize;
 }

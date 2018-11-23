@@ -19,14 +19,14 @@ mod string_concept;
 
 pub use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
-use super::traits::{
-    AbstractFactory, Application, Definition, DefinitionModifier, Id, Label, NormalForm,
-    NormalFormModifier, RefactorFrom, StringFactory,
-};
-use super::utils::ZiaResult;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
+use traits::{
+    AbstractFactory, Application, Definition, DefinitionModifier, Id, Label, NormalForm,
+    NormalFormModifier, RefactorFrom, StringFactory,
+};
+use utils::ZiaResult;
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
