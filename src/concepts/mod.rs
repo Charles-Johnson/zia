@@ -23,8 +23,9 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use traits::{
-    AbstractFactory, Application, Definition, DefinitionModifier, Id, Label, NormalForm,
-    NormalFormModifier, RefactorFrom, StringFactory,
+    AbstractFactory, Application, Definition, DefinitionModifier, DeleteNormalForm, GetNormalForm,
+    GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm, SetNormalForm, StringFactory,
+    UpdateNormalForm,
 };
 use utils::ZiaResult;
 
@@ -152,46 +153,57 @@ impl Id for ConceptRef {
     }
 }
 
-impl NormalForm<ConceptRef> for ConceptRef {
+impl GetNormalForm<ConceptRef> for ConceptRef {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match *self {
             ConceptRef::Abstract(ref c) => c.borrow().get_normal_form(),
             ConceptRef::String(ref c) => c.borrow().get_normal_form(),
         }
     }
-    fn get_reduces_from(&self) -> Vec<ConceptRef> {
+}
+
+impl GetNormalFormOf<ConceptRef> for ConceptRef {
+    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_reduces_from(),
-            ConceptRef::String(ref c) => c.borrow().get_reduces_from(),
+            ConceptRef::Abstract(ref c) => c.borrow().get_normal_form_of(),
+            ConceptRef::String(ref c) => c.borrow().get_normal_form_of(),
         }
     }
+}
+
+impl SetNormalForm<ConceptRef> for ConceptRef {
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
             ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),
         }
     }
-    fn add_reduces_from(&mut self, concept: &ConceptRef) {
+    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_reduces_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_reduces_from(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_normal_form_of(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_normal_form_of(concept),
         }
     }
+}
+
+impl RemoveNormalForm<ConceptRef> for ConceptRef {
     fn remove_normal_form(&mut self) {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form(),
             ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form(),
         }
     }
-    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
+    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_reduces_from(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
         }
     }
 }
 
-impl NormalFormModifier for ConceptRef {}
+impl UpdateNormalForm for ConceptRef {}
+
+impl DeleteNormalForm for ConceptRef {}
 
 impl Label<ConceptRef> for ConceptRef {}
 

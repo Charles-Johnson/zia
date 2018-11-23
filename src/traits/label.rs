@@ -1,5 +1,5 @@
 use constants::LABEL;
-use traits::base::{Application, Id, NormalForm};
+use traits::base::{Application, GetNormalFormOf, Id};
 use utils::{ZiaError, ZiaResult};
 
 pub trait SyntaxFinder<T>
@@ -17,12 +17,12 @@ where
 
 pub trait Label<T>
 where
-    T: Application<T> + NormalForm<T> + Clone + Id,
-    Self: NormalForm<T>,
+    T: Application<T> + GetNormalFormOf<T> + Clone + Id,
+    Self: GetNormalFormOf<T>,
 {
     fn get_labellee(&self) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();
-        for label in self.get_reduces_from() {
+        for label in self.get_normal_form_of() {
             match label.get_definition() {
                 None => continue,
                 Some((r, x)) => if r.get_id() == LABEL {

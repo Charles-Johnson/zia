@@ -17,7 +17,10 @@
 use concepts::{AbstractRef, ConceptRef};
 use std::cell::RefCell;
 use std::rc::Rc;
-use traits::{Application, Id, Label, NormalForm, RefactorFrom};
+use traits::{
+    Application, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm,
+    SetNormalForm,
+};
 use utils::{ZiaError, ZiaResult};
 
 pub struct AbstractConcept {
@@ -26,7 +29,7 @@ pub struct AbstractConcept {
     lefthand_of: Vec<ConceptRef>,
     righthand_of: Vec<ConceptRef>,
     normal_form: Option<ConceptRef>,
-    reduces_from: Vec<ConceptRef>,
+    normal_form_of: Vec<ConceptRef>,
 }
 
 impl AbstractConcept {
@@ -40,7 +43,7 @@ impl AbstractConcept {
             lefthand_of: Vec::new(),
             righthand_of: Vec::new(),
             normal_form: None,
-            reduces_from: Vec::new(),
+            normal_form_of: Vec::new(),
         }
     }
     pub fn set_id(&mut self, number: usize) {
@@ -61,7 +64,7 @@ impl RefactorFrom<ConceptRef> for AbstractConcept {
         self.lefthand_of = other.get_lefthand_of();
         self.righthand_of = other.get_righthand_of();
         self.normal_form = try!(other.get_normal_form());
-        self.reduces_from = other.get_reduces_from();
+        self.normal_form_of = other.get_normal_form_of();
         Ok(())
     }
 }
@@ -102,7 +105,7 @@ impl Id for AbstractConcept {
     }
 }
 
-impl NormalForm<ConceptRef> for AbstractConcept {
+impl GetNormalForm<ConceptRef> for AbstractConcept {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         match self.normal_form {
             None => Ok(None),
@@ -119,16 +122,22 @@ impl NormalForm<ConceptRef> for AbstractConcept {
             }
         }
     }
-    fn get_reduces_from(&self) -> Vec<ConceptRef> {
-        let mut reduces_from: Vec<ConceptRef> = Vec::new();
-        for concept in self.reduces_from.clone() {
-            reduces_from.push(concept.clone());
-            for concept2 in concept.get_reduces_from() {
-                reduces_from.push(concept2);
+}
+
+impl GetNormalFormOf<ConceptRef> for AbstractConcept {
+    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
+        let mut normal_form_of: Vec<ConceptRef> = Vec::new();
+        for concept in self.normal_form_of.clone() {
+            normal_form_of.push(concept.clone());
+            for concept2 in concept.get_normal_form_of() {
+                normal_form_of.push(concept2);
             }
         }
-        reduces_from
+        normal_form_of
     }
+}
+
+impl SetNormalForm<ConceptRef> for AbstractConcept {
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         // If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will
         // raise an error due to borrowing self which has already been mutably borrowed.
@@ -145,14 +154,17 @@ impl NormalForm<ConceptRef> for AbstractConcept {
         self.normal_form = Some(concept.clone());
         Ok(())
     }
-    fn add_reduces_from(&mut self, concept: &ConceptRef) {
-        self.reduces_from.push(concept.clone());
+    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
+        self.normal_form_of.push(concept.clone());
     }
+}
+
+impl RemoveNormalForm<ConceptRef> for AbstractConcept {
     fn remove_normal_form(&mut self) {
         self.normal_form = None;
     }
-    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
-        self.reduces_from.remove_item(concept);
+    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
+        self.normal_form_of.remove_item(concept);
     }
 }
 

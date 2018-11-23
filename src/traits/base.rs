@@ -19,13 +19,28 @@ use std::ops::Add;
 use token::Token;
 use utils::ZiaResult;
 
-pub trait NormalForm<T> {
+pub trait GetNormalForm<T>
+where
+    Self: marker::Sized,
+{
     fn get_normal_form(&self) -> ZiaResult<Option<T>>;
-    fn get_reduces_from(&self) -> Vec<T>;
+}
+
+pub trait GetNormalFormOf<T> {
+    fn get_normal_form_of(&self) -> Vec<T>;
+}
+
+pub trait SetNormalForm<T>
+where
+    Self: marker::Sized,
+{
     fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
-    fn add_reduces_from(&mut self, &T);
+    fn add_normal_form_of(&mut self, &T);
+}
+
+pub trait RemoveNormalForm<T> {
     fn remove_normal_form(&mut self);
-    fn remove_reduces_from(&mut self, &T);
+    fn remove_normal_form_of(&mut self, &T);
 }
 
 pub trait Id {

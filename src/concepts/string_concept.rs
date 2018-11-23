@@ -19,7 +19,10 @@ use concepts::{ConceptRef, StringRef};
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{Application, Id, Label, NormalForm, RefactorFrom};
+use traits::{
+    Application, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm,
+    SetNormalForm,
+};
 use utils::ZiaResult;
 
 pub struct StringConcept {
@@ -81,24 +84,33 @@ impl Id for StringConcept {
     }
 }
 
-impl NormalForm<ConceptRef> for StringConcept {
+impl GetNormalForm<ConceptRef> for StringConcept {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
         self.abstract_concept.get_normal_form()
     }
-    fn get_reduces_from(&self) -> Vec<ConceptRef> {
-        self.abstract_concept.get_reduces_from()
+}
+
+impl GetNormalFormOf<ConceptRef> for StringConcept {
+    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.get_normal_form_of()
     }
+}
+
+impl SetNormalForm<ConceptRef> for StringConcept {
     fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
         self.abstract_concept.set_normal_form(concept)
     }
-    fn add_reduces_from(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.add_reduces_from(concept);
+    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.add_normal_form_of(concept);
     }
+}
+
+impl RemoveNormalForm<ConceptRef> for StringConcept {
     fn remove_normal_form(&mut self) {
         self.abstract_concept.remove_normal_form();
     }
-    fn remove_reduces_from(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.remove_reduces_from(concept);
+    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.remove_normal_form_of(concept);
     }
 }
 
