@@ -67,14 +67,14 @@ impl Application<ConceptRef> for StringConcept {
     fn add_righthand_of(&mut self, righthand: &ConceptRef) {
         self.abstract_concept.add_righthand_of(righthand);
     }
-    fn delete_definition(&mut self) {
-        self.abstract_concept.delete_definition();
+    fn remove_definition(&mut self) {
+        self.abstract_concept.remove_definition();
     }
-    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.delete_lefthand_of(definition)
+    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.remove_lefthand_of(definition)
     }
-    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.delete_righthand_of(definition)
+    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.remove_righthand_of(definition)
     }
 }
 

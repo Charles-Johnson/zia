@@ -122,22 +122,22 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
         }
     }
-    fn delete_definition(&mut self) {
+    fn remove_definition(&mut self) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_definition(),
-            ConceptRef::String(ref mut c) => c.borrow_mut().delete_definition(),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_definition(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_definition(),
         }
     }
-    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_lefthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().delete_lefthand_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_lefthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_lefthand_of(definition),
         }
     }
-    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().delete_righthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().delete_righthand_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_righthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_righthand_of(definition),
         }
     }
 }

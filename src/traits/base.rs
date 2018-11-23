@@ -54,9 +54,9 @@ pub trait Application<T> {
     fn set_definition(&mut self, &T, &T);
     fn add_lefthand_of(&mut self, &T);
     fn add_righthand_of(&mut self, &T);
-    fn delete_definition(&mut self);
-    fn delete_lefthand_of(&mut self, &T);
-    fn delete_righthand_of(&mut self, &T);
+    fn remove_definition(&mut self);
+    fn remove_lefthand_of(&mut self, &T);
+    fn remove_righthand_of(&mut self, &T);
 }
 
 pub trait RefactorFrom<T> {

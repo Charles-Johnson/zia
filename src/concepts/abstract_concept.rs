@@ -88,13 +88,13 @@ impl Application<ConceptRef> for AbstractConcept {
     fn add_righthand_of(&mut self, righthand: &ConceptRef) {
         self.righthand_of.push(righthand.clone());
     }
-    fn delete_definition(&mut self) {
+    fn remove_definition(&mut self) {
         self.definition = None
     }
-    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
         self.lefthand_of.remove_item(definition);
     }
-    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
         self.righthand_of.remove_item(definition);
     }
 }

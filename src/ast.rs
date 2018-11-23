@@ -132,19 +132,19 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             c.add_righthand_of(concept)
         }
     }
-    fn delete_definition(&mut self) {
+    fn remove_definition(&mut self) {
         if let Some(mut c) = self.get_concept() {
-            c.delete_definition()
+            c.remove_definition()
         }
     }
-    fn delete_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.delete_lefthand_of(definition)
+            c.remove_lefthand_of(definition)
         }
     }
-    fn delete_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
-            c.delete_righthand_of(definition)
+            c.remove_righthand_of(definition)
         }
     }
 }

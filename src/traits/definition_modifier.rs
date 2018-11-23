@@ -10,13 +10,13 @@ where
         lefthand.add_lefthand_of(self);
         righthand.add_righthand_of(self);
     }
-    fn remove_definition(&mut self) {
+    fn delete_definition(&mut self) {
         match self.get_definition() {
             None => panic!("No definition to remove!"),
             Some((mut app, mut arg)) => {
-                app.delete_lefthand_of(self);
-                arg.delete_righthand_of(self);
-                self.delete_definition();
+                app.remove_lefthand_of(self);
+                arg.remove_righthand_of(self);
+                self.remove_definition();
             }
         };
     }

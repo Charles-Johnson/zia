@@ -227,7 +227,7 @@ where
     fn define(&mut self, before: &U, after: &U) -> ZiaResult<()> {
         if let Some(mut before_c) = before.get_concept() {
             if before == after {
-                before_c.remove_definition();
+                before_c.delete_definition();
                 Ok(())
             } else {
                 self.define2(&mut before_c, after)
