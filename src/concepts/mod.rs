@@ -23,8 +23,9 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use traits::{
-    AbstractFactory, Application, Definition, DefinitionModifier, DeleteNormalForm, GetNormalForm,
-    GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm, SetNormalForm, StringFactory,
+    AbstractFactory, DeleteDefinition, DeleteNormalForm, FindDefinition, GetDefinition,
+    GetDefinitionOf, GetNormalForm, GetNormalFormOf, Id, InsertDefinition, Label, RefactorFrom,
+    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory,
     UpdateNormalForm,
 };
 use utils::ZiaResult;
@@ -52,7 +53,9 @@ impl ConceptRef {
     }
 }
 
-impl DefinitionModifier for ConceptRef {}
+impl InsertDefinition for ConceptRef {}
+
+impl DeleteDefinition for ConceptRef {}
 
 impl RefactorFrom<ConceptRef> for ConceptRef {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
@@ -85,7 +88,16 @@ impl Clone for ConceptRef {
     }
 }
 
-impl Application<ConceptRef> for ConceptRef {
+impl GetDefinition<ConceptRef> for ConceptRef {
+    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_definition(),
+            ConceptRef::String(ref c) => c.borrow().get_definition(),
+        }
+    }
+}
+
+impl GetDefinitionOf<ConceptRef> for ConceptRef {
     fn get_righthand_of(&self) -> Vec<ConceptRef> {
         match *self {
             ConceptRef::Abstract(ref c) => c.borrow().get_righthand_of(),
@@ -98,12 +110,9 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref c) => c.borrow().get_lefthand_of(),
         }
     }
-    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
-        match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_definition(),
-            ConceptRef::String(ref c) => c.borrow().get_definition(),
-        }
-    }
+}
+
+impl SetDefinition<ConceptRef> for ConceptRef {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
@@ -122,6 +131,9 @@ impl Application<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
         }
     }
+}
+
+impl RemoveDefinition<ConceptRef> for ConceptRef {
     fn remove_definition(&mut self) {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_definition(),
@@ -142,7 +154,7 @@ impl Application<ConceptRef> for ConceptRef {
     }
 }
 
-impl Definition<ConceptRef> for ConceptRef {}
+impl FindDefinition<ConceptRef> for ConceptRef {}
 
 impl Id for ConceptRef {
     fn get_id(&self) -> usize {

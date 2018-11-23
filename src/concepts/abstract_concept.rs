@@ -18,8 +18,8 @@ use concepts::{AbstractRef, ConceptRef};
 use std::cell::RefCell;
 use std::rc::Rc;
 use traits::{
-    Application, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm,
-    SetNormalForm,
+    GetDefinition, GetDefinitionOf, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom,
+    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
 };
 use utils::{ZiaError, ZiaResult};
 
@@ -69,16 +69,22 @@ impl RefactorFrom<ConceptRef> for AbstractConcept {
     }
 }
 
-impl Application<ConceptRef> for AbstractConcept {
+impl GetDefinitionOf<ConceptRef> for AbstractConcept {
     fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         self.lefthand_of.clone()
     }
     fn get_righthand_of(&self) -> Vec<ConceptRef> {
         self.righthand_of.clone()
     }
+}
+
+impl GetDefinition<ConceptRef> for AbstractConcept {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.definition.clone()
     }
+}
+
+impl SetDefinition<ConceptRef> for AbstractConcept {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         self.definition = Some((lefthand.clone(), righthand.clone()));
     }
@@ -88,6 +94,9 @@ impl Application<ConceptRef> for AbstractConcept {
     fn add_righthand_of(&mut self, righthand: &ConceptRef) {
         self.righthand_of.push(righthand.clone());
     }
+}
+
+impl RemoveDefinition<ConceptRef> for AbstractConcept {
     fn remove_definition(&mut self) {
         self.definition = None
     }

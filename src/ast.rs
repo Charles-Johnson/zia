@@ -19,8 +19,8 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::{
-    Application, Container, Definition, HasToken, MatchLeftRight, MaybeConcept, MightExpand, Pair,
-    SyntaxFactory,
+    Container, FindDefinition, GetDefinition, GetDefinitionOf, HasToken, MatchLeftRight,
+    MaybeConcept, MightExpand, Pair, RemoveDefinition, SetDefinition, SyntaxFactory,
 };
 use utils::ZiaResult;
 
@@ -89,7 +89,7 @@ impl MightExpand for AbstractSyntaxTree {
     }
 }
 
-impl Application<ConceptRef> for AbstractSyntaxTree {
+impl GetDefinition<ConceptRef> for AbstractSyntaxTree {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         match self.get_concept() {
             None => match self.get_expansion() {
@@ -105,6 +105,9 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             Some(c) => c.get_definition(),
         }
     }
+}
+
+impl GetDefinitionOf<ConceptRef> for AbstractSyntaxTree {
     fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         match self.get_concept() {
             None => Vec::new(),
@@ -117,6 +120,9 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             Some(c) => c.get_righthand_of(),
         }
     }
+}
+
+impl SetDefinition<ConceptRef> for AbstractSyntaxTree {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
             c.set_definition(lefthand, righthand)
@@ -132,6 +138,9 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
             c.add_righthand_of(concept)
         }
     }
+}
+
+impl RemoveDefinition<ConceptRef> for AbstractSyntaxTree {
     fn remove_definition(&mut self) {
         if let Some(mut c) = self.get_concept() {
             c.remove_definition()
@@ -149,7 +158,7 @@ impl Application<ConceptRef> for AbstractSyntaxTree {
     }
 }
 
-impl Definition<ConceptRef> for AbstractSyntaxTree {}
+impl FindDefinition<ConceptRef> for AbstractSyntaxTree {}
 
 impl PartialEq for AbstractSyntaxTree {
     fn eq(&self, other: &Self) -> bool {

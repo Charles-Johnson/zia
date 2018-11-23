@@ -1,15 +1,21 @@
-use traits::base::Application;
+use std::marker;
+use traits::base::{GetDefinition, GetDefinitionOf, RemoveDefinition, SetDefinition};
 use utils::{ZiaError, ZiaResult};
 
-pub trait DefinitionModifier
+pub trait InsertDefinition
 where
-    Self: Definition<Self> + PartialEq + Clone,
+    Self: SetDefinition<Self> + marker::Sized,
 {
     fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) {
         self.set_definition(lefthand, righthand);
         lefthand.add_lefthand_of(self);
         righthand.add_righthand_of(self);
     }
+}
+pub trait DeleteDefinition
+where
+    Self: GetDefinition<Self> + RemoveDefinition<Self> + marker::Sized,
+{
     fn delete_definition(&mut self) {
         match self.get_definition() {
             None => panic!("No definition to remove!"),
@@ -22,10 +28,10 @@ where
     }
 }
 
-pub trait Definition<T>
+pub trait FindDefinition<T>
 where
-    T: Application<T> + Clone + PartialEq,
-    Self: Application<T>,
+    T: GetDefinitionOf<T> + Clone + PartialEq,
+    Self: GetDefinitionOf<T>,
 {
     fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
         let mut candidates: Vec<T> = Vec::new();

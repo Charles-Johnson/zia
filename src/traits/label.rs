@@ -1,10 +1,10 @@
 use constants::LABEL;
-use traits::base::{Application, GetNormalFormOf, Id};
+use traits::base::{GetDefinition, GetNormalFormOf, Id};
 use utils::{ZiaError, ZiaResult};
 
 pub trait SyntaxFinder<T>
 where
-    T: Label<T> + Application<T> + Clone + Id,
+    T: Label<T> + GetDefinition<T> + Clone + Id,
 {
     fn get_string_concept(&self, &str) -> Option<T>;
     fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
@@ -17,7 +17,7 @@ where
 
 pub trait Label<T>
 where
-    T: Application<T> + GetNormalFormOf<T> + Clone + Id,
+    T: GetDefinition<T> + GetNormalFormOf<T> + Clone + Id,
     Self: GetNormalFormOf<T>,
 {
     fn get_labellee(&self) -> ZiaResult<Option<T>> {

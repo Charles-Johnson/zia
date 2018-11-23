@@ -47,13 +47,22 @@ pub trait Id {
     fn get_id(&self) -> usize;
 }
 
-pub trait Application<T> {
+pub trait GetDefinition<T> {
+    fn get_definition(&self) -> Option<(T, T)>;
+}
+
+pub trait GetDefinitionOf<T> {
     fn get_lefthand_of(&self) -> Vec<T>;
     fn get_righthand_of(&self) -> Vec<T>;
-    fn get_definition(&self) -> Option<(T, T)>;
+}
+
+pub trait SetDefinition<T> {
     fn set_definition(&mut self, &T, &T);
     fn add_lefthand_of(&mut self, &T);
     fn add_righthand_of(&mut self, &T);
+}
+
+pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
     fn remove_lefthand_of(&mut self, &T);
     fn remove_righthand_of(&mut self, &T);

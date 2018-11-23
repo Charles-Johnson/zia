@@ -20,8 +20,8 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use traits::{
-    Application, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom, RemoveNormalForm,
-    SetNormalForm,
+    GetDefinition, GetDefinitionOf, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom,
+    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
 };
 use utils::ZiaResult;
 
@@ -48,16 +48,22 @@ impl RefactorFrom<ConceptRef> for StringConcept {
     }
 }
 
-impl Application<ConceptRef> for StringConcept {
+impl GetDefinitionOf<ConceptRef> for StringConcept {
     fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         self.abstract_concept.get_lefthand_of()
     }
     fn get_righthand_of(&self) -> Vec<ConceptRef> {
         self.abstract_concept.get_righthand_of()
     }
+}
+
+impl GetDefinition<ConceptRef> for StringConcept {
     fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
         self.abstract_concept.get_definition()
     }
+}
+
+impl SetDefinition<ConceptRef> for StringConcept {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         self.abstract_concept.set_definition(lefthand, righthand);
     }
@@ -67,6 +73,9 @@ impl Application<ConceptRef> for StringConcept {
     fn add_righthand_of(&mut self, righthand: &ConceptRef) {
         self.abstract_concept.add_righthand_of(righthand);
     }
+}
+
+impl RemoveDefinition<ConceptRef> for StringConcept {
     fn remove_definition(&mut self) {
         self.abstract_concept.remove_definition();
     }
