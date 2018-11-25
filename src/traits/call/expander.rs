@@ -1,12 +1,14 @@
 use std::fmt;
-use traits::{FindDefinition, GetDefinition, GetNormalForm, GetNormalFormOf, LabelGetter, MightExpand, MaybeConcept, HasToken};
 use token::Token;
+use traits::{
+    FindDefinition, GetDefinition, GetNormalForm, HasToken, LabelGetter,
+    MaybeConcept, MightExpand,
+};
 use utils::{ZiaError, ZiaResult};
 
 pub trait Expander<T, U>
 where
-    T: GetNormalFormOf<T>
-        + GetNormalForm<T>
+    T: GetNormalForm<T>
         + FindDefinition<T>
         + Clone
         + PartialEq
@@ -28,8 +30,7 @@ where
 
 pub trait TokenHandler<T>
 where
-    T: GetNormalFormOf<T>
-        + GetNormalForm<T>
+    T:  GetNormalForm<T>
         + FindDefinition<T>
         + Clone
         + PartialEq

@@ -1,17 +1,22 @@
-mod reduce;
 mod expander;
 mod left_hand_call;
+mod reduce;
 
 pub use self::expander::{Expander, TokenHandler};
-pub use self::reduce::{Reduce, MatchLeftRight, SyntaxFromConcept};
-pub use self::left_hand_call::{LeftHandCall, Container, Definer3, Definer2, Refactor, Unlabeller, RefactorId, ConceptTidyer, RefactorFrom, ConceptMaker, LabelledAbstractMaker, AbstractMaker, StringMaker, StringFactory, AbstractFactory, FindDefinition, DeleteNormalForm, ConceptNumber, ConceptAdder, InsertDefinition, UpdateNormalForm, DeleteDefinition, Pair, Labeller, Definer, LabelGetter, SetDefinition, RemoveNormalForm, SetNormalForm, RemoveDefinition, GetDefinitionOf};
+pub use self::left_hand_call::{
+    AbstractFactory, AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
+    Container, Definer, Definer2, Definer3, DeleteDefinition, DeleteNormalForm, FindDefinition,
+    GetDefinitionOf, InsertDefinition, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
+    Pair, Refactor, RefactorFrom, RefactorId, RemoveDefinition, RemoveNormalForm, SetDefinition,
+    SetNormalForm, StringFactory, StringMaker, Unlabeller, UpdateNormalForm,
+};
+pub use self::reduce::{MatchLeftRight, Reduce, SyntaxFromConcept};
+use constants::{DEFINE, REDUCTION};
 use std::{fmt, marker};
 use token::Token;
-use traits::{GetDefinition, Id};
-use traits::syntax_converter::GetNormalFormOf;
-use utils::{ZiaError, ZiaResult};
 use traits::SyntaxFactory;
-use constants::{REDUCTION, DEFINE};
+use traits::{GetDefinition, Id};
+use utils::{ZiaError, ZiaResult};
 
 pub trait MightExpand
 where
@@ -46,7 +51,6 @@ where
         + DeleteDefinition
         + DeleteNormalForm
         + UpdateNormalForm
-        + GetNormalFormOf<T>
         + fmt::Display
         + GetDefinition<T>
         + FindDefinition<T>

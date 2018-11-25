@@ -1,7 +1,9 @@
 use std::fmt;
 use std::ops::Add;
-use traits::{FindDefinition, GetDefinition, GetNormalForm, LabelGetter, MaybeConcept, MightExpand, SyntaxFactory};
-use traits::syntax_converter::GetNormalFormOf;
+use traits::{
+    FindDefinition, GetDefinition, GetNormalForm, LabelGetter, MaybeConcept, MightExpand,
+    SyntaxFactory,
+};
 use utils::{ZiaError, ZiaResult};
 
 pub trait Reduce<T, U>
@@ -12,7 +14,6 @@ where
         + fmt::Display
         + PartialEq
         + FindDefinition<T>
-        + GetNormalFormOf<T>
         + GetNormalForm<T>,
     U: SyntaxFactory<T> + MatchLeftRight + MaybeConcept<T> + MightExpand,
 {
@@ -64,7 +65,6 @@ where
         + fmt::Display
         + PartialEq
         + FindDefinition<T>
-        + GetNormalFormOf<T>
         + GetNormalForm<T>,
     U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
 {
@@ -82,7 +82,6 @@ where
         }
     }
 }
-
 
 pub trait MatchLeftRight
 where

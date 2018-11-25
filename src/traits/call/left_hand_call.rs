@@ -1,8 +1,8 @@
+use constants::{DEFINE, REDUCTION};
 use std::{fmt, marker};
 use token::Token;
 use traits::{GetDefinition, GetNormalForm, HasToken, Id, MaybeConcept, MightExpand};
 use utils::{ZiaError, ZiaResult};
-use constants::{REDUCTION, DEFINE};
 
 pub trait DeleteDefinition
 where
