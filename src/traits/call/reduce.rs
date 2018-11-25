@@ -9,12 +9,7 @@ use utils::{ZiaError, ZiaResult};
 pub trait Reduce<T, U>
 where
     Self: SyntaxFromConcept<T, U>,
-    T: Clone
-        + GetDefinition<T>
-        + fmt::Display
-        + PartialEq
-        + FindDefinition<T>
-        + GetNormalForm<T>,
+    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
     U: SyntaxFactory<T> + MatchLeftRight + MaybeConcept<T> + MightExpand,
 {
     fn reduce_concept(&mut self, c: &T) -> ZiaResult<Option<U>> {
@@ -60,12 +55,7 @@ where
 pub trait SyntaxFromConcept<T, U>
 where
     Self: LabelGetter<T>,
-    T: Clone
-        + GetDefinition<T>
-        + fmt::Display
-        + PartialEq
-        + FindDefinition<T>
-        + GetNormalForm<T>,
+    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
     U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
 {
     fn ast_from_concept(&self, c: &T) -> ZiaResult<U> {
