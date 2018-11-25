@@ -22,10 +22,9 @@ pub use self::call::{
     AbstractFactory, AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
     Container, Definer, Definer2, Definer3, DeleteDefinition, DeleteNormalForm, Expander,
     FindDefinition, GetDefinitionOf, GetNormalForm, HasToken, InsertDefinition, LabelGetter,
-    Labeller, LeftHandCall, MatchLeftRight, MaybeConcept, MightExpand, Pair,
-    Reduce, Refactor, RefactorFrom, RefactorId, RemoveDefinition, RemoveNormalForm, SetDefinition,
-    SetNormalForm, StringFactory, StringMaker, SyntaxFromConcept, TokenHandler, Unlabeller,
-    UpdateNormalForm,
+    Labeller, LeftHandCall, MatchLeftRight, MaybeConcept, MightExpand, Pair, Reduce, Refactor,
+    RefactorFrom, RefactorId, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
+    StringFactory, StringMaker, SyntaxFromConcept, TokenHandler, Unlabeller, UpdateNormalForm,
 };
 pub use self::syntax_converter::{GetNormalFormOf, Label, SyntaxConverter, SyntaxFinder};
 

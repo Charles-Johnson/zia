@@ -1,6 +1,42 @@
-use std::fmt;
-use traits::{ConceptAdder, ConceptNumber, FindDefinition, GetNormalForm, InsertDefinition, LabelGetter, UpdateNormalForm};
+use std::{fmt, marker};
+use traits::{ConceptAdder, ConceptNumber, FindDefinition, GetNormalForm, LabelGetter};
 use utils::ZiaResult;
+
+pub trait UpdateNormalForm
+where
+    Self: SetNormalForm<Self>,
+{
+    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
+        try!(self.set_normal_form(normal_form));
+        normal_form.add_normal_form_of(self);
+        Ok(())
+    }
+}
+
+pub trait SetNormalForm<T>
+where
+    Self: marker::Sized,
+{
+    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
+    fn add_normal_form_of(&mut self, &T);
+}
+
+pub trait SetDefinition<T> {
+    fn set_definition(&mut self, &T, &T);
+    fn add_lefthand_of(&mut self, &T);
+    fn add_righthand_of(&mut self, &T);
+}
+
+pub trait InsertDefinition
+where
+    Self: SetDefinition<Self> + marker::Sized,
+{
+    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) {
+        self.set_definition(lefthand, righthand);
+        lefthand.add_lefthand_of(self);
+        righthand.add_righthand_of(self);
+    }
+}
 
 pub trait Labeller<T>
 where
@@ -21,7 +57,7 @@ where
         let mut string_ref = self.new_string(string);
         definition.update_normal_form(&mut string_ref)
     }
-	fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
+    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
         let mut new_abstract = self.new_abstract();
         try!(self.label(&mut new_abstract, string));
         Ok(new_abstract)
