@@ -245,7 +245,7 @@ where
         + PartialEq
         + Clone,
     U: MaybeConcept<T> + HasToken + MightExpand,
-    Self: LabelledAbstractMaker<T>,
+    Self: Labeller<T>,
 {
     fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
         if let Some(c) = ast.get_concept() {
@@ -262,33 +262,6 @@ where
             }
             Ok(c)
         }
-    }
-}
-
-pub trait LabelledAbstractMaker<T>
-where
-    T: StringFactory
-        + AbstractFactory
-        + fmt::Display
-        + InsertDefinition
-        + FindDefinition<T>
-        + GetNormalForm<T>
-        + UpdateNormalForm
-        + Clone
-        + PartialEq,
-    Self: AbstractMaker<T> + Labeller<T>,
-{
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
-        let mut new_abstract = self.new_abstract();
-        try!(self.label(&mut new_abstract, string));
-        Ok(new_abstract)
-    }
-    fn setup(&mut self) -> ZiaResult<()> {
-        self.new_abstract(); // for LABEL
-        let mut define_concept = self.new_abstract(); // for DEFINE;
-        let mut reduction_concept = self.new_abstract(); // for REDUCTION
-        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
-        self.label(&mut reduction_concept, "->") //two more ids occupied
     }
 }
 

@@ -20,7 +20,7 @@ use constants::LABEL;
 use std::collections::HashMap;
 use traits::{
     AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Expander, Id, LabelGetter, LabelledAbstractMaker, Labeller, LeftHandCall,
+    Definer2, Definer3, Expander, Id, LabelGetter, Labeller, LeftHandCall,
     Reduce, Refactor, RefactorId, StringMaker, SyntaxConverter, SyntaxFinder, SyntaxFromConcept,
     TokenHandler, Unlabeller,
 };
@@ -93,8 +93,6 @@ impl AbstractMaker<ConceptRef> for Context {}
 impl Definer<ConceptRef> for Context {}
 
 impl Labeller<ConceptRef> for Context {}
-
-impl LabelledAbstractMaker<ConceptRef> for Context {}
 
 impl SyntaxFinder<ConceptRef> for Context {
     fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {

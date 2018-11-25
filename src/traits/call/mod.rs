@@ -8,7 +8,7 @@ pub use self::label_getter::{FindDefinition, GetDefinitionOf, LabelGetter};
 pub use self::left_hand_call::{
     AbstractFactory, AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
     Container, Definer, Definer2, Definer3, DeleteDefinition, DeleteNormalForm, InsertDefinition,
-    LabelledAbstractMaker, Labeller, LeftHandCall, Pair, Refactor, RefactorFrom, RefactorId,
+    Labeller, LeftHandCall, Pair, Refactor, RefactorFrom, RefactorId,
     RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory, StringMaker,
     Unlabeller, UpdateNormalForm,
 };
