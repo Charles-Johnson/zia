@@ -21,10 +21,10 @@ pub mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::FindDefinition;
-use self::left_hand_call::definer3::{
-    AbstractFactory, DeleteDefinition, DeleteNormalForm, InsertDefinition, Pair, RefactorFrom,
-    StringFactory, UpdateNormalForm,
+use self::left_hand_call::definer3::labeller::{
+    AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
+use self::left_hand_call::definer3::{DeleteDefinition, DeleteNormalForm, Pair, RefactorFrom};
 use self::left_hand_call::{Container, LeftHandCall};
 pub use self::reduce::{MatchLeftRight, Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};

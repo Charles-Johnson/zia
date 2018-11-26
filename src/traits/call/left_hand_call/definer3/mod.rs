@@ -14,11 +14,10 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod labeller;
+pub mod labeller;
 
-pub use self::labeller::{
-    AbstractFactory, AbstractMaker, Definer, InsertDefinition, Labeller, SetDefinition,
-    SetNormalForm, StringFactory, StringMaker, UpdateNormalForm,
+use self::labeller::{
+    AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
 use std::{fmt, marker};
 use token::Token;

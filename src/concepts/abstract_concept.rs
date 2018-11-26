@@ -18,9 +18,8 @@ use concepts::{AbstractRef, ConceptRef};
 use std::cell::RefCell;
 use std::rc::Rc;
 use traits::call::label_getter::GetDefinitionOf;
-use traits::call::left_hand_call::definer3::{
-    RefactorFrom, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
-};
+use traits::call::left_hand_call::definer3::labeller::{SetDefinition, SetNormalForm};
+use traits::call::left_hand_call::definer3::{RefactorFrom, RemoveDefinition, RemoveNormalForm};
 use traits::call::GetNormalForm;
 use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};

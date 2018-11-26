@@ -16,10 +16,10 @@
 */
 pub mod definer3;
 
-use self::definer3::{
-    AbstractFactory, Definer3, DeleteDefinition, DeleteNormalForm, InsertDefinition, Pair,
-    RefactorFrom, StringFactory, UpdateNormalForm,
+use self::definer3::labeller::{
+    AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
+use self::definer3::{Definer3, DeleteDefinition, DeleteNormalForm, Pair, RefactorFrom};
 use constants::{DEFINE, REDUCTION};
 use std::fmt;
 use traits::{FindDefinition, HasToken, Id, MaybeConcept, MightExpand};
