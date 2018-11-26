@@ -22,12 +22,13 @@ pub use self::string_concept::StringConcept;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{
-    AbstractFactory, DeleteDefinition, DeleteNormalForm, FindDefinition, GetDefinition,
-    GetDefinitionOf, GetNormalForm, GetNormalFormOf, Id, InsertDefinition, Label, RefactorFrom,
-    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory,
-    UpdateNormalForm,
+use traits::call::{
+    AbstractFactory, DeleteDefinition, DeleteNormalForm, FindDefinition, GetDefinitionOf,
+    GetNormalForm, InsertDefinition, RefactorFrom, RemoveDefinition, RemoveNormalForm,
+    SetDefinition, SetNormalForm, StringFactory, UpdateNormalForm,
 };
+use traits::syntax_converter::{GetNormalFormOf, Label};
+use traits::{GetDefinition, Id};
 use utils::ZiaResult;
 
 pub enum ConceptRef {

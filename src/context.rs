@@ -18,12 +18,13 @@ use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::{
+use traits::call::{
     AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Expander, Id, LabelGetter, Labeller, LeftHandCall, Reduce, Refactor,
-    RefactorId, StringMaker, SyntaxConverter, SyntaxFinder, SyntaxFromConcept, TokenHandler,
-    Unlabeller,
+    Definer2, Definer3, Expander, LabelGetter, Labeller, LeftHandCall, Reduce, Refactor,
+    RefactorId, StringMaker, SyntaxFromConcept, TokenHandler, Unlabeller,
 };
+use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
+use traits::Id;
 use utils::ZiaResult;
 
 pub struct Context {

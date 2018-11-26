@@ -18,10 +18,11 @@ use concepts::ConceptRef;
 use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
-use traits::{
-    Container, FindDefinition, GetDefinition, GetDefinitionOf, HasToken, MatchLeftRight,
-    MaybeConcept, MightExpand, Pair, RemoveDefinition, SetDefinition, SyntaxFactory,
+use traits::call::{
+    Container, FindDefinition, GetDefinitionOf, HasToken, MatchLeftRight, MaybeConcept,
+    MightExpand, Pair, RemoveDefinition, SetDefinition,
 };
+use traits::{GetDefinition, SyntaxFactory};
 use utils::ZiaResult;
 
 pub struct AbstractSyntaxTree {

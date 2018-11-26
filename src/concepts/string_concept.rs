@@ -19,10 +19,12 @@ use concepts::{ConceptRef, StringRef};
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::{
-    GetDefinition, GetDefinitionOf, GetNormalForm, GetNormalFormOf, Id, Label, RefactorFrom,
-    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
+use traits::call::{
+    GetDefinitionOf, GetNormalForm, RefactorFrom, RemoveDefinition, RemoveNormalForm,
+    SetDefinition, SetNormalForm,
 };
+use traits::syntax_converter::{GetNormalFormOf, Label};
+use traits::{GetDefinition, Id};
 use utils::ZiaResult;
 
 pub struct StringConcept {

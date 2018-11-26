@@ -15,18 +15,13 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-mod call;
-mod syntax_converter;
+pub mod call;
+pub mod syntax_converter;
 
-pub use self::call::{
-    AbstractFactory, AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
-    Container, Definer, Definer2, Definer3, DeleteDefinition, DeleteNormalForm, Expander,
-    FindDefinition, GetDefinitionOf, GetNormalForm, HasToken, InsertDefinition, LabelGetter,
-    Labeller, LeftHandCall, MatchLeftRight, MaybeConcept, MightExpand, Pair, Reduce, Refactor,
-    RefactorFrom, RefactorId, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
-    StringFactory, StringMaker, SyntaxFromConcept, TokenHandler, Unlabeller, UpdateNormalForm,
+use self::call::{
+    ConceptAdder, ConceptNumber, FindDefinition, GetNormalForm, HasToken, LabelGetter,
+    MaybeConcept, MightExpand,
 };
-pub use self::syntax_converter::{GetNormalFormOf, Label, SyntaxConverter, SyntaxFinder};
 
 pub trait Id {
     fn get_id(&self) -> usize;
