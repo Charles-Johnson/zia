@@ -21,15 +21,16 @@ pub mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::FindDefinition;
+use self::left_hand_call::definer3::definer2::{DeleteNormalForm, RefactorFrom};
+use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
 use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
 use self::left_hand_call::definer3::Pair;
-use self::left_hand_call::definer3::definer2::{DeleteNormalForm, RefactorFrom};
-use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
 use self::left_hand_call::{Container, LeftHandCall};
-pub use self::reduce::{MatchLeftRight, Reduce, SyntaxFromConcept};
+pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
+use std::ops::Add;
 use std::{fmt, marker};
 use token::Token;
 use traits::SyntaxFactory;
@@ -74,7 +75,12 @@ where
         + FindDefinition<T>
         + PartialEq
         + Clone,
-    U: HasToken + Pair + Container + MaybeConcept<T> + MatchLeftRight + SyntaxFactory<T>,
+    U: HasToken
+        + Pair
+        + Container
+        + MaybeConcept<T>
+        + SyntaxFactory<T>
+        + Add<U, Output = ZiaResult<U>>,
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
         match ast.get_expansion() {

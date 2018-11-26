@@ -19,11 +19,11 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
-use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::Container;
-use traits::call::{HasToken, MatchLeftRight, MaybeConcept, MightExpand};
+use traits::call::{HasToken, MaybeConcept, MightExpand};
 use traits::{GetDefinition, SyntaxFactory};
 use utils::ZiaResult;
 
@@ -32,8 +32,6 @@ pub struct AbstractSyntaxTree {
     concept: Option<ConceptRef>,
     expansion: Option<(Box<AbstractSyntaxTree>, Box<AbstractSyntaxTree>)>,
 }
-
-impl MatchLeftRight for AbstractSyntaxTree {}
 
 impl SyntaxFactory<ConceptRef> for AbstractSyntaxTree {
     fn new(s: &str, concept: Option<ConceptRef>) -> AbstractSyntaxTree {

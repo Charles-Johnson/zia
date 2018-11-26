@@ -15,8 +15,8 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::{fmt, marker};
-use traits::{ConceptAdder, FindDefinition, GetNormalForm, LabelGetter};
 use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::{ConceptAdder, FindDefinition, GetNormalForm, LabelGetter};
 use utils::ZiaResult;
 
 pub trait UpdateNormalForm

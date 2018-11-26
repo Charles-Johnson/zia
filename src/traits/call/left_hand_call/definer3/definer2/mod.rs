@@ -16,12 +16,14 @@
 */
 use std::fmt;
 use token::Token;
-use traits::call::{HasToken, MaybeConcept};
-use traits::call::left_hand_call::definer3::labeller::{AbstractFactory, StringFactory, Labeller, UpdateNormalForm, InsertDefinition};
-use traits::call::left_hand_call::definer3::ConceptNumber;
-use traits::{FindDefinition, Id};
-use traits::call::GetNormalForm;
 use traits::call::label_getter::LabelGetter;
+use traits::call::left_hand_call::definer3::labeller::{
+    AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
+};
+use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::GetNormalForm;
+use traits::call::{HasToken, MaybeConcept};
+use traits::{FindDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
 pub trait Definer2<T, U>

@@ -16,9 +16,11 @@
 */
 use std::fmt;
 use token::Token;
-use traits::FindDefinition;
+use traits::call::left_hand_call::definer3::labeller::{
+    AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
+};
 use traits::call::{GetNormalForm, HasToken, MaybeConcept, MightExpand};
-use traits::call::left_hand_call::definer3::labeller::{AbstractFactory, StringFactory, Labeller, UpdateNormalForm, InsertDefinition};
+use traits::FindDefinition;
 use utils::ZiaResult;
 
 pub trait ConceptMaker<T, U>

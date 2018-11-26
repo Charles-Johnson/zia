@@ -22,15 +22,10 @@ pub mod labeller;
 use self::concept_maker::ConceptMaker;
 use self::definer2::{Definer2, DeleteNormalForm, RefactorFrom};
 use self::delete_definition::DeleteDefinition;
-use self::labeller::{
-    AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm
-};
+use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use std::{fmt, marker};
 use token::Token;
-use traits::{
-    FindDefinition, HasToken, Id, MaybeConcept,
-    MightExpand,
-};
+use traits::{FindDefinition, HasToken, Id, MaybeConcept, MightExpand};
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptNumber {

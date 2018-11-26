@@ -20,15 +20,14 @@ use constants::LABEL;
 use std::collections::HashMap;
 use traits::call::expander::{Expander, TokenHandler};
 use traits::call::label_getter::LabelGetter;
+use traits::call::left_hand_call::definer3::concept_maker::ConceptMaker;
+use traits::call::left_hand_call::definer3::definer2::{
+    ConceptTidyer, Definer2, Refactor, RefactorId, Unlabeller,
+};
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractMaker, Definer, Labeller, StringMaker,
 };
-use traits::call::left_hand_call::definer3::{
-    ConceptNumber, Definer3
-};
-use traits::call::left_hand_call::definer3::concept_maker::ConceptMaker;
-use traits::call::left_hand_call::definer3::definer2::{ConceptTidyer, Definer2, Refactor, RefactorId,
-    Unlabeller};
+use traits::call::left_hand_call::definer3::{ConceptNumber, Definer3};
 use traits::call::left_hand_call::{ConceptAdder, LeftHandCall};
 use traits::call::reduce::Reduce;
 use traits::call::{Call, SyntaxFromConcept};

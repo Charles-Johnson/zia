@@ -23,12 +23,16 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::left_hand_call::definer3::definer2::{
+    DeleteNormalForm, RefactorFrom, RemoveNormalForm,
+};
+use traits::call::left_hand_call::definer3::delete_definition::{
+    DeleteDefinition, RemoveDefinition,
+};
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, SetDefinition, SetNormalForm, StringFactory,
     UpdateNormalForm,
 };
-use traits::call::left_hand_call::definer3::definer2::{DeleteNormalForm, RefactorFrom, RemoveNormalForm};
-use traits::call::left_hand_call::definer3::delete_definition::{DeleteDefinition, RemoveDefinition};
 use traits::call::GetNormalForm;
 use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};
