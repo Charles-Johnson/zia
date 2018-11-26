@@ -24,7 +24,9 @@ use self::label_getter::FindDefinition;
 use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::left_hand_call::definer3::{DeleteDefinition, DeleteNormalForm, Pair, RefactorFrom};
+use self::left_hand_call::definer3::Pair;
+use self::left_hand_call::definer3::definer2::{DeleteNormalForm, RefactorFrom};
+use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
 use self::left_hand_call::{Container, LeftHandCall};
 pub use self::reduce::{MatchLeftRight, Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};

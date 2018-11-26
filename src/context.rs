@@ -24,9 +24,11 @@ use traits::call::left_hand_call::definer3::labeller::{
     AbstractMaker, Definer, Labeller, StringMaker,
 };
 use traits::call::left_hand_call::definer3::{
-    ConceptMaker, ConceptNumber, ConceptTidyer, Definer2, Definer3, Refactor, RefactorId,
-    Unlabeller,
+    ConceptNumber, Definer3
 };
+use traits::call::left_hand_call::definer3::concept_maker::ConceptMaker;
+use traits::call::left_hand_call::definer3::definer2::{ConceptTidyer, Definer2, Refactor, RefactorId,
+    Unlabeller};
 use traits::call::left_hand_call::{ConceptAdder, LeftHandCall};
 use traits::call::reduce::Reduce;
 use traits::call::{Call, SyntaxFromConcept};

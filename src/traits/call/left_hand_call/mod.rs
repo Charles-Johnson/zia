@@ -19,7 +19,9 @@ pub mod definer3;
 use self::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::definer3::{Definer3, DeleteDefinition, DeleteNormalForm, Pair, RefactorFrom};
+use self::definer3::{Definer3, Pair};
+use self::definer3::definer2::{DeleteNormalForm, RefactorFrom};
+use self::definer3::delete_definition::DeleteDefinition;
 use constants::{DEFINE, REDUCTION};
 use std::fmt;
 use traits::{FindDefinition, HasToken, Id, MaybeConcept, MightExpand};

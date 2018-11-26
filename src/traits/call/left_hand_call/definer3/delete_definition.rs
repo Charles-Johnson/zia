@@ -14,22 +14,28 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use std::marker;
 
-pub mod call;
-pub mod syntax_converter;
+use traits::GetDefinition;
 
-use self::call::label_getter::{FindDefinition, LabelGetter};
-use self::call::left_hand_call::ConceptAdder;
-use self::call::{GetNormalForm, HasToken, MaybeConcept, MightExpand};
-
-pub trait Id {
-    fn get_id(&self) -> usize;
+pub trait DeleteDefinition
+where
+    Self: GetDefinition<Self> + RemoveDefinition<Self> + marker::Sized,
+{
+    fn delete_definition(&mut self) {
+        match self.get_definition() {
+            None => panic!("No definition to remove!"),
+            Some((mut app, mut arg)) => {
+                app.remove_lefthand_of(self);
+                arg.remove_righthand_of(self);
+                self.remove_definition();
+            }
+        };
+    }
 }
 
-pub trait SyntaxFactory<T> {
-    fn new(&str, Option<T>) -> Self;
-}
-
-pub trait GetDefinition<T> {
-    fn get_definition(&self) -> Option<(T, T)>;
+pub trait RemoveDefinition<T> {
+    fn remove_definition(&mut self);
+    fn remove_lefthand_of(&mut self, &T);
+    fn remove_righthand_of(&mut self, &T);
 }
