@@ -20,9 +20,11 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use traits::call::{
-    GetDefinitionOf, GetNormalForm, RefactorFrom, RemoveDefinition, RemoveNormalForm,
-    SetDefinition, SetNormalForm,
+    GetNormalForm,
 };
+use traits::call::label_getter::{GetDefinitionOf};
+use traits::call::left_hand_call::{ RefactorFrom, RemoveDefinition, RemoveNormalForm,
+    SetDefinition, SetNormalForm,};
 use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;

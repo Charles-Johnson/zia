@@ -19,9 +19,11 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::call::{
-    Container, FindDefinition, GetDefinitionOf, HasToken, MatchLeftRight, MaybeConcept,
-    MightExpand, Pair, RemoveDefinition, SetDefinition,
+    HasToken, MatchLeftRight, MaybeConcept,
+    MightExpand,
 };
+use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::left_hand_call::{Container, Pair, RemoveDefinition, SetDefinition};
 use traits::{GetDefinition, SyntaxFactory};
 use utils::ZiaResult;
 

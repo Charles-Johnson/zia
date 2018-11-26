@@ -19,9 +19,11 @@ pub mod call;
 pub mod syntax_converter;
 
 use self::call::{
-    ConceptAdder, ConceptNumber, FindDefinition, GetNormalForm, HasToken, LabelGetter,
+    GetNormalForm, HasToken,
     MaybeConcept, MightExpand,
 };
+use self::call::label_getter::{FindDefinition, LabelGetter};
+use self::call::left_hand_call::{ConceptAdder, ConceptNumber};
 
 pub trait Id {
     fn get_id(&self) -> usize;

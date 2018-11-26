@@ -14,18 +14,18 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod expander;
-mod label_getter;
-mod left_hand_call;
-mod reduce;
+pub mod expander;
+pub mod label_getter;
+pub mod left_hand_call;
+pub mod reduce;
 
-pub use self::expander::{Expander, TokenHandler};
-pub use self::label_getter::{FindDefinition, GetDefinitionOf, LabelGetter};
-pub use self::left_hand_call::{
-    AbstractFactory, AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer,
-    Container, Definer, Definer2, Definer3, DeleteDefinition, DeleteNormalForm, InsertDefinition,
-    Labeller, LeftHandCall, Pair, Refactor, RefactorFrom, RefactorId, RemoveDefinition,
-    RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory, StringMaker, Unlabeller,
+use self::expander::Expander;
+use self::label_getter::FindDefinition;
+use self::left_hand_call::{
+    AbstractFactory,
+    Container, DeleteDefinition, DeleteNormalForm, InsertDefinition,
+    LeftHandCall, Pair, RefactorFrom,
+    StringFactory, 
     UpdateNormalForm,
 };
 pub use self::reduce::{MatchLeftRight, Reduce, SyntaxFromConcept};

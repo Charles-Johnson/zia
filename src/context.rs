@@ -19,10 +19,14 @@ use concepts::{ConceptRef, StringRef};
 use constants::LABEL;
 use std::collections::HashMap;
 use traits::call::{
-    AbstractMaker, Call, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Expander, LabelGetter, Labeller, LeftHandCall, Reduce, Refactor,
-    RefactorId, StringMaker, SyntaxFromConcept, TokenHandler, Unlabeller,
+    Call, SyntaxFromConcept
 };
+use traits::call::expander::{Expander, TokenHandler};
+use traits::call::label_getter::LabelGetter;
+use traits::call::left_hand_call::{AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
+    Definer2, Definer3, Labeller, LeftHandCall, Refactor,
+    RefactorId, StringMaker, Unlabeller};
+use traits::call::reduce::Reduce;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
 use utils::ZiaResult;
