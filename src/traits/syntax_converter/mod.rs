@@ -14,9 +14,9 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod label;
+pub mod label;
 
-pub use self::label::{GetNormalFormOf, Label};
+use self::label::Label;
 use std::ops::Add;
 use token::{parse_line, parse_tokens, Token};
 use traits::{GetDefinition, Id, SyntaxFactory};

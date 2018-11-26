@@ -23,7 +23,7 @@ use traits::call::{
     GetDefinitionOf, GetNormalForm, RefactorFrom, RemoveDefinition, RemoveNormalForm,
     SetDefinition, SetNormalForm,
 };
-use traits::syntax_converter::{GetNormalFormOf, Label};
+use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
 
