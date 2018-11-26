@@ -18,12 +18,10 @@
 pub mod call;
 pub mod syntax_converter;
 
-use self::call::{
-    GetNormalForm, HasToken,
-    MaybeConcept, MightExpand,
-};
 use self::call::label_getter::{FindDefinition, LabelGetter};
-use self::call::left_hand_call::{ConceptAdder, ConceptNumber};
+use self::call::left_hand_call::definer3::ConceptNumber;
+use self::call::left_hand_call::ConceptAdder;
+use self::call::{GetNormalForm, HasToken, MaybeConcept, MightExpand};
 
 pub trait Id {
     fn get_id(&self) -> usize;

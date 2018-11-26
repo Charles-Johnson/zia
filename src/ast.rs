@@ -18,12 +18,10 @@ use concepts::ConceptRef;
 use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
-use traits::call::{
-    HasToken, MatchLeftRight, MaybeConcept,
-    MightExpand,
-};
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
-use traits::call::left_hand_call::{Container, Pair, RemoveDefinition, SetDefinition};
+use traits::call::left_hand_call::definer3::{Pair, RemoveDefinition, SetDefinition};
+use traits::call::left_hand_call::Container;
+use traits::call::{HasToken, MatchLeftRight, MaybeConcept, MightExpand};
 use traits::{GetDefinition, SyntaxFactory};
 use utils::ZiaResult;
 

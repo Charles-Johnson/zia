@@ -14,13 +14,11 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod definer3;
+pub mod definer3;
 
-pub use self::definer3::{
-    AbstractFactory, AbstractMaker, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2,
-    Definer3, DeleteDefinition, DeleteNormalForm, InsertDefinition, Labeller, Pair, Refactor,
-    RefactorFrom, RefactorId, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
-    StringFactory, StringMaker, Unlabeller, UpdateNormalForm,
+use self::definer3::{
+    AbstractFactory, Definer3, DeleteDefinition, DeleteNormalForm, InsertDefinition, Pair,
+    RefactorFrom, StringFactory, UpdateNormalForm,
 };
 use constants::{DEFINE, REDUCTION};
 use std::fmt;

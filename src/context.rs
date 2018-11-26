@@ -18,15 +18,15 @@ use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::call::{
-    Call, SyntaxFromConcept
-};
 use traits::call::expander::{Expander, TokenHandler};
 use traits::call::label_getter::LabelGetter;
-use traits::call::left_hand_call::{AbstractMaker, ConceptAdder, ConceptMaker, ConceptNumber, ConceptTidyer, Definer,
-    Definer2, Definer3, Labeller, LeftHandCall, Refactor,
-    RefactorId, StringMaker, Unlabeller};
+use traits::call::left_hand_call::definer3::{
+    AbstractMaker, ConceptMaker, ConceptNumber, ConceptTidyer, Definer, Definer2, Definer3,
+    Labeller, Refactor, RefactorId, StringMaker, Unlabeller,
+};
+use traits::call::left_hand_call::{ConceptAdder, LeftHandCall};
 use traits::call::reduce::Reduce;
+use traits::call::{Call, SyntaxFromConcept};
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
 use utils::ZiaResult;

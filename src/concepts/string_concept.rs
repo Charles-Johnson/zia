@@ -19,12 +19,11 @@ use concepts::{ConceptRef, StringRef};
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::call::{
-    GetNormalForm,
+use traits::call::label_getter::GetDefinitionOf;
+use traits::call::left_hand_call::definer3::{
+    RefactorFrom, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm,
 };
-use traits::call::label_getter::{GetDefinitionOf};
-use traits::call::left_hand_call::{ RefactorFrom, RemoveDefinition, RemoveNormalForm,
-    SetDefinition, SetNormalForm,};
+use traits::call::GetNormalForm;
 use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;

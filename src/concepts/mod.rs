@@ -22,12 +22,13 @@ pub use self::string_concept::StringConcept;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::call::{
-    GetNormalForm
-};
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
-use traits::call::left_hand_call::{ AbstractFactory, DeleteDefinition, DeleteNormalForm, InsertDefinition, RefactorFrom, RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory, 
-    UpdateNormalForm,};
+use traits::call::left_hand_call::definer3::{
+    AbstractFactory, DeleteDefinition, DeleteNormalForm, InsertDefinition, RefactorFrom,
+    RemoveDefinition, RemoveNormalForm, SetDefinition, SetNormalForm, StringFactory,
+    UpdateNormalForm,
+};
+use traits::call::GetNormalForm;
 use traits::syntax_converter::label::{GetNormalFormOf, Label};
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
