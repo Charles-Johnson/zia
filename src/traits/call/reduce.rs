@@ -31,19 +31,19 @@ where
     fn reduce_concept(&mut self, c: &T) -> ZiaResult<Option<U>> {
         match try!(c.get_normal_form()) {
             None => match c.get_definition() {
-                Some((mut left, mut right)) => {
-                    let left_result = try!(self.reduce_concept(&left));
-                    let right_result = try!(self.reduce_concept(&right));
+                Some((ref mut left, ref mut right)) => {
+                    let left_result = try!(self.reduce_concept(left));
+                    let right_result = try!(self.reduce_concept(right));
                     match_left_right::<U>(
                         left_result,
                         right_result,
-                        &try!(self.ast_from_concept(&left)),
-                        &try!(self.ast_from_concept(&right)),
+                        &try!(self.ast_from_concept(left)),
+                        &try!(self.ast_from_concept(right)),
                     )
                 }
                 None => Ok(None),
             },
-            Some(n) => Ok(Some(try!(self.ast_from_concept(&n)))),
+            Some(ref n) => Ok(Some(try!(self.ast_from_concept(n)))),
         }
     }
     fn recursively_reduce(&mut self, ast: &U) -> ZiaResult<U> {
@@ -57,11 +57,11 @@ where
             Some(ref c) => self.reduce_concept(c),
             None => match ast.get_expansion() {
                 None => Ok(None),
-                Some((left, right)) => match_left_right::<U>(
-                    try!(self.reduce(&left)),
-                    try!(self.reduce(&right)),
-                    &left,
-                    &right,
+                Some((ref left, ref right)) => match_left_right::<U>(
+                    try!(self.reduce(left)),
+                    try!(self.reduce(right)),
+                    left,
+                    right,
                 ),
             },
         }

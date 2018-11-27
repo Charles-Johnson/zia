@@ -176,4 +176,14 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_)));
     }
+	#[test]
+	fn definition_reduction() {
+		let mut cont = Context::new().unwrap();
+		assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
+		assert_eq!(cont.execute("(b ->) d").unwrap(), "");
+		assert_eq!(cont.execute("(c ->) e").unwrap(), "");
+		assert_eq!(cont.execute("a ->").unwrap(), "d e");
+	    assert_eq!(cont.execute("(f :=) (d e)").unwrap(), "");
+		assert_eq!(cont.execute("a ->").unwrap(), "f");
+	}
 }
