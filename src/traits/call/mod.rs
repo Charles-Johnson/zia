@@ -21,7 +21,8 @@ mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::FindDefinition;
-use self::left_hand_call::definer3::definer2::{DeleteNormalForm, RefactorFrom};
+use self::left_hand_call::definer3::definer2::delete_normal_form::DeleteNormalForm;
+use self::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
 use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
 use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,

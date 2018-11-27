@@ -16,7 +16,8 @@
 */
 pub mod definer3;
 
-use self::definer3::definer2::{DeleteNormalForm, RefactorFrom};
+use self::definer3::definer2::delete_normal_form::DeleteNormalForm;
+use self::definer3::definer2::refactor_id::RefactorFrom;
 use self::definer3::delete_definition::DeleteDefinition;
 use self::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,

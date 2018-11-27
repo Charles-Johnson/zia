@@ -20,7 +20,9 @@ pub mod delete_definition;
 pub mod labeller;
 
 use self::concept_maker::ConceptMaker;
-use self::definer2::{Definer2, DeleteNormalForm, RefactorFrom};
+use self::definer2::delete_normal_form::DeleteNormalForm;
+use self::definer2::refactor_id::RefactorFrom;
+use self::definer2::Definer2;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use std::{fmt, marker};

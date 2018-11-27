@@ -14,14 +14,17 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+pub mod delete_normal_form;
+pub mod refactor_id;
+
+use self::delete_normal_form::DeleteNormalForm;
+use self::refactor_id::{RefactorFrom, RefactorId};
 use std::fmt;
 use token::Token;
 use traits::call::label_getter::LabelGetter;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
-use traits::call::left_hand_call::definer3::ConceptNumber;
-use traits::call::GetNormalForm;
 use traits::call::{HasToken, MaybeConcept};
 use traits::{FindDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -88,56 +91,6 @@ where
     S: RefactorId<T> + Unlabeller<T>,
 {}
 
-pub trait RefactorId<T>
-where
-    T: Id + RefactorFrom<T>,
-    Self: ConceptTidyer<T> + ConceptNumber,
-{
-    fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-        if self.number_of_concepts() > before.get_id() {
-            try!(after.refactor_from(before));
-            self.remove_concept(before);
-            for id in before.get_id()..self.number_of_concepts() {
-                self.correct_id(id);
-            }
-            Ok(())
-        } else {
-            panic!("refactoring id has gone wrong!")
-        }
-    }
-}
-
-impl<S, T> RefactorId<T> for S
-where
-    T: Id + RefactorFrom<T>,
-    S: ConceptTidyer<T> + ConceptNumber,
-{}
-
-pub trait DeleteNormalForm
-where
-    Self: GetNormalForm<Self> + RemoveNormalForm<Self>,
-{
-    fn delete_normal_form(&mut self) -> ZiaResult<()> {
-        match try!(self.get_normal_form()) {
-            None => (),
-            Some(mut n) => {
-                n.remove_normal_form_of(self);
-                self.remove_normal_form();
-            }
-        };
-        Ok(())
-    }
-}
-
-impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {}
-
-pub trait RemoveNormalForm<T> {
-    fn remove_normal_form(&mut self);
-    fn remove_normal_form_of(&mut self, &T);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-
 pub trait Unlabeller<T>
 where
     T: FindDefinition<T> + PartialEq + DeleteNormalForm + fmt::Display + Clone,
@@ -156,12 +109,3 @@ where
     T: FindDefinition<T> + PartialEq + DeleteNormalForm + fmt::Display + Clone,
     S: LabelGetter<T>,
 {}
-
-pub trait RefactorFrom<T> {
-    fn refactor_from(&mut self, &T) -> ZiaResult<()>;
-}
-
-pub trait ConceptTidyer<T> {
-    fn remove_concept(&mut self, &T);
-    fn correct_id(&mut self, usize);
-}
