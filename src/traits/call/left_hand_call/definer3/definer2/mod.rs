@@ -76,6 +76,18 @@ where
     }
 }
 
+impl<S, T> Refactor<T> for S
+where
+    T: RefactorFrom<T>
+        + Id
+        + DeleteNormalForm
+        + fmt::Display
+        + PartialEq
+        + FindDefinition<T>
+        + Clone,
+    S: RefactorId<T> + Unlabeller<T>,
+{}
+
 pub trait RefactorId<T>
 where
     T: Id + RefactorFrom<T>,
@@ -95,6 +107,12 @@ where
     }
 }
 
+impl<S, T> RefactorId<T> for S
+where
+    T: Id + RefactorFrom<T>,
+    S: ConceptTidyer<T> + ConceptNumber,
+{}
+
 pub trait DeleteNormalForm
 where
     Self: GetNormalForm<Self> + RemoveNormalForm<Self>,
@@ -110,6 +128,8 @@ where
         Ok(())
     }
 }
+
+impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {}
 
 pub trait RemoveNormalForm<T> {
     fn remove_normal_form(&mut self);
@@ -130,6 +150,12 @@ where
         }
     }
 }
+
+impl<S, T> Unlabeller<T> for S
+where
+    T: FindDefinition<T> + PartialEq + DeleteNormalForm + fmt::Display + Clone,
+    S: LabelGetter<T>,
+{}
 
 pub trait RefactorFrom<T> {
     fn refactor_from(&mut self, &T) -> ZiaResult<()>;

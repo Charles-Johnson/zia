@@ -14,10 +14,10 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub mod expander;
+mod expander;
 pub mod label_getter;
 pub mod left_hand_call;
-pub mod reduce;
+mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::FindDefinition;
@@ -99,3 +99,27 @@ where
         }
     }
 }
+
+impl<S, T, U> Call<T, U> for S
+where
+    S: Reduce<T, U> + LeftHandCall<T, U> + Expander<T, U>,
+    T: RefactorFrom<T>
+        + StringFactory
+        + AbstractFactory
+        + Id
+        + InsertDefinition
+        + DeleteDefinition
+        + DeleteNormalForm
+        + UpdateNormalForm
+        + fmt::Display
+        + GetDefinition<T>
+        + FindDefinition<T>
+        + PartialEq
+        + Clone,
+    U: HasToken
+        + Pair
+        + Container
+        + MaybeConcept<T>
+        + SyntaxFactory<T>
+        + Add<U, Output = ZiaResult<U>>,
+{}

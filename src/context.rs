@@ -18,19 +18,12 @@ use ast::AbstractSyntaxTree;
 use concepts::{ConceptRef, StringRef};
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::call::expander::{Expander, TokenHandler};
 use traits::call::label_getter::LabelGetter;
-use traits::call::left_hand_call::definer3::concept_maker::ConceptMaker;
-use traits::call::left_hand_call::definer3::definer2::{
-    ConceptTidyer, Definer2, Refactor, RefactorId, Unlabeller,
-};
-use traits::call::left_hand_call::definer3::labeller::{
-    AbstractMaker, Definer, Labeller, StringMaker,
-};
-use traits::call::left_hand_call::definer3::{ConceptNumber, Definer3};
-use traits::call::left_hand_call::{ConceptAdder, LeftHandCall};
-use traits::call::reduce::Reduce;
-use traits::call::{Call, SyntaxFromConcept};
+use traits::call::left_hand_call::definer3::definer2::{ConceptTidyer, Definer2};
+use traits::call::left_hand_call::definer3::labeller::Labeller;
+use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::left_hand_call::ConceptAdder;
+use traits::call::Call;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
 use utils::ZiaResult;
@@ -74,17 +67,11 @@ impl ConceptNumber for Context {
     }
 }
 
-impl RefactorId<ConceptRef> for Context {}
-
 impl LabelGetter<ConceptRef> for Context {
     fn get_label_concept(&self) -> ConceptRef {
         self.concepts[LABEL].clone()
     }
 }
-
-impl Unlabeller<ConceptRef> for Context {}
-
-impl Refactor<ConceptRef> for Context {}
 
 impl ConceptAdder<ConceptRef> for Context {
     fn add_concept(&mut self, concept: &ConceptRef) {
@@ -94,14 +81,6 @@ impl ConceptAdder<ConceptRef> for Context {
         }
     }
 }
-
-impl StringMaker<ConceptRef> for Context {}
-
-impl AbstractMaker<ConceptRef> for Context {}
-
-impl Definer<ConceptRef> for Context {}
-
-impl Labeller<ConceptRef> for Context {}
 
 impl SyntaxFinder<ConceptRef> for Context {
     fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {
@@ -113,24 +92,6 @@ impl SyntaxFinder<ConceptRef> for Context {
 }
 
 impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl Definer3<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl TokenHandler<ConceptRef> for Context {}
-
-impl Expander<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl LeftHandCall<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl SyntaxFromConcept<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl Reduce<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl SyntaxConverter<ConceptRef, AbstractSyntaxTree> for Context {}
-
-impl Call<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

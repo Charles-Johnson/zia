@@ -54,3 +54,18 @@ where
         }
     }
 }
+
+impl<S, T, U> ConceptMaker<T, U> for S
+where
+    T: StringFactory
+        + AbstractFactory
+        + fmt::Display
+        + InsertDefinition
+        + GetNormalForm<T>
+        + UpdateNormalForm
+        + FindDefinition<T>
+        + PartialEq
+        + Clone,
+    U: MaybeConcept<T> + HasToken + MightExpand,
+    S: Labeller<T>,
+{}

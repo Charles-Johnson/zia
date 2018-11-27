@@ -22,7 +22,7 @@ use traits::call::left_hand_call::definer3::definer2::{RefactorFrom, RemoveNorma
 use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::{SetDefinition, SetNormalForm};
 use traits::call::GetNormalForm;
-use traits::syntax_converter::label::{GetNormalFormOf, Label};
+use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
@@ -179,5 +179,3 @@ impl RemoveNormalForm<ConceptRef> for AbstractConcept {
         self.normal_form_of.remove_item(concept);
     }
 }
-
-impl Label<ConceptRef> for AbstractConcept {}

@@ -30,6 +30,8 @@ where
     }
 }
 
+impl<T> UpdateNormalForm for T where T: SetNormalForm<T> {}
+
 pub trait SetNormalForm<T>
 where
     Self: marker::Sized,
@@ -54,6 +56,8 @@ where
         righthand.add_righthand_of(self);
     }
 }
+
+impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized {}
 
 pub trait Labeller<T>
 where
@@ -88,6 +92,20 @@ where
     }
 }
 
+impl<S, T> Labeller<T> for S
+where
+    T: StringFactory
+        + AbstractFactory
+        + fmt::Display
+        + InsertDefinition
+        + FindDefinition<T>
+        + GetNormalForm<T>
+        + UpdateNormalForm
+        + PartialEq
+        + Clone,
+    S: StringMaker<T> + LabelGetter<T> + Definer<T>,
+{}
+
 pub trait StringMaker<T>
 where
     T: StringFactory,
@@ -99,6 +117,13 @@ where
         self.add_concept(&string_ref);
         string_ref
     }
+}
+
+impl<S, T> StringMaker<T> for S
+where
+    T: StringFactory,
+    S: ConceptAdder<T> + ConceptNumber,
+{
 }
 
 pub trait Definer<T>
@@ -119,6 +144,12 @@ where
     }
 }
 
+impl<S, T> Definer<T> for S
+where
+    T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
+    S: AbstractMaker<T>,
+{}
+
 pub trait AbstractMaker<T>
 where
     T: AbstractFactory,
@@ -131,6 +162,12 @@ where
         concept_ref
     }
 }
+
+impl<S, T> AbstractMaker<T> for S
+where
+    T: AbstractFactory,
+    S: ConceptAdder<T> + ConceptNumber,
+{}
 
 pub trait AbstractFactory {
     fn new_abstract(usize) -> Self;

@@ -68,6 +68,13 @@ where
     }
 }
 
+impl<S, T, U> Reduce<T, U> for S
+where
+    S: SyntaxFromConcept<T, U>,
+    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
+    U: SyntaxFactory<T> + MaybeConcept<T> + MightExpand + Add<U, Output = ZiaResult<U>> + Clone,
+{}
+
 pub trait SyntaxFromConcept<T, U>
 where
     Self: LabelGetter<T>,
@@ -88,6 +95,13 @@ where
         }
     }
 }
+
+impl<S, T, U> SyntaxFromConcept<T, U> for S
+where
+    S: LabelGetter<T>,
+    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
+    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+{}
 
 fn match_left_right<T: Clone + Add<T, Output = ZiaResult<T>>>(
     left: Option<T>,

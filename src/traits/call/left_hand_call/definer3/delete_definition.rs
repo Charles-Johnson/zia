@@ -34,6 +34,8 @@ where
     }
 }
 
+impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> + marker::Sized {}
+
 pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
     fn remove_lefthand_of(&mut self, &T);

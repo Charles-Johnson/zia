@@ -22,19 +22,14 @@ pub use self::string_concept::StringConcept;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
-use traits::call::left_hand_call::definer3::definer2::{
-    DeleteNormalForm, RefactorFrom, RemoveNormalForm,
-};
-use traits::call::left_hand_call::definer3::delete_definition::{
-    DeleteDefinition, RemoveDefinition,
-};
+use traits::call::label_getter::GetDefinitionOf;
+use traits::call::left_hand_call::definer3::definer2::{RefactorFrom, RemoveNormalForm};
+use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::{
-    AbstractFactory, InsertDefinition, SetDefinition, SetNormalForm, StringFactory,
-    UpdateNormalForm,
+    AbstractFactory, SetDefinition, SetNormalForm, StringFactory,
 };
 use traits::call::GetNormalForm;
-use traits::syntax_converter::label::{GetNormalFormOf, Label};
+use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
 
@@ -60,10 +55,6 @@ impl ConceptRef {
         }
     }
 }
-
-impl InsertDefinition for ConceptRef {}
-
-impl DeleteDefinition for ConceptRef {}
 
 impl RefactorFrom<ConceptRef> for ConceptRef {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
@@ -162,8 +153,6 @@ impl RemoveDefinition<ConceptRef> for ConceptRef {
     }
 }
 
-impl FindDefinition<ConceptRef> for ConceptRef {}
-
 impl Id for ConceptRef {
     fn get_id(&self) -> usize {
         match *self {
@@ -221,19 +210,11 @@ impl RemoveNormalForm<ConceptRef> for ConceptRef {
     }
 }
 
-impl UpdateNormalForm for ConceptRef {}
-
-impl DeleteNormalForm for ConceptRef {}
-
-impl Label<ConceptRef> for ConceptRef {}
-
 impl PartialEq for ConceptRef {
     fn eq(&self, other: &ConceptRef) -> bool {
         self.get_id() == other.get_id()
     }
 }
-
-impl Eq for ConceptRef {}
 
 impl StringFactory for ConceptRef {
     fn new_string(id: usize, string: &str) -> ConceptRef {

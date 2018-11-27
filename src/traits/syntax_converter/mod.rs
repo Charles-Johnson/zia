@@ -62,6 +62,13 @@ where
     }
 }
 
+impl<S, T, U> SyntaxConverter<T, U> for S
+where
+    S: SyntaxFinder<T>,
+    T: Clone + Id + GetDefinition<T> + Label<T>,
+    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+{}
+
 pub trait SyntaxFinder<T>
 where
     T: Label<T> + GetDefinition<T> + Clone + Id,

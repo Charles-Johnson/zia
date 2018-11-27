@@ -22,7 +22,6 @@ use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
 use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
-use traits::call::left_hand_call::Container;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
 use traits::{GetDefinition, SyntaxFactory};
 use utils::ZiaResult;
@@ -42,8 +41,6 @@ impl SyntaxFactory<ConceptRef> for AbstractSyntaxTree {
         }
     }
 }
-
-impl Container for AbstractSyntaxTree {}
 
 impl Pair for AbstractSyntaxTree {
     fn from_pair(
@@ -159,15 +156,11 @@ impl RemoveDefinition<ConceptRef> for AbstractSyntaxTree {
     }
 }
 
-impl FindDefinition<ConceptRef> for AbstractSyntaxTree {}
-
 impl PartialEq for AbstractSyntaxTree {
     fn eq(&self, other: &Self) -> bool {
         self.get_token() == other.get_token()
     }
 }
-
-impl Eq for AbstractSyntaxTree {}
 
 impl Clone for AbstractSyntaxTree {
     fn clone(&self) -> AbstractSyntaxTree {

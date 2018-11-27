@@ -38,6 +38,13 @@ where
     }
 }
 
+impl<S, T, U> Expander<T, U> for S
+where
+    T: GetNormalForm<T> + FindDefinition<T> + Clone + PartialEq + fmt::Display + GetDefinition<T>,
+    U: MaybeConcept<T> + HasToken + MightExpand,
+    S: TokenHandler<T>,
+{}
+
 pub trait TokenHandler<T>
 where
     T: GetNormalForm<T> + FindDefinition<T> + Clone + PartialEq + fmt::Display + GetDefinition<T>,
@@ -64,3 +71,9 @@ where
         }
     }
 }
+
+impl<S, T> TokenHandler<T> for S
+where
+    T: GetNormalForm<T> + FindDefinition<T> + Clone + PartialEq + fmt::Display + GetDefinition<T>,
+    S: LabelGetter<T>,
+{}

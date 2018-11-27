@@ -96,6 +96,24 @@ where
     }
 }
 
+impl<S, T, U> LeftHandCall<T, U> for S
+where
+    T: DeleteNormalForm
+        + UpdateNormalForm
+        + InsertDefinition
+        + DeleteDefinition
+        + Id
+        + AbstractFactory
+        + StringFactory
+        + RefactorFrom<T>
+        + fmt::Display
+        + FindDefinition<T>
+        + PartialEq
+        + Clone,
+    U: MaybeConcept<T> + Container + Pair + HasToken,
+    Self: Definer3<T, U>,
+{}
+
 pub trait Container
 where
     Self: PartialEq + MightExpand,
@@ -108,3 +126,5 @@ where
         }
     }
 }
+
+impl<T> Container for T where T: PartialEq + MightExpand {}

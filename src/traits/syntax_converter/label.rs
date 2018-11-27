@@ -45,6 +45,12 @@ where
     }
 }
 
+impl<S, T> Label<T> for S
+where
+    T: GetDefinition<T> + GetNormalFormOf<T> + Clone + Id,
+    S: GetNormalFormOf<T>,
+{}
+
 pub trait GetNormalFormOf<T> {
     fn get_normal_form_of(&self) -> Vec<T>;
 }

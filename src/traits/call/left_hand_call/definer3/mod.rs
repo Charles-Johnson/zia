@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub mod concept_maker;
+mod concept_maker;
 pub mod definer2;
 pub mod delete_definition;
 pub mod labeller;
@@ -80,6 +80,24 @@ where
         }
     }
 }
+
+impl<S, T, U> Definer3<T, U> for S
+where
+    T: fmt::Display
+        + Id
+        + DeleteNormalForm
+        + UpdateNormalForm
+        + RefactorFrom<T>
+        + InsertDefinition
+        + DeleteDefinition
+        + StringFactory
+        + AbstractFactory
+        + FindDefinition<T>
+        + PartialEq
+        + Clone,
+    U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
+    S: Definer2<T, U> + ConceptMaker<T, U>,
+{}
 
 pub trait Pair
 where
