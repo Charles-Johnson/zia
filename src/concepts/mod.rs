@@ -15,13 +15,11 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 mod abstract_concept;
-mod string_concept;
+pub mod string_concept;
 
-pub use self::abstract_concept::AbstractConcept;
-pub use self::string_concept::StringConcept;
-use std::cell::RefCell;
+use self::abstract_concept::{AbstractConcept, AbstractRef};
+use self::string_concept::{StringConcept, StringRef};
 use std::fmt;
-use std::rc::Rc;
 use traits::call::label_getter::GetDefinitionOf;
 use traits::call::left_hand_call::definer3::definer2::delete_normal_form::RemoveNormalForm;
 use traits::call::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
@@ -38,9 +36,6 @@ pub enum ConceptRef {
     Abstract(AbstractRef),
     String(StringRef),
 }
-
-pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
-pub type StringRef = Rc<RefCell<StringConcept>>;
 
 impl ConceptRef {
     pub fn set_id(&mut self, number: usize) {

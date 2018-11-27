@@ -15,7 +15,8 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concepts::{ConceptRef, StringRef};
+use concepts::ConceptRef;
+use concepts::string_concept::StringRef;
 use constants::LABEL;
 use std::collections::HashMap;
 use traits::call::label_getter::LabelGetter;

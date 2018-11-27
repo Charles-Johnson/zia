@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::{AbstractRef, ConceptRef};
+use concepts::ConceptRef;
 use std::cell::RefCell;
 use std::rc::Rc;
 use traits::call::label_getter::GetDefinitionOf;
@@ -26,6 +26,8 @@ use traits::call::GetNormalForm;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
+
+pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
 
 pub struct AbstractConcept {
     id: usize,

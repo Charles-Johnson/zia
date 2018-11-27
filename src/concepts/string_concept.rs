@@ -15,7 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::abstract_concept::AbstractConcept;
-use concepts::{ConceptRef, StringRef};
+use concepts::ConceptRef;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
@@ -28,6 +28,8 @@ use traits::call::GetNormalForm;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
+
+pub type StringRef = Rc<RefCell<StringConcept>>;
 
 pub struct StringConcept {
     abstract_concept: AbstractConcept,
