@@ -19,7 +19,6 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::call::label_getter::FindDefinition;
-use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
@@ -82,24 +81,6 @@ impl MightExpand for AbstractSyntaxTree {
                 let borrowed_right: &AbstractSyntaxTree = right.borrow();
                 Some((borrowed_left.clone(), borrowed_right.clone()))
             }
-        }
-    }
-}
-
-impl SetDefinition<ConceptRef> for AbstractSyntaxTree {
-    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
-        if let Some(mut c) = self.get_concept() {
-            c.set_definition(lefthand, righthand)
-        }
-    }
-    fn add_lefthand_of(&mut self, concept: &ConceptRef) {
-        if let Some(mut c) = self.get_concept() {
-            c.add_lefthand_of(concept)
-        }
-    }
-    fn add_righthand_of(&mut self, concept: &ConceptRef) {
-        if let Some(mut c) = self.get_concept() {
-            c.add_righthand_of(concept)
         }
     }
 }

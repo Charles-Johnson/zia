@@ -17,6 +17,7 @@
 use std::marker;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
 use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::MaybeConcept;
 use utils::ZiaResult;
 
 pub trait ConceptAdder<T> {
@@ -48,6 +49,28 @@ pub trait SetDefinition<T> {
     fn set_definition(&mut self, &T, &T);
     fn add_lefthand_of(&mut self, &T);
     fn add_righthand_of(&mut self, &T);
+}
+
+impl<T,U> SetDefinition<T> for U 
+where
+	T: SetDefinition<T>,
+	U: MaybeConcept<T>,
+{
+    fn set_definition(&mut self, lefthand: &T, righthand: &T) {
+        if let Some(mut c) = self.get_concept() {
+            c.set_definition(lefthand, righthand)
+        }
+    }
+    fn add_lefthand_of(&mut self, concept: &T) {
+        if let Some(mut c) = self.get_concept() {
+            c.add_lefthand_of(concept)
+        }
+    }
+    fn add_righthand_of(&mut self, concept: &T) {
+        if let Some(mut c) = self.get_concept() {
+            c.add_righthand_of(concept)
+        }
+    }
 }
 
 pub trait InsertDefinition
