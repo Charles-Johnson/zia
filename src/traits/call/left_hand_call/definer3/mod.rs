@@ -39,7 +39,7 @@ pub trait Definer3<T, U>
 where
     T: DeleteNormalForm
         + UpdateNormalForm
-        + RefactorFrom<T>
+        + RefactorFrom
         + InsertDefinition
         + DeleteDefinition
         + StringFactory
@@ -83,7 +83,7 @@ impl<S, T, U> Definer3<T, U> for S
 where
     T: DeleteNormalForm
         + UpdateNormalForm
-        + RefactorFrom<T>
+        + RefactorFrom
         + InsertDefinition
         + DeleteDefinition
         + StringFactory

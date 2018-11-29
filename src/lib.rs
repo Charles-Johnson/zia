@@ -169,6 +169,7 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_eq!(cont.execute("(a :=) a").unwrap(), "");
         assert_eq!(cont.execute("a :=").unwrap(), "a");
+		assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn redundancy() {

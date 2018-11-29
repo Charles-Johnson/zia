@@ -30,7 +30,7 @@ use traits::call::left_hand_call::definer3::labeller::{
 use traits::call::GetNormalForm;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
-use utils::ZiaResult;
+use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
@@ -52,11 +52,39 @@ impl ConceptRef {
     }
 }
 
-impl RefactorFrom<ConceptRef> for ConceptRef {
+impl RefactorFrom for ConceptRef {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-        match *self {
-            ConceptRef::Abstract(ref mut r) => r.borrow_mut().refactor_from(other),
-            ConceptRef::String(ref mut r) => r.borrow_mut().refactor_from(other),
+        match (self.clone(), other.clone()) {
+            (ConceptRef::Abstract(ref mut r), ConceptRef::Abstract(ref o)) => {
+				let mut r_borrowed = r.borrow_mut();
+				// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+        		// then borrowing `other` will panic because `other` is already mutably borrowed.
+        		if other.check_borrow_err() {
+            		return Err(ZiaError::Redundancy(
+                		"Concept already has this definition".to_string(),
+            		));
+				}
+				r_borrowed.refactor_from(&o.borrow())
+			},
+            (ConceptRef::String(ref mut r), ConceptRef::String(ref o)) => {
+				let mut r_borrowed = r.borrow_mut();
+				// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+        		// then borrowing `other` will panic because `other` is already mutably borrowed.
+        		if other.check_borrow_err() {
+            		return Err(ZiaError::Redundancy(
+                		"Concept already has this definition".to_string(),
+            		));
+				}
+				r_borrowed.refactor_from(&o.borrow())
+			},
+			(ConceptRef::Abstract(ref r), ConceptRef::String(ref o)) => {
+				*self = ConceptRef::new_string(r.borrow().get_id(), &o.borrow().to_string());
+				self.refactor_from(other)
+			},
+			(ConceptRef::String(ref r), ConceptRef::Abstract(_)) => {
+				*self = ConceptRef::new_abstract(r.borrow().get_id());
+				self.refactor_from(other)
+			},
         }
     }
 }

@@ -48,9 +48,11 @@ impl StringConcept {
     }
 }
 
-impl RefactorFrom<ConceptRef> for StringConcept {
-    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-        self.abstract_concept.refactor_from(other)
+impl RefactorFrom for StringConcept {
+    fn refactor_from(&mut self, other: &StringConcept) -> ZiaResult<()> {
+        try!(self.abstract_concept.refactor_from(&other.abstract_concept));
+		self.string = other.string.clone();
+		Ok(())
     }
 }
 

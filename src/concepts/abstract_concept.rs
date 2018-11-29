@@ -57,20 +57,13 @@ impl AbstractConcept {
     }
 }
 
-impl RefactorFrom<ConceptRef> for AbstractConcept {
-    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-        // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-        // then borrowing `other` will panic because `other` is already mutably borrowed.
-        if other.check_borrow_err() {
-            return Err(ZiaError::Redundancy(
-                "Concept already has this definition".to_string(),
-            ));
-        }
-        self.definition = other.get_definition();
-        self.lefthand_of = other.get_lefthand_of();
-        self.righthand_of = other.get_righthand_of();
-        self.normal_form = try!(other.get_normal_form());
-        self.normal_form_of = other.get_normal_form_of();
+impl RefactorFrom for AbstractConcept {
+    fn refactor_from(&mut self, other: &AbstractConcept) -> ZiaResult<()> {
+        self.definition = other.definition.clone();
+        self.lefthand_of = other.lefthand_of.clone();
+        self.righthand_of = other.righthand_of.clone();
+        self.normal_form = other.normal_form.clone();
+        self.normal_form_of = other.normal_form_of.clone();
         Ok(())
     }
 }

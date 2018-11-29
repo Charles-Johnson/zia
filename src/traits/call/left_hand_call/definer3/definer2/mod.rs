@@ -32,7 +32,7 @@ where
     T: InsertDefinition
         + StringFactory
         + AbstractFactory
-        + RefactorFrom<T>
+        + RefactorFrom
         + DeleteNormalForm
         + UpdateNormalForm
         + LabelGetter,
@@ -58,7 +58,7 @@ where
 
 pub trait Refactor<T>
 where
-    T: RefactorFrom<T> + DeleteNormalForm + LabelGetter,
+    T: RefactorFrom + DeleteNormalForm + LabelGetter,
     Self: RefactorId<T> + Unlabeller<T>,
 {
     fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -69,7 +69,7 @@ where
 
 impl<S, T> Refactor<T> for S
 where
-    T: RefactorFrom<T> + DeleteNormalForm + LabelGetter,
+    T: RefactorFrom + DeleteNormalForm + LabelGetter,
     S: RefactorId<T> + Unlabeller<T>,
 {}
 

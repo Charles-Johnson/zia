@@ -20,7 +20,7 @@ use utils::ZiaResult;
 
 pub trait RefactorId<T>
 where
-    T: Id + RefactorFrom<T>,
+    T: Id + RefactorFrom,
     Self: ConceptTidyer<T> + ConceptNumber,
 {
     fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -39,12 +39,12 @@ where
 
 impl<S, T> RefactorId<T> for S
 where
-    T: Id + RefactorFrom<T>,
+    T: Id + RefactorFrom,
     S: ConceptTidyer<T> + ConceptNumber,
 {}
 
-pub trait RefactorFrom<T> {
-    fn refactor_from(&mut self, &T) -> ZiaResult<()>;
+pub trait RefactorFrom {
+    fn refactor_from(&mut self, &Self) -> ZiaResult<()>;
 }
 
 pub trait ConceptTidyer<T> {

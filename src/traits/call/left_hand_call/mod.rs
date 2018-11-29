@@ -37,7 +37,7 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + RefactorFrom<T>
+        + RefactorFrom
         + LabelGetter,
     U: MaybeId<T> + Container + Pair + HasToken + DeleteReduction<T>,
     Self: Definer3<T, U>,
@@ -92,7 +92,7 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + RefactorFrom<T>
+        + RefactorFrom
         + LabelGetter,
     U: MaybeId<T> + Container + Pair + HasToken,
     Self: Definer3<T, U>,

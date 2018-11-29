@@ -71,7 +71,7 @@ impl<T, U> GetNormalForm<T> for U where T: GetNormalForm<T>, U: MaybeConcept<T> 
 pub trait Call<T, U>
 where
     Self: LeftHandCall<T, U>,
-    T: RefactorFrom<T>
+    T: RefactorFrom
         + StringFactory
         + AbstractFactory
         + InsertDefinition
@@ -110,7 +110,7 @@ where
 impl<S, T, U> Call<T, U> for S
 where
     S: LeftHandCall<T, U>,
-    T: RefactorFrom<T>
+    T: RefactorFrom
         + StringFactory
         + AbstractFactory
         + InsertDefinition
