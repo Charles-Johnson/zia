@@ -23,7 +23,7 @@ use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
-use traits::{GetDefinition, SyntaxFactory};
+use traits::SyntaxFactory;
 use utils::ZiaResult;
 
 pub struct AbstractSyntaxTree {
@@ -83,24 +83,6 @@ impl MightExpand for AbstractSyntaxTree {
                 let borrowed_right: &AbstractSyntaxTree = right.borrow();
                 Some((borrowed_left.clone(), borrowed_right.clone()))
             }
-        }
-    }
-}
-
-impl GetDefinition<ConceptRef> for AbstractSyntaxTree {
-    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
-        match self.get_concept() {
-            None => match self.get_expansion() {
-                Some((left, right)) => {
-                    if let (Some(lc), Some(rc)) = (left.get_concept(), right.get_concept()) {
-                        Some((lc, rc))
-                    } else {
-                        None
-                    }
-                }
-                None => None,
-            },
-            Some(c) => c.get_definition(),
         }
     }
 }
