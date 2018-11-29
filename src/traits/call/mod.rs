@@ -28,7 +28,7 @@ use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
 use self::left_hand_call::definer3::Pair;
-use self::left_hand_call::{Container, LeftHandCall};
+use self::left_hand_call::{MaybeId, Container, LeftHandCall};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
 use std::marker;
@@ -84,7 +84,7 @@ where
         + HasToken
         + Pair
         + Container
-        + MaybeConcept<T>
+        + MaybeId<T>
         + SyntaxFactory<T>
         + Add<U, Output = ZiaResult<U>>,
 {
@@ -123,7 +123,7 @@ where
         + Reduce<T>
         + Pair
         + Container
-        + MaybeConcept<T>
+        + MaybeId<T>
         + SyntaxFactory<T>
         + Add<U, Output = ZiaResult<U>>,
 {}

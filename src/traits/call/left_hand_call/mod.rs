@@ -26,6 +26,7 @@ use self::definer3::{Definer3, Pair};
 use constants::{DEFINE, REDUCTION};
 use traits::call::label_getter::LabelGetter;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
+use traits::Id;
 use utils::{ZiaError, ZiaResult};
 
 pub trait LeftHandCall<T, U>
@@ -38,21 +39,20 @@ where
         + StringFactory
         + RefactorFrom<T>
         + LabelGetter,
-    U: MaybeConcept<T> + Container + Pair + HasToken + DeleteReduction<T>,
+    U: MaybeId<T> + Container + Pair + HasToken + DeleteReduction<T>,
     Self: Definer3<T, U>,
 {
     fn call_as_lefthand(&mut self, left: &U, right: &U) -> ZiaResult<String> {
         match left.get_expansion() {
-            Some((ref mut leftleft, ref leftright)) => if let Some(lrc) = leftright.get_concept() {
-                match lrc.get_id() {
+            Some((ref mut leftleft, ref leftright)) => match leftright.get_id() {
+				Some(id) => match id {
                     REDUCTION => self.try_reduction(leftleft, right),
                     DEFINE => self.try_definition(leftleft, right),
                     _ => Err(ZiaError::Absence(
                         "This concept is not a program".to_string(),
                     )),
-                }
-            } else {
-                Err(ZiaError::Absence(
+                },
+            	None => Err(ZiaError::Absence(
                     "This concept is not a program".to_string(),
                 ))
             },
@@ -94,7 +94,7 @@ where
         + StringFactory
         + RefactorFrom<T>
         + LabelGetter,
-    U: MaybeConcept<T> + Container + Pair + HasToken,
+    U: MaybeId<T> + Container + Pair + HasToken,
     Self: Definer3<T, U>,
 {}
 
@@ -112,3 +112,18 @@ where
 }
 
 impl<T> Container for T where T: PartialEq + MightExpand {}
+
+pub trait MaybeId<T> 
+where
+	Self: MaybeConcept<T>,
+	T: Id,
+{
+	fn get_id(&self) -> Option<usize> {
+		match self.get_concept() {
+			None => None,
+			Some(c) => Some(c.get_id()),
+		}
+	}
+}
+
+impl<T, U> MaybeId<T> for U where U: MaybeConcept<T>, T: Id {}
