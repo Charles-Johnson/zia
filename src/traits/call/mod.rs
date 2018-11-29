@@ -59,6 +59,15 @@ where
     fn get_normal_form(&self) -> ZiaResult<Option<T>>;
 }
 
+impl<T, U> GetNormalForm<T> for U where T: GetNormalForm<T>, U: MaybeConcept<T> {
+	fn get_normal_form(&self) -> ZiaResult<Option<T>> {
+		match self.get_concept() {
+			None => Ok(None),
+			Some(c) => c.get_normal_form(),
+		}
+	}
+}
+
 pub trait Call<T, U>
 where
     Self: LeftHandCall<T, U>,

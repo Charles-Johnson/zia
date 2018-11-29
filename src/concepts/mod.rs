@@ -196,13 +196,13 @@ impl RemoveNormalForm<ConceptRef> for ConceptRef {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form(),
             ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form(),
-        }
+        };
     }
     fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
             ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
-        }
+        };
     }
 }
 

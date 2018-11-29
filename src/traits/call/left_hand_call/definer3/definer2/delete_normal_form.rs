@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use traits::call::GetNormalForm;
-use utils::ZiaResult;
+use traits::call::{GetNormalForm, MaybeConcept};
+use utils::{ZiaError, ZiaResult};
 
 pub trait DeleteNormalForm
 where
@@ -23,17 +23,37 @@ where
 {
     fn delete_normal_form(&mut self) -> ZiaResult<()> {
         match try!(self.get_normal_form()) {
-            None => (),
+            None => Ok(()),
             Some(mut n) => {
                 n.remove_normal_form_of(self);
                 self.remove_normal_form();
-            }
-        };
-        Ok(())
+				Ok(())
+            },
+        }
     }
 }
 
 impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {}
+
+pub trait DeleteReduction<T>
+where
+	Self: MaybeConcept<T>,
+	T: DeleteNormalForm,
+{
+	fn delete_reduction(&mut self) -> ZiaResult<()> {
+		if let Some(mut concept) = self.get_concept() {
+            concept.delete_normal_form()
+        } else {
+            Err(ZiaError::Redundancy(
+                "Removing the normal form of a symbol that was never previously used \
+                 is redundant"
+                    .to_string(),
+            ))
+        }
+	}
+}
+
+impl<T, U> DeleteReduction<T> for U where U: MaybeConcept<T>, T: DeleteNormalForm {}
 
 pub trait RemoveNormalForm<T> {
     fn remove_normal_form(&mut self);

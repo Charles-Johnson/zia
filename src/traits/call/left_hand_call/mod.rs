@@ -16,7 +16,7 @@
 */
 pub mod definer3;
 
-use self::definer3::definer2::delete_normal_form::DeleteNormalForm;
+use self::definer3::definer2::delete_normal_form::{DeleteNormalForm, DeleteReduction};
 use self::definer3::definer2::refactor_id::RefactorFrom;
 use self::definer3::delete_definition::DeleteDefinition;
 use self::definer3::labeller::{
@@ -38,41 +38,15 @@ where
         + StringFactory
         + RefactorFrom<T>
         + LabelGetter,
-    U: MaybeConcept<T> + Container + Pair + HasToken,
+    U: MaybeConcept<T> + Container + Pair + HasToken + DeleteReduction<T>,
     Self: Definer3<T, U>,
 {
     fn call_as_lefthand(&mut self, left: &U, right: &U) -> ZiaResult<String> {
         match left.get_expansion() {
-            Some((ref leftleft, ref leftright)) => if let Some(lrc) = leftright.get_concept() {
+            Some((ref mut leftleft, ref leftright)) => if let Some(lrc) = leftright.get_concept() {
                 match lrc.get_id() {
-                    REDUCTION => if right.contains(leftleft) {
-                        Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
-                    } else if right == leftleft {
-                        if let Some(mut rc) = right.get_concept() {
-                            try!(rc.delete_normal_form());
-                            Ok("".to_string())
-                        } else {
-                            Err(ZiaError::Redundancy(
-                                "Removing the normal form a symbol that was never previously used \
-                                 is redundant"
-                                    .to_string(),
-                            ))
-                        }
-                    } else {
-                        try!(
-                            try!(self.concept_from_ast(leftleft))
-                                .update_normal_form(&mut try!(self.concept_from_ast(right)))
-                        );
-                        Ok("".to_string())
-                    },
-                    DEFINE => {
-                        if right.contains(leftleft) {
-                            Err(ZiaError::Loop("Definition is infinite".to_string()))
-                        } else {
-                            try!(self.define(right, leftleft));
-                            Ok("".to_string())
-                        }
-                    }
+                    REDUCTION => self.try_reduction(leftleft, right),
+                    DEFINE => self.try_definition(leftleft, right),
                     _ => Err(ZiaError::Absence(
                         "This concept is not a program".to_string(),
                     )),
@@ -87,6 +61,27 @@ where
             )),
         }
     }
+	fn try_reduction(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String>{
+		if normal_form.contains(syntax) {
+            Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
+        } else if syntax == normal_form {
+            try!(syntax.delete_reduction());
+            Ok("".to_string())
+        } else {
+			let mut syntax_concept = try!(self.concept_from_ast(syntax));
+			let mut normal_form_concept = try!(self.concept_from_ast(normal_form));
+            try!(syntax_concept.update_normal_form(&mut normal_form_concept));
+            Ok("".to_string())
+        }
+	}
+	fn try_definition(&mut self, new: &U, old: &U) -> ZiaResult<String> {
+		if old.contains(new) {
+            Err(ZiaError::Loop("Definition is infinite".to_string()))
+        } else {
+            try!(self.define(old, new));
+            Ok("".to_string())
+        }
+	}
 }
 
 impl<S, T, U> LeftHandCall<T, U> for S
