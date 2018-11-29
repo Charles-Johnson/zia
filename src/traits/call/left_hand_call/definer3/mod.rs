@@ -23,7 +23,7 @@ use self::concept_maker::ConceptMaker;
 use self::definer2::delete_normal_form::DeleteNormalForm;
 use self::definer2::refactor_id::RefactorFrom;
 use self::definer2::Definer2;
-use self::delete_definition::DeleteDefinition;
+use self::delete_definition::{DeleteDefinition, TryDeleteDefinition};
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use std::marker;
 use token::Token;
@@ -45,35 +45,30 @@ where
         + StringFactory
         + AbstractFactory
         + LabelGetter,
-    U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
+    U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq + TryDeleteDefinition<T>,
     Self: Definer2<T, U> + ConceptMaker<T, U>,
 {
-    fn define(&mut self, before: &U, after: &U) -> ZiaResult<()> {
-        if let Some(mut before_c) = before.get_concept() {
-            if before == after {
-                before_c.delete_definition();
-                Ok(())
-            } else {
-                self.define2(&mut before_c, after)
-            }
+    fn define(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
+		if let Some(_) = after.get_expansion() {
+			Err(ZiaError::Syntax("Only symbols can have definitions".to_string()))
+		} else if before == after {
+            before.try_delete_definition()
+        } else if let Some(mut before_c) = before.get_concept() {
+            self.define2(&mut before_c, after)
         } else if let Some((ref before_left, ref before_right)) = before.get_expansion() {
             if let Some(mut after_c) = after.get_concept() {
                 if let Some((ref mut after_left, ref mut after_right)) = after_c.get_definition() {
                     try!(self.define2(after_left, before_left));
                     self.define2(after_right, before_right)
                 } else {
-                    after_c.insert_definition(
-                        &mut try!(self.concept_from_ast(before_left)),
-                        &mut try!(self.concept_from_ast(before_right)),
-                    );
+					let mut left_concept = try!(self.concept_from_ast(before_left));
+					let mut right_concept = try!(self.concept_from_ast(before_right));
+                    after_c.insert_definition(&mut left_concept, &mut right_concept);
                     Ok(())
                 }
             } else {
-                try!(self.concept_from_ast(&try!(U::from_pair(
-                    after.get_token(),
-                    before_left,
-                    before_right,
-                ))));
+				let new_syntax = try!(U::from_pair(after.get_token(), before_left, before_right));
+                try!(self.concept_from_ast(&new_syntax));
                 Ok(())
             }
         } else {

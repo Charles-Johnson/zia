@@ -42,7 +42,7 @@ where
     U: MaybeId<T> + Container + Pair + HasToken + DeleteReduction<T>,
     Self: Definer3<T, U>,
 {
-    fn call_as_lefthand(&mut self, left: &U, right: &U) -> ZiaResult<String> {
+    fn call_as_lefthand(&mut self, left: &U, right: &mut U) -> ZiaResult<String> {
         match left.get_expansion() {
             Some((ref mut leftleft, ref leftright)) => match leftright.get_id() {
 				Some(id) => match id {
@@ -74,7 +74,7 @@ where
             Ok("".to_string())
         }
 	}
-	fn try_definition(&mut self, new: &U, old: &U) -> ZiaResult<String> {
+	fn try_definition(&mut self, new: &U, old: &mut U) -> ZiaResult<String> {
 		if old.contains(new) {
             Err(ZiaError::Loop("Definition is infinite".to_string()))
         } else {

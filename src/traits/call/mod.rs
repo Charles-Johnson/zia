@@ -91,7 +91,7 @@ where
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
         println!("Calling AST: {:?}", ast.get_token());
         match ast.get_expansion() {
-            Some((ref left, ref right)) => if let Some(c) = right.get_concept() {
+            Some((ref left, ref mut right)) => if let Some(c) = right.get_concept() {
                 match c.get_id() {
                     REDUCTION => Ok(try!(left.recursively_reduce()).get_token().as_string()),
                     DEFINE => Ok(try!(left.expand_ast_token()).as_string()),

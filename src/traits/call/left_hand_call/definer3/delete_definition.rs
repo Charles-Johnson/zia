@@ -15,9 +15,9 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker;
-
 use traits::GetDefinition;
 use traits::call::MaybeConcept;
+use utils::{ZiaError, ZiaResult};
 
 pub trait DeleteDefinition
 where
@@ -36,6 +36,26 @@ where
 }
 
 impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> + marker::Sized {}
+
+pub trait TryDeleteDefinition<T>
+where
+	Self: MaybeConcept<T>,
+	T: DeleteDefinition,
+{
+	fn try_delete_definition(&mut self) -> ZiaResult<()> {
+		match self.get_concept() {
+			None => return Err(ZiaError::Redundancy(
+                "Refactoring a symbol that was never previously used is redundant".to_string(),
+            )),
+			Some(mut c) => {
+				c.delete_definition(); 
+				Ok(())
+			},
+		}
+	}
+}
+
+impl<T, U> TryDeleteDefinition<T> for U where U: MaybeConcept<T>, T: DeleteDefinition {}
 
 pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
