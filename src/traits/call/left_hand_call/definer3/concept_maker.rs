@@ -14,26 +14,21 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::fmt;
 use token::Token;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
-use traits::call::{GetNormalForm, HasToken, MaybeConcept, MightExpand};
-use traits::FindDefinition;
+use traits::call::{GetNormalForm, HasToken, LabelGetter, MaybeConcept, MightExpand};
 use utils::ZiaResult;
 
 pub trait ConceptMaker<T, U>
 where
     T: StringFactory
         + AbstractFactory
-        + fmt::Display
         + InsertDefinition
         + GetNormalForm<T>
         + UpdateNormalForm
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: MaybeConcept<T> + HasToken + MightExpand,
     Self: Labeller<T>,
 {
@@ -57,15 +52,7 @@ where
 
 impl<S, T, U> ConceptMaker<T, U> for S
 where
-    T: StringFactory
-        + AbstractFactory
-        + fmt::Display
-        + InsertDefinition
-        + GetNormalForm<T>
-        + UpdateNormalForm
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
     U: MaybeConcept<T> + HasToken + MightExpand,
     S: Labeller<T>,
 {}

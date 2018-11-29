@@ -24,13 +24,9 @@ use self::definer3::labeller::{
 };
 use self::definer3::{Definer3, Pair};
 use constants::{DEFINE, REDUCTION};
-use std::fmt;
-use traits::{FindDefinition, HasToken, Id, MaybeConcept, MightExpand};
+use traits::call::label_getter::LabelGetter;
+use traits::call::{HasToken, MaybeConcept, MightExpand};
 use utils::{ZiaError, ZiaResult};
-
-pub trait ConceptAdder<T> {
-    fn add_concept(&mut self, &T);
-}
 
 pub trait LeftHandCall<T, U>
 where
@@ -38,14 +34,10 @@ where
         + UpdateNormalForm
         + InsertDefinition
         + DeleteDefinition
-        + Id
         + AbstractFactory
         + StringFactory
         + RefactorFrom<T>
-        + fmt::Display
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: MaybeConcept<T> + Container + Pair + HasToken,
     Self: Definer3<T, U>,
 {
@@ -103,14 +95,10 @@ where
         + UpdateNormalForm
         + InsertDefinition
         + DeleteDefinition
-        + Id
         + AbstractFactory
         + StringFactory
         + RefactorFrom<T>
-        + fmt::Display
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: MaybeConcept<T> + Container + Pair + HasToken,
     Self: Definer3<T, U>,
 {}

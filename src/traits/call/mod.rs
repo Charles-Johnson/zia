@@ -20,7 +20,7 @@ pub mod left_hand_call;
 mod reduce;
 
 use self::expander::Expander;
-use self::label_getter::FindDefinition;
+use self::label_getter::LabelGetter;
 use self::left_hand_call::definer3::definer2::delete_normal_form::DeleteNormalForm;
 use self::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
 use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
@@ -31,11 +31,10 @@ use self::left_hand_call::definer3::Pair;
 use self::left_hand_call::{Container, LeftHandCall};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
+use std::marker;
 use std::ops::Add;
-use std::{fmt, marker};
 use token::Token;
 use traits::SyntaxFactory;
-use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
 pub trait MightExpand
@@ -62,21 +61,18 @@ where
 
 pub trait Call<T, U>
 where
-    Self: Reduce<T, U> + LeftHandCall<T, U> + Expander<T, U>,
+    Self: LeftHandCall<T, U>,
     T: RefactorFrom<T>
         + StringFactory
         + AbstractFactory
-        + Id
         + InsertDefinition
         + DeleteDefinition
         + DeleteNormalForm
         + UpdateNormalForm
-        + fmt::Display
-        + GetDefinition<T>
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
-    U: HasToken
+        + LabelGetter,
+    U: Reduce<T>
+        + Expander<T>
+        + HasToken
         + Pair
         + Container
         + MaybeConcept<T>
@@ -84,11 +80,12 @@ where
         + Add<U, Output = ZiaResult<U>>,
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
+        println!("Calling AST: {:?}", ast.get_token());
         match ast.get_expansion() {
             Some((ref left, ref right)) => if let Some(c) = right.get_concept() {
                 match c.get_id() {
-                    REDUCTION => Ok(try!(self.recursively_reduce(left)).get_token().as_string()),
-                    DEFINE => Ok(try!(self.expand_ast_token(left)).as_string()),
+                    REDUCTION => Ok(try!(left.recursively_reduce()).get_token().as_string()),
+                    DEFINE => Ok(try!(left.expand_ast_token()).as_string()),
                     _ => self.call_as_lefthand(left, right),
                 }
             } else {
@@ -103,21 +100,18 @@ where
 
 impl<S, T, U> Call<T, U> for S
 where
-    S: Reduce<T, U> + LeftHandCall<T, U> + Expander<T, U>,
+    S: LeftHandCall<T, U>,
     T: RefactorFrom<T>
         + StringFactory
         + AbstractFactory
-        + Id
         + InsertDefinition
         + DeleteDefinition
         + DeleteNormalForm
         + UpdateNormalForm
-        + fmt::Display
-        + GetDefinition<T>
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: HasToken
+        + Expander<T>
+        + Reduce<T>
         + Pair
         + Container
         + MaybeConcept<T>

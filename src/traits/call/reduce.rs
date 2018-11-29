@@ -14,52 +14,38 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::fmt;
 use std::ops::Add;
-use traits::{
-    FindDefinition, GetDefinition, GetNormalForm, LabelGetter, MaybeConcept, MightExpand,
-    SyntaxFactory,
-};
-use utils::{ZiaError, ZiaResult};
+use token::Token;
+use traits::call::label_getter::{FindDefinition, LabelGetter};
+use traits::call::left_hand_call::definer3::Pair;
+use traits::call::{HasToken, MaybeConcept, MightExpand};
+use traits::SyntaxFactory;
+use utils::ZiaResult;
 
-pub trait Reduce<T, U>
+pub trait Reduce<T>
 where
-    Self: SyntaxFromConcept<T, U>,
-    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
-    U: SyntaxFactory<T> + MaybeConcept<T> + MightExpand + Add<U, Output = ZiaResult<U>> + Clone,
+    T: SyntaxFromConcept<Self>,
+    Self: SyntaxFactory<T>
+        + Add<Self, Output = ZiaResult<Self>>
+        + MaybeConcept<T>
+        + MightExpand
+        + HasToken
+        + Pair,
 {
-    fn reduce_concept(&mut self, c: &T) -> ZiaResult<Option<U>> {
-        match try!(c.get_normal_form()) {
-            None => match c.get_definition() {
-                Some((ref mut left, ref mut right)) => {
-                    let left_result = try!(self.reduce_concept(left));
-                    let right_result = try!(self.reduce_concept(right));
-                    match_left_right::<U>(
-                        left_result,
-                        right_result,
-                        &try!(self.ast_from_concept(left)),
-                        &try!(self.ast_from_concept(right)),
-                    )
-                }
-                None => Ok(None),
-            },
-            Some(ref n) => Ok(Some(try!(self.ast_from_concept(n)))),
+    fn recursively_reduce(&self) -> ZiaResult<Self> {
+        match try!(self.reduce()) {
+            Some(ref a) => a.recursively_reduce(),
+            None => Ok(self.clone()),
         }
     }
-    fn recursively_reduce(&mut self, ast: &U) -> ZiaResult<U> {
-        match try!(self.reduce(ast)) {
-            Some(ref a) => self.recursively_reduce(a),
-            None => Ok(ast.clone()),
-        }
-    }
-    fn reduce(&mut self, ast: &U) -> ZiaResult<Option<U>> {
-        match ast.get_concept() {
-            Some(ref c) => self.reduce_concept(c),
-            None => match ast.get_expansion() {
+    fn reduce(&self) -> ZiaResult<Option<Self>> {
+        match self.get_concept() {
+            Some(ref c) => c.reduce_concept(),
+            None => match self.get_expansion() {
                 None => Ok(None),
-                Some((ref left, ref right)) => match_left_right::<U>(
-                    try!(self.reduce(left)),
-                    try!(self.reduce(right)),
+                Some((ref left, ref right)) => match_left_right::<T, Self>(
+                    try!(left.reduce()),
+                    try!(right.reduce()),
                     left,
                     right,
                 ),
@@ -68,51 +54,100 @@ where
     }
 }
 
-impl<S, T, U> Reduce<T, U> for S
+impl<S, T> Reduce<T> for S
 where
-    S: SyntaxFromConcept<T, U>,
-    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
-    U: SyntaxFactory<T> + MaybeConcept<T> + MightExpand + Add<U, Output = ZiaResult<U>> + Clone,
+    T: SyntaxFromConcept<S> + LabelGetter,
+    S: SyntaxFactory<T>
+        + Add<S, Output = ZiaResult<S>>
+        + MaybeConcept<T>
+        + MightExpand
+        + HasToken
+        + Pair
+        + Clone,
 {}
 
-pub trait SyntaxFromConcept<T, U>
+pub trait SyntaxFromConcept<T>
 where
-    Self: LabelGetter<T>,
-    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
-    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+    Self: LabelGetter,
+    T: SyntaxFactory<Self>
+        + Add<T, Output = ZiaResult<T>>
+        + MaybeConcept<Self>
+        + HasToken
+        + Pair
+        + Clone,
 {
-    fn ast_from_concept(&self, c: &T) -> ZiaResult<U> {
-        match try!(self.get_label(c)) {
-            Some(ref s) => Ok(U::new(s, Some(c.clone()))),
-            None => match c.get_definition() {
+    fn reduce_concept(&self) -> ZiaResult<Option<T>> {
+        match try!(self.get_normal_form()) {
+            None => match self.get_definition() {
                 Some((ref left, ref right)) => {
-                    try!(self.ast_from_concept(left)) + try!(self.ast_from_concept(right))
+                    let left_result = try!(left.reduce_concept());
+                    let right_result = try!(right.reduce_concept());
+                    match_left_right::<Self, T>(
+                        left_result,
+                        right_result,
+                        &try!(left.ast_from_concept()),
+                        &try!(right.ast_from_concept()),
+                    )
                 }
-                None => Err(ZiaError::Absence(
-                    "Unlabelled concept with no definition".to_string(),
-                )),
+                None => Ok(None),
+            },
+            Some(ref n) => Ok(Some(try!(n.ast_from_concept()))),
+        }
+    }
+    fn ast_from_concept(&self) -> ZiaResult<T> {
+        match try!(self.get_label()) {
+            Some(ref s) => Ok(T::new(s, Some(self.clone()))),
+            None => match self.get_definition() {
+                Some((ref left, ref right)) => {
+                    try!(left.ast_from_concept()) + try!(right.ast_from_concept())
+                }
+                None => panic!("Unlabelled concept with no definition"),
             },
         }
     }
 }
 
-impl<S, T, U> SyntaxFromConcept<T, U> for S
+impl<S, T> SyntaxFromConcept<T> for S
 where
-    S: LabelGetter<T>,
-    T: Clone + GetDefinition<T> + fmt::Display + PartialEq + FindDefinition<T> + GetNormalForm<T>,
-    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+    S: LabelGetter,
+    T: SyntaxFactory<S>
+        + Add<T, Output = ZiaResult<T>>
+        + MaybeConcept<Self>
+        + HasToken
+        + Pair
+        + Clone,
 {}
 
-fn match_left_right<T: Clone + Add<T, Output = ZiaResult<T>>>(
-    left: Option<T>,
-    right: Option<T>,
-    original_left: &T,
-    original_right: &T,
-) -> ZiaResult<Option<T>> {
+fn match_left_right<T: LabelGetter, U: HasToken + Pair + MaybeConcept<T>>(
+    left: Option<U>,
+    right: Option<U>,
+    original_left: &U,
+    original_right: &U,
+) -> ZiaResult<Option<U>> {
     match (left, right) {
         (None, None) => Ok(None),
-        (Some(new_left), None) => Ok(Some(try!(new_left + original_right.clone()))),
-        (None, Some(new_right)) => Ok(Some(try!(original_left.clone() + new_right))),
-        (Some(new_left), Some(new_right)) => Ok(Some(try!(new_left + new_right))),
+        (Some(new_left), None) => Ok(Some(try!(contract_pair::<T, U>(&new_left, original_right)))),
+        (None, Some(new_right)) => Ok(Some(try!(contract_pair::<T, U>(original_left, &new_right)))),
+        (Some(new_left), Some(new_right)) => {
+            Ok(Some(try!(contract_pair::<T, U>(&new_left, &new_right))))
+        }
     }
+}
+
+fn contract_pair<T: LabelGetter, U: HasToken + Pair + MaybeConcept<T>>(
+    lefthand: &U,
+    righthand: &U,
+) -> ZiaResult<U> {
+    if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
+        if let Some(def) = try!(lc.find_definition(&rc)) {
+            if let Some(ref a) = try!(def.get_label()) {
+                return U::from_pair(Token::Atom(a.clone()), lefthand, righthand);
+            }
+        }
+    }
+    U::from_pair(
+        lefthand.get_token() + righthand.get_token(),
+        lefthand,
+        righthand,
+    )
 }

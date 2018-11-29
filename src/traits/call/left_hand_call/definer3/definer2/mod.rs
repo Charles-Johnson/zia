@@ -19,14 +19,12 @@ pub mod refactor_id;
 
 use self::delete_normal_form::DeleteNormalForm;
 use self::refactor_id::{RefactorFrom, RefactorId};
-use std::fmt;
 use token::Token;
 use traits::call::label_getter::LabelGetter;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
 use traits::call::{HasToken, MaybeConcept};
-use traits::{FindDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
 pub trait Definer2<T, U>
@@ -34,14 +32,10 @@ where
     T: InsertDefinition
         + StringFactory
         + AbstractFactory
-        + fmt::Display
-        + Id
         + RefactorFrom<T>
         + DeleteNormalForm
         + UpdateNormalForm
-        + Clone
-        + PartialEq
-        + FindDefinition<T>,
+        + LabelGetter,
     U: HasToken + MaybeConcept<T>,
     Self: Refactor<T> + Labeller<T>,
 {
@@ -64,13 +58,7 @@ where
 
 pub trait Refactor<T>
 where
-    T: RefactorFrom<T>
-        + Id
-        + DeleteNormalForm
-        + fmt::Display
-        + PartialEq
-        + FindDefinition<T>
-        + Clone,
+    T: RefactorFrom<T> + DeleteNormalForm + LabelGetter,
     Self: RefactorId<T> + Unlabeller<T>,
 {
     fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
@@ -81,31 +69,20 @@ where
 
 impl<S, T> Refactor<T> for S
 where
-    T: RefactorFrom<T>
-        + Id
-        + DeleteNormalForm
-        + fmt::Display
-        + PartialEq
-        + FindDefinition<T>
-        + Clone,
+    T: RefactorFrom<T> + DeleteNormalForm + LabelGetter,
     S: RefactorId<T> + Unlabeller<T>,
 {}
 
 pub trait Unlabeller<T>
 where
-    T: FindDefinition<T> + PartialEq + DeleteNormalForm + fmt::Display + Clone,
-    Self: LabelGetter<T>,
+    T: LabelGetter + DeleteNormalForm,
 {
     fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
-        match try!(self.get_concept_of_label(concept)) {
+        match concept.get_concept_of_label() {
             None => Ok(()),
             Some(mut d) => d.delete_normal_form(),
         }
     }
 }
 
-impl<S, T> Unlabeller<T> for S
-where
-    T: FindDefinition<T> + PartialEq + DeleteNormalForm + fmt::Display + Clone,
-    S: LabelGetter<T>,
-{}
+impl<S, T> Unlabeller<T> for S where T: LabelGetter + DeleteNormalForm {}

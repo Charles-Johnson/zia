@@ -14,10 +14,14 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::{fmt, marker};
+use std::marker;
+use traits::call::label_getter::{FindDefinition, LabelGetter};
 use traits::call::left_hand_call::definer3::ConceptNumber;
-use traits::{ConceptAdder, FindDefinition, GetNormalForm, LabelGetter};
 use utils::ZiaResult;
+
+pub trait ConceptAdder<T> {
+    fn add_concept(&mut self, &T);
+}
 
 pub trait UpdateNormalForm
 where
@@ -61,16 +65,8 @@ impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized {}
 
 pub trait Labeller<T>
 where
-    T: StringFactory
-        + AbstractFactory
-        + fmt::Display
-        + InsertDefinition
-        + FindDefinition<T>
-        + GetNormalForm<T>
-        + UpdateNormalForm
-        + PartialEq
-        + Clone,
-    Self: StringMaker<T> + LabelGetter<T> + Definer<T>,
+    T: StringFactory + AbstractFactory + LabelGetter + InsertDefinition + UpdateNormalForm,
+    Self: StringMaker<T> + Definer<T> + LabelConcept<T>,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
@@ -92,18 +88,14 @@ where
     }
 }
 
+pub trait LabelConcept<T> {
+    fn get_label_concept(&self) -> T;
+}
+
 impl<S, T> Labeller<T> for S
 where
-    T: StringFactory
-        + AbstractFactory
-        + fmt::Display
-        + InsertDefinition
-        + FindDefinition<T>
-        + GetNormalForm<T>
-        + UpdateNormalForm
-        + PartialEq
-        + Clone,
-    S: StringMaker<T> + LabelGetter<T> + Definer<T>,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
+    S: StringMaker<T> + Definer<T> + LabelConcept<T>,
 {}
 
 pub trait StringMaker<T>

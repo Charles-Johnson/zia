@@ -25,9 +25,10 @@ use self::definer2::refactor_id::RefactorFrom;
 use self::definer2::Definer2;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
-use std::{fmt, marker};
+use std::marker;
 use token::Token;
-use traits::{FindDefinition, HasToken, Id, MaybeConcept, MightExpand};
+use traits::call::label_getter::LabelGetter;
+use traits::call::{HasToken, MaybeConcept, MightExpand};
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptNumber {
@@ -36,18 +37,14 @@ pub trait ConceptNumber {
 
 pub trait Definer3<T, U>
 where
-    T: fmt::Display
-        + Id
-        + DeleteNormalForm
+    T: DeleteNormalForm
         + UpdateNormalForm
         + RefactorFrom<T>
         + InsertDefinition
         + DeleteDefinition
         + StringFactory
         + AbstractFactory
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
     Self: Definer2<T, U> + ConceptMaker<T, U>,
 {
@@ -59,20 +56,24 @@ where
             } else {
                 self.define2(&mut before_c, after)
             }
-        } else if let Some((ref left, ref right)) = before.get_expansion() {
+        } else if let Some((ref before_left, ref before_right)) = before.get_expansion() {
             if let Some(mut after_c) = after.get_concept() {
-                if let Some((ref mut ap, ref mut ar)) = after_c.get_definition() {
-                    try!(self.define2(ap, left));
-                    self.define2(ar, right)
+                if let Some((ref mut after_left, ref mut after_right)) = after_c.get_definition() {
+                    try!(self.define2(after_left, before_left));
+                    self.define2(after_right, before_right)
                 } else {
                     after_c.insert_definition(
-                        &mut try!(self.concept_from_ast(left)),
-                        &mut try!(self.concept_from_ast(right)),
+                        &mut try!(self.concept_from_ast(before_left)),
+                        &mut try!(self.concept_from_ast(before_right)),
                     );
                     Ok(())
                 }
             } else {
-                try!(self.concept_from_ast(&try!(U::from_pair(after.get_token(), left, right,))));
+                try!(self.concept_from_ast(&try!(U::from_pair(
+                    after.get_token(),
+                    before_left,
+                    before_right,
+                ))));
                 Ok(())
             }
         } else {
@@ -85,18 +86,14 @@ where
 
 impl<S, T, U> Definer3<T, U> for S
 where
-    T: fmt::Display
-        + Id
-        + DeleteNormalForm
+    T: DeleteNormalForm
         + UpdateNormalForm
         + RefactorFrom<T>
         + InsertDefinition
         + DeleteDefinition
         + StringFactory
         + AbstractFactory
-        + FindDefinition<T>
-        + PartialEq
-        + Clone,
+        + LabelGetter,
     U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
     S: Definer2<T, U> + ConceptMaker<T, U>,
 {}

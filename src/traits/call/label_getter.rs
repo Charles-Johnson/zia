@@ -14,20 +14,36 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use constants::LABEL;
 use std::fmt;
-use traits::GetNormalForm;
+use token::Token;
+use traits::call::GetNormalForm;
+use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
-pub trait LabelGetter<T>
+pub trait LabelGetter
 where
-    T: GetNormalForm<T> + FindDefinition<T> + Clone + PartialEq + fmt::Display,
+    Self: Id
+        + GetNormalForm<Self>
+        + GetDefinition<Self>
+        + GetDefinitionOf<Self>
+        + Clone
+        + PartialEq
+        + fmt::Display,
 {
-    fn get_label_concept(&self) -> T;
-    fn get_concept_of_label(&self, concept: &T) -> ZiaResult<Option<T>> {
-        self.get_label_concept().find_definition(concept)
+    fn get_concept_of_label(&self) -> Option<Self> {
+        for candidate in self.get_righthand_of() {
+            match candidate.get_definition() {
+                None => panic!("Candidate should have a definition!"),
+                Some((ref left, _)) => if left.get_id() == LABEL {
+                    return Some(candidate.clone());
+                },
+            };
+        }
+        None
     }
-    fn get_label(&self, concept: &T) -> ZiaResult<Option<String>> {
-        Ok(match try!(self.get_concept_of_label(concept)) {
+    fn get_label(&self) -> ZiaResult<Option<String>> {
+        Ok(match self.get_concept_of_label() {
             None => None,
             Some(d) => match try!(d.get_normal_form()) {
                 None => None,
@@ -35,7 +51,36 @@ where
             },
         })
     }
+    fn get_token(&self) -> ZiaResult<Token> {
+        match try!(self.get_label()) {
+            None => match self.get_definition() {
+                Some((ref left, ref right)) => join_tokens::<Self>(left, right),
+                None => panic!("Unlabelled concept with no definition"),
+            },
+            Some(s) => Ok(Token::Atom(s)),
+        }
+    }
+    fn expand_as_token(&self) -> ZiaResult<Token> {
+        match self.get_definition() {
+            Some((ref left, ref right)) => join_tokens::<Self>(left, right),
+            None => self.get_token(),
+        }
+    }
 }
+
+fn join_tokens<T: LabelGetter>(left: &T, right: &T) -> ZiaResult<Token> {
+    Ok(try!(left.get_token()) + try!(right.get_token()))
+}
+
+impl<T> LabelGetter for T where
+    T: Id
+        + GetNormalForm<T>
+        + GetDefinition<T>
+        + GetDefinitionOf<T>
+        + Clone
+        + PartialEq
+        + fmt::Display
+{}
 
 pub trait FindDefinition<T>
 where

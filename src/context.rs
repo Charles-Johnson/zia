@@ -15,16 +15,14 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concepts::ConceptRef;
 use concepts::string_concept::StringRef;
+use concepts::ConceptRef;
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::call::label_getter::LabelGetter;
 use traits::call::left_hand_call::definer3::definer2::refactor_id::ConceptTidyer;
 use traits::call::left_hand_call::definer3::definer2::Definer2;
-use traits::call::left_hand_call::definer3::labeller::Labeller;
+use traits::call::left_hand_call::definer3::labeller::{ConceptAdder, LabelConcept, Labeller};
 use traits::call::left_hand_call::definer3::ConceptNumber;
-use traits::call::left_hand_call::ConceptAdder;
 use traits::call::Call;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
@@ -69,12 +67,6 @@ impl ConceptNumber for Context {
     }
 }
 
-impl LabelGetter<ConceptRef> for Context {
-    fn get_label_concept(&self) -> ConceptRef {
-        self.concepts[LABEL].clone()
-    }
-}
-
 impl ConceptAdder<ConceptRef> for Context {
     fn add_concept(&mut self, concept: &ConceptRef) {
         self.concepts.push(concept.clone());
@@ -90,6 +82,12 @@ impl SyntaxFinder<ConceptRef> for Context {
             None => None,
             Some(sc) => Some(ConceptRef::String(sc.clone())),
         }
+    }
+}
+
+impl LabelConcept<ConceptRef> for Context {
+    fn get_label_concept(&self) -> ConceptRef {
+        self.concepts[LABEL].clone()
     }
 }
 
