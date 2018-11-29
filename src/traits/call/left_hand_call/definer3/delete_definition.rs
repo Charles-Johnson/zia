@@ -17,6 +17,7 @@
 use std::marker;
 
 use traits::GetDefinition;
+use traits::call::MaybeConcept;
 
 pub trait DeleteDefinition
 where
@@ -40,4 +41,26 @@ pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
     fn remove_lefthand_of(&mut self, &T);
     fn remove_righthand_of(&mut self, &T);
+}
+
+impl<T,U> RemoveDefinition<T> for U 
+where
+	T: RemoveDefinition<T>,
+	U: MaybeConcept<T>,
+{
+    fn remove_definition(&mut self) {
+        if let Some(mut c) = self.get_concept() {
+            c.remove_definition()
+        }
+    }
+    fn remove_lefthand_of(&mut self, definition: &T) {
+        if let Some(mut c) = self.get_concept() {
+            c.remove_lefthand_of(definition)
+        }
+    }
+    fn remove_righthand_of(&mut self, definition: &T) {
+        if let Some(mut c) = self.get_concept() {
+            c.remove_righthand_of(definition)
+        }
+    }
 }

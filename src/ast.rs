@@ -19,7 +19,6 @@ use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
-use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
@@ -116,24 +115,6 @@ impl SetDefinition<ConceptRef> for AbstractSyntaxTree {
     fn add_righthand_of(&mut self, concept: &ConceptRef) {
         if let Some(mut c) = self.get_concept() {
             c.add_righthand_of(concept)
-        }
-    }
-}
-
-impl RemoveDefinition<ConceptRef> for AbstractSyntaxTree {
-    fn remove_definition(&mut self) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_definition()
-        }
-    }
-    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_lefthand_of(definition)
-        }
-    }
-    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_righthand_of(definition)
         }
     }
 }
