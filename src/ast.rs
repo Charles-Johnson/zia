@@ -18,7 +18,7 @@ use concepts::ConceptRef;
 use std::borrow::Borrow;
 use std::ops::Add;
 use token::Token;
-use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::label_getter::FindDefinition;
 use traits::call::left_hand_call::definer3::labeller::SetDefinition;
 use traits::call::left_hand_call::definer3::Pair;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
@@ -82,21 +82,6 @@ impl MightExpand for AbstractSyntaxTree {
                 let borrowed_right: &AbstractSyntaxTree = right.borrow();
                 Some((borrowed_left.clone(), borrowed_right.clone()))
             }
-        }
-    }
-}
-
-impl GetDefinitionOf<ConceptRef> for AbstractSyntaxTree {
-    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
-        match self.get_concept() {
-            None => Vec::new(),
-            Some(c) => c.get_lefthand_of(),
-        }
-    }
-    fn get_righthand_of(&self) -> Vec<ConceptRef> {
-        match self.get_concept() {
-            None => Vec::new(),
-            Some(c) => c.get_righthand_of(),
         }
     }
 }
