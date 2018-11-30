@@ -22,7 +22,7 @@ use self::definer3::delete_definition::DeleteDefinition;
 use self::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::definer3::{Definer3, Pair};
+use self::definer3::{Definer3, Pair, MaybeDisconnected};
 use constants::{DEFINE, REDUCTION};
 use traits::call::label_getter::LabelGetter;
 use traits::call::{HasToken, MaybeConcept, MightExpand};
@@ -38,7 +38,8 @@ where
         + AbstractFactory
         + StringFactory
         + RefactorFrom
-        + LabelGetter,
+        + LabelGetter
+		+ MaybeDisconnected,
     U: MaybeId<T> + Container + Pair + HasToken + DeleteReduction<T>,
     Self: Definer3<T, U>,
 {
@@ -93,7 +94,8 @@ where
         + AbstractFactory
         + StringFactory
         + RefactorFrom
-        + LabelGetter,
+        + LabelGetter
+		+ MaybeDisconnected,
     U: MaybeId<T> + Container + Pair + HasToken,
     Self: Definer3<T, U>,
 {}

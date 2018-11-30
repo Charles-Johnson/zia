@@ -19,6 +19,7 @@ pub mod definer2;
 pub mod delete_definition;
 pub mod labeller;
 
+use constants::LABEL;
 use self::concept_maker::ConceptMaker;
 use self::definer2::delete_normal_form::DeleteNormalForm;
 use self::definer2::refactor_id::RefactorFrom;
@@ -27,8 +28,10 @@ use self::delete_definition::{DeleteDefinition, TryDeleteDefinition};
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use std::marker;
 use token::Token;
-use traits::call::label_getter::LabelGetter;
-use traits::call::{HasToken, MaybeConcept, MightExpand};
+use traits::{GetDefinition, Id};
+use traits::call::label_getter::{LabelGetter, GetDefinitionOf};
+use traits::call::{HasToken, MaybeConcept, MightExpand, GetNormalForm};
+use traits::syntax_converter::label::GetNormalFormOf;
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptNumber {
@@ -44,7 +47,8 @@ where
         + DeleteDefinition
         + StringFactory
         + AbstractFactory
-        + LabelGetter,
+        + LabelGetter
+		 + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq + TryDeleteDefinition<T>,
     Self: Definer2<T, U> + ConceptMaker<T, U>,
 {
@@ -52,7 +56,38 @@ where
 		if let Some(_) = after.get_expansion() {
 			Err(ZiaError::Syntax("Only symbols can have definitions".to_string()))
 		} else if before == after {
-            before.try_delete_definition()
+			if let Some(ref mut before_c) = before.get_concept() {
+				println!("Deleting definition of concept {:?}", before_c.get_id());
+				let definition = before_c.get_definition();
+				before_c.delete_definition();
+				if try!(before_c.is_disconnected()) {
+					println!("Concept {:?} is disconnected", before_c.get_id());
+					try!(self.unlabel(before_c));
+					self.remove_concept(before_c);
+					for id in before_c.get_id()..self.number_of_concepts() {
+                		self.correct_id(id);
+					}
+				}
+				if let Some((ref left, ref right)) = definition {
+					if try!(left.is_disconnected()) {
+						println!("Concept {:?} is disconnected", left.get_id());
+						try!(self.unlabel(left));
+						self.remove_concept(left);
+						for id in left.get_id()..self.number_of_concepts() {
+                			self.correct_id(id);
+						}
+					}
+					if try!(right.is_disconnected()) {
+						println!("Concept {:?} is disconnected", right.get_id());
+						try!(self.unlabel(right));
+						self.remove_concept(right);
+						for id in right.get_id()..self.number_of_concepts() {
+                			self.correct_id(id);
+						}
+					}
+				}
+			}
+			Ok(())
         } else if let Some(mut before_c) = before.get_concept() {
             self.define2(&mut before_c, after)
         } else if let Some((ref before_left, ref before_right)) = before.get_expansion() {
@@ -88,7 +123,8 @@ where
         + DeleteDefinition
         + StringFactory
         + AbstractFactory
-        + LabelGetter,
+        + LabelGetter
+		 + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + HasToken + Pair + PartialEq,
     S: Definer2<T, U> + ConceptMaker<T, U>,
 {}
@@ -99,3 +135,30 @@ where
 {
     fn from_pair(Token, &Self, &Self) -> ZiaResult<Self>;
 }
+
+pub trait MaybeDisconnected
+where
+	Self: GetNormalForm<Self> + GetNormalFormOf<Self> + GetDefinition<Self> + GetDefinitionOf<Self> + Id,
+{
+	fn is_disconnected(&self) -> ZiaResult<bool> {
+		Ok(
+			try!(self.get_normal_form()).is_none()
+				&& self.get_definition().is_none() 
+				&& self.get_lefthand_of().is_empty() 
+				&& self.righthand_of_without_label_is_empty()
+				&& self.get_normal_form_of().is_empty()
+		)		
+	}
+	fn righthand_of_without_label_is_empty(&self) -> bool {
+		for concept in self.get_righthand_of() {
+			if let Some((left, _)) = concept.get_definition() {
+				if left.get_id() != LABEL {
+					return false;
+				}
+			}
+		}
+		true
+	}
+}
+
+impl<T> MaybeDisconnected for T where T: GetNormalForm<T> + GetNormalFormOf<T> + GetDefinition<T> + GetDefinitionOf<T> + Id {}

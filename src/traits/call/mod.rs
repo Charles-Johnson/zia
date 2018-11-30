@@ -27,7 +27,7 @@ use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
 use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::left_hand_call::definer3::Pair;
+use self::left_hand_call::definer3::{MaybeDisconnected, Pair};
 use self::left_hand_call::{MaybeId, Container, LeftHandCall};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
@@ -78,7 +78,8 @@ where
         + DeleteDefinition
         + DeleteNormalForm
         + UpdateNormalForm
-        + LabelGetter,
+        + LabelGetter
+		+ MaybeDisconnected,
     U: Reduce<T>
         + Expander<T>
         + HasToken
@@ -117,7 +118,8 @@ where
         + DeleteDefinition
         + DeleteNormalForm
         + UpdateNormalForm
-        + LabelGetter,
+        + LabelGetter
+		+ MaybeDisconnected,
     U: HasToken
         + Expander<T>
         + Reduce<T>
