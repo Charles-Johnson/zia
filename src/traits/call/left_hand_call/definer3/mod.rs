@@ -63,27 +63,18 @@ where
 				if try!(before_c.is_disconnected()) {
 					println!("Concept {:?} is disconnected", before_c.get_id());
 					try!(self.unlabel(before_c));
-					self.remove_concept(before_c);
-					for id in before_c.get_id()..self.number_of_concepts() {
-                		self.correct_id(id);
-					}
+					self.cleanly_remove_concept(before_c);
 				}
 				if let Some((ref left, ref right)) = definition {
 					if try!(left.is_disconnected()) {
 						println!("Concept {:?} is disconnected", left.get_id());
 						try!(self.unlabel(left));
-						self.remove_concept(left);
-						for id in left.get_id()..self.number_of_concepts() {
-                			self.correct_id(id);
-						}
+						self.cleanly_remove_concept(left);
 					}
 					if try!(right.is_disconnected()) {
 						println!("Concept {:?} is disconnected", right.get_id());
 						try!(self.unlabel(right));
-						self.remove_concept(right);
-						for id in right.get_id()..self.number_of_concepts() {
-                			self.correct_id(id);
-						}
+						self.cleanly_remove_concept(right);
 					}
 				}
 			}
