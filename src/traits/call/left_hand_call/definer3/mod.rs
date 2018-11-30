@@ -57,25 +57,12 @@ where
 			Err(ZiaError::Syntax("Only symbols can have definitions".to_string()))
 		} else if before == after {
 			if let Some(ref mut before_c) = before.get_concept() {
-				println!("Deleting definition of concept {:?}", before_c.get_id());
 				let definition = before_c.get_definition();
 				before_c.delete_definition();
-				if try!(before_c.is_disconnected()) {
-					println!("Concept {:?} is disconnected", before_c.get_id());
-					try!(self.unlabel(before_c));
-					self.cleanly_remove_concept(before_c);
-				}
+				try!(self.try_delete_concept(before_c));
 				if let Some((ref left, ref right)) = definition {
-					if try!(left.is_disconnected()) {
-						println!("Concept {:?} is disconnected", left.get_id());
-						try!(self.unlabel(left));
-						self.cleanly_remove_concept(left);
-					}
-					if try!(right.is_disconnected()) {
-						println!("Concept {:?} is disconnected", right.get_id());
-						try!(self.unlabel(right));
-						self.cleanly_remove_concept(right);
-					}
+					try!(self.try_delete_concept(left));
+					try!(self.try_delete_concept(right));
 				}
 			}
 			Ok(())
@@ -103,6 +90,13 @@ where
             ));
         }
     }
+	fn try_delete_concept(&mut self, concept: &T) -> ZiaResult<()> {
+		if try!(concept.is_disconnected()) {
+			try!(self.unlabel(concept));
+			self.cleanly_remove_concept(concept);
+		}
+		Ok(())
+	}
 }
 
 impl<S, T, U> Definer3<T, U> for S
