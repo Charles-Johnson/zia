@@ -57,15 +57,10 @@ where
 			Err(ZiaError::Syntax("Only symbols can have definitions".to_string()))
 		} else if before == after {
 			if let Some(ref mut before_c) = before.get_concept() {
-				let definition = before_c.get_definition();
-				before_c.delete_definition();
-				try!(self.try_delete_concept(before_c));
-				if let Some((ref left, ref right)) = definition {
-					try!(self.try_delete_concept(left));
-					try!(self.try_delete_concept(right));
-				}
+				self.delete_definition(before_c)
+			} else {
+				Ok(())
 			}
-			Ok(())
         } else if let Some(mut before_c) = before.get_concept() {
             self.define2(&mut before_c, after)
         } else if let Some((ref before_left, ref before_right)) = before.get_expansion() {
@@ -90,6 +85,16 @@ where
             ));
         }
     }
+	fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
+		let definition = concept.get_definition();
+		concept.delete_definition();
+		try!(self.try_delete_concept(concept));
+		if let Some((ref left, ref right)) = definition {
+			try!(self.try_delete_concept(left));
+			try!(self.try_delete_concept(right));
+		}
+		Ok(())
+	}
 	fn try_delete_concept(&mut self, concept: &T) -> ZiaResult<()> {
 		if try!(concept.is_disconnected()) {
 			try!(self.unlabel(concept));
