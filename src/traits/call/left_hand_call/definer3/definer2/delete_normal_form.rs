@@ -27,8 +27,8 @@ where
             Some(mut n) => {
                 n.remove_normal_form_of(self);
                 self.remove_normal_form();
-				Ok(())
-            },
+                Ok(())
+            }
         }
     }
 }
@@ -37,11 +37,11 @@ impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {
 
 pub trait DeleteReduction<T>
 where
-	Self: MaybeConcept<T>,
-	T: DeleteNormalForm,
+    Self: MaybeConcept<T>,
+    T: DeleteNormalForm,
 {
-	fn delete_reduction(&mut self) -> ZiaResult<()> {
-		if let Some(mut concept) = self.get_concept() {
+    fn delete_reduction(&mut self) -> ZiaResult<()> {
+        if let Some(mut concept) = self.get_concept() {
             concept.delete_normal_form()
         } else {
             Err(ZiaError::Redundancy(
@@ -50,10 +50,15 @@ where
                     .to_string(),
             ))
         }
-	}
+    }
 }
 
-impl<T, U> DeleteReduction<T> for U where U: MaybeConcept<T>, T: DeleteNormalForm {}
+impl<T, U> DeleteReduction<T> for U
+where
+    U: MaybeConcept<T>,
+    T: DeleteNormalForm,
+{
+}
 
 pub trait RemoveNormalForm<T> {
     fn remove_normal_form(&mut self);

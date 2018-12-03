@@ -38,7 +38,8 @@ impl<S, T> RefactorId<T> for S
 where
     T: Id + RefactorFrom,
     S: ConceptCleaner<T>,
-{}
+{
+}
 
 pub trait RefactorFrom {
     fn refactor_from(&mut self, &Self) -> ZiaResult<()>;
@@ -49,17 +50,22 @@ pub trait ConceptTidyer<T> {
     fn correct_id(&mut self, usize);
 }
 
-pub trait ConceptCleaner<T> 
+pub trait ConceptCleaner<T>
 where
-	Self: ConceptTidyer<T> + ConceptNumber,
-	T: Id,
+    Self: ConceptTidyer<T> + ConceptNumber,
+    T: Id,
 {
-	fn cleanly_remove_concept(&mut self, concept: &T) {
-		self.remove_concept(concept);
+    fn cleanly_remove_concept(&mut self, concept: &T) {
+        self.remove_concept(concept);
         for id in concept.get_id()..self.number_of_concepts() {
             self.correct_id(id);
         }
-	}
+    }
 }
 
-impl<S, T> ConceptCleaner<T> for S where S: ConceptTidyer<T> + ConceptNumber, T: Id {}
+impl<S, T> ConceptCleaner<T> for S
+where
+    S: ConceptTidyer<T> + ConceptNumber,
+    T: Id,
+{
+}

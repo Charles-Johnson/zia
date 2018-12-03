@@ -17,7 +17,7 @@
 mod expander;
 pub mod label_getter;
 pub mod left_hand_call;
-mod reduce;
+pub mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::LabelGetter;
@@ -28,12 +28,12 @@ use self::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
 use self::left_hand_call::definer3::{MaybeDisconnected, Pair};
-use self::left_hand_call::{MaybeId, Container, LeftHandCall};
+use self::left_hand_call::{Container, LeftHandCall, MaybeId};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
+use std::fmt::Display;
 use std::marker;
 use std::ops::Add;
-use token::Token;
 use traits::SyntaxFactory;
 use utils::{ZiaError, ZiaResult};
 
@@ -48,10 +48,6 @@ pub trait MaybeConcept<T> {
     fn get_concept(&self) -> Option<T>;
 }
 
-pub trait HasToken {
-    fn get_token(&self) -> Token;
-}
-
 pub trait GetNormalForm<T>
 where
     Self: marker::Sized,
@@ -59,13 +55,17 @@ where
     fn get_normal_form(&self) -> ZiaResult<Option<T>>;
 }
 
-impl<T, U> GetNormalForm<T> for U where T: GetNormalForm<T>, U: MaybeConcept<T> {
-	fn get_normal_form(&self) -> ZiaResult<Option<T>> {
-		match self.get_concept() {
-			None => Ok(None),
-			Some(c) => c.get_normal_form(),
-		}
-	}
+impl<T, U> GetNormalForm<T> for U
+where
+    T: GetNormalForm<T>,
+    U: MaybeConcept<T>,
+{
+    fn get_normal_form(&self) -> ZiaResult<Option<T>> {
+        match self.get_concept() {
+            None => Ok(None),
+            Some(c) => c.get_normal_form(),
+        }
+    }
 }
 
 pub trait Call<T, U>
@@ -79,23 +79,24 @@ where
         + DeleteNormalForm
         + UpdateNormalForm
         + LabelGetter
-		+ MaybeDisconnected,
+        + MaybeDisconnected
+        + Display,
     U: Reduce<T>
         + Expander<T>
-        + HasToken
-        + Pair
+        + Pair<U>
         + Container
         + MaybeId<T>
         + SyntaxFactory<T>
-        + Add<U, Output = ZiaResult<U>>,
+        + Add<U, Output = ZiaResult<U>>
+        + Clone
+        + Display,
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
-        println!("Calling AST: {:?}", ast.get_token());
         match ast.get_expansion() {
             Some((ref left, ref mut right)) => if let Some(c) = right.get_concept() {
                 match c.get_id() {
-                    REDUCTION => Ok(try!(left.recursively_reduce()).get_token().as_string()),
-                    DEFINE => Ok(try!(left.expand_ast_token()).as_string()),
+                    REDUCTION => Ok(try!(left.recursively_reduce()).to_string()),
+                    DEFINE => Ok(try!(left.expand()).to_string()),
                     _ => self.call_as_lefthand(left, right),
                 }
             } else {
@@ -119,13 +120,14 @@ where
         + DeleteNormalForm
         + UpdateNormalForm
         + LabelGetter
-		+ MaybeDisconnected,
-    U: HasToken
-        + Expander<T>
+        + MaybeDisconnected
+        + Display,
+    U: Expander<T>
         + Reduce<T>
-        + Pair
+        + Pair<U>
         + Container
         + MaybeId<T>
         + SyntaxFactory<T>
-        + Add<U, Output = ZiaResult<U>>,
+        + Add<U, Output = ZiaResult<U>>
+        + Display,
 {}

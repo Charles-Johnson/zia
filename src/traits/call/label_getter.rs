@@ -15,8 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
-use std::fmt;
-use token::Token;
+use std::fmt::Display;
 use traits::call::{GetNormalForm, MaybeConcept};
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -29,7 +28,7 @@ where
         + GetDefinitionOf<Self>
         + Clone
         + PartialEq
-        + fmt::Display,
+        + MaybeString,
 {
     fn get_concept_of_label(&self) -> Option<Self> {
         for candidate in self.get_righthand_of() {
@@ -47,29 +46,10 @@ where
             None => None,
             Some(d) => match try!(d.get_normal_form()) {
                 None => None,
-                Some(n) => Some(n.to_string()),
+                Some(n) => Some(n.get_string()),
             },
         })
     }
-    fn get_token(&self) -> ZiaResult<Token> {
-        match try!(self.get_label()) {
-            None => match self.get_definition() {
-                Some((ref left, ref right)) => join_tokens::<Self>(left, right),
-                None => panic!("Unlabelled concept with no definition"),
-            },
-            Some(s) => Ok(Token::Atom(s)),
-        }
-    }
-    fn expand_as_token(&self) -> ZiaResult<Token> {
-        match self.get_definition() {
-            Some((ref left, ref right)) => join_tokens::<Self>(left, right),
-            None => self.get_token(),
-        }
-    }
-}
-
-fn join_tokens<T: LabelGetter>(left: &T, right: &T) -> ZiaResult<Token> {
-    Ok(try!(left.get_token()) + try!(right.get_token()))
 }
 
 impl<T> LabelGetter for T where
@@ -79,8 +59,13 @@ impl<T> LabelGetter for T where
         + GetDefinitionOf<T>
         + Clone
         + PartialEq
-        + fmt::Display
+        + Display
+        + MaybeString
 {}
+
+pub trait MaybeString {
+    fn get_string(&self) -> String;
+}
 
 pub trait FindDefinition<T>
 where
@@ -119,10 +104,10 @@ pub trait GetDefinitionOf<T> {
     fn get_righthand_of(&self) -> Vec<T>;
 }
 
-impl<T,U> GetDefinitionOf<T> for U 
+impl<T, U> GetDefinitionOf<T> for U
 where
-	T: GetDefinitionOf<T>,
-	U: MaybeConcept<T>,
+    T: GetDefinitionOf<T>,
+    U: MaybeConcept<T>,
 {
     fn get_lefthand_of(&self) -> Vec<T> {
         match self.get_concept() {

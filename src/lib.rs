@@ -33,7 +33,7 @@ mod reductions {
     use utils::ZiaError;
     use Context;
     #[test]
-    fn monad() {
+    fn pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(a ->) b").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "b");
@@ -41,7 +41,7 @@ mod reductions {
         assert_eq!(cont.execute("(not true) ->").unwrap(), "false");
     }
     #[test]
-    fn nested_monads() {
+    fn nested_pairs() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("((not true) ->) false").unwrap(), "");
         assert_eq!(cont.execute("((not false) ->) true").unwrap(), "");
@@ -114,33 +114,33 @@ mod definitions {
     use utils::ZiaError;
     use Context;
     #[test]
-    fn fresh_monad() {
+    fn fresh_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
-        assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
+        assert_eq!(cont.execute("* :=").unwrap(), "repeated +"); // returns "*"
     }
     #[test]
-    fn fresh_nested_monads() {
+    fn fresh_nested_pairs() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(2 :=) (++ (++ 0))").unwrap(), "");
-        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)");
+        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)"); //returns "2"
     }
     #[test]
-    fn left_fresh_monad() {
+    fn left_fresh_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(((2 (repeated +)) 2) ->) 4").unwrap(), "",);
         assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
-    fn right_fresh_monad() {
+    fn right_fresh_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(((2 *) 2) ->) 4").unwrap(), "");
         assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
-    fn old_monad() {
+    fn old_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(((2 *) 2) ->) 4").unwrap(), "");
         assert_eq!(cont.execute("(((2 (repeated +)) 2) ->) 4").unwrap(), "",);
@@ -148,7 +148,7 @@ mod definitions {
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
-    fn monad_on_the_left() {
+    fn pair_on_the_left() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("((x y) ->) c").unwrap(), "");
         assert_matches!(cont.execute("((a b) :=) c"), Err(ZiaError::Syntax(_)));
@@ -169,13 +169,13 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_eq!(cont.execute("(a :=) a").unwrap(), "");
         assert_eq!(cont.execute("a :=").unwrap(), "a");
-		assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_))); // returns Ok
     }
     #[test]
     fn redundancy() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
-        assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_))); //returns Ok
     }
     #[test]
     fn definition_reduction() {
@@ -183,7 +183,7 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_eq!(cont.execute("(b ->) d").unwrap(), "");
         assert_eq!(cont.execute("(c ->) e").unwrap(), "");
-        assert_eq!(cont.execute("a ->").unwrap(), "d e");
+        assert_eq!(cont.execute("a ->").unwrap(), "d e"); // returns "a"
         assert_eq!(cont.execute("(f :=) (d e)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "f");
     }

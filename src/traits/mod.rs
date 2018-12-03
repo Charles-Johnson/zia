@@ -33,9 +33,9 @@ pub trait GetDefinition<T> {
 }
 
 impl<S, T> GetDefinition<T> for S
-where 
-	S: MaybeConcept<T> + MightExpand,
-	T: GetDefinition<T>,
+where
+    S: MaybeConcept<T> + MightExpand,
+    T: GetDefinition<T>,
 {
     fn get_definition(&self) -> Option<(T, T)> {
         match self.get_concept() {

@@ -19,7 +19,7 @@ use concepts::ConceptRef;
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
-use traits::call::label_getter::GetDefinitionOf;
+use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::left_hand_call::definer3::definer2::delete_normal_form::RemoveNormalForm;
 use traits::call::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
 use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
@@ -48,11 +48,17 @@ impl StringConcept {
     }
 }
 
+impl MaybeString for StringConcept {
+    fn get_string(&self) -> String {
+        self.string.clone()
+    }
+}
+
 impl RefactorFrom for StringConcept {
     fn refactor_from(&mut self, other: &StringConcept) -> ZiaResult<()> {
         try!(self.abstract_concept.refactor_from(&other.abstract_concept));
-		self.string = other.string.clone();
-		Ok(())
+        self.string = other.string.clone();
+        Ok(())
     }
 }
 

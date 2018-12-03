@@ -19,14 +19,16 @@ pub mod string_concept;
 
 use self::abstract_concept::{AbstractConcept, AbstractRef};
 use self::string_concept::{StringConcept, StringRef};
+use ast::AbstractSyntaxTree;
 use std::fmt;
-use traits::call::label_getter::GetDefinitionOf;
+use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::left_hand_call::definer3::definer2::delete_normal_form::RemoveNormalForm;
 use traits::call::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
 use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, SetDefinition, SetNormalForm, StringFactory,
 };
+use traits::call::reduce::SyntaxFromConcept;
 use traits::call::GetNormalForm;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
@@ -56,35 +58,35 @@ impl RefactorFrom for ConceptRef {
     fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
         match (self.clone(), other.clone()) {
             (ConceptRef::Abstract(ref mut r), ConceptRef::Abstract(ref o)) => {
-				let mut r_borrowed = r.borrow_mut();
-				// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-        		// then borrowing `other` will panic because `other` is already mutably borrowed.
-        		if other.check_borrow_err() {
-            		return Err(ZiaError::Redundancy(
-                		"Concept already has this definition".to_string(),
-            		));
-				}
-				r_borrowed.refactor_from(&o.borrow())
-			},
+                let mut r_borrowed = r.borrow_mut();
+                // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+                // then borrowing `other` will panic because `other` is already mutably borrowed.
+                if other.check_borrow_err() {
+                    return Err(ZiaError::Redundancy(
+                        "Concept already has this definition".to_string(),
+                    ));
+                }
+                r_borrowed.refactor_from(&o.borrow())
+            }
             (ConceptRef::String(ref mut r), ConceptRef::String(ref o)) => {
-				let mut r_borrowed = r.borrow_mut();
-				// In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-        		// then borrowing `other` will panic because `other` is already mutably borrowed.
-        		if other.check_borrow_err() {
-            		return Err(ZiaError::Redundancy(
-                		"Concept already has this definition".to_string(),
-            		));
-				}
-				r_borrowed.refactor_from(&o.borrow())
-			},
-			(ConceptRef::Abstract(ref r), ConceptRef::String(ref o)) => {
-				*self = ConceptRef::new_string(r.borrow().get_id(), &o.borrow().to_string());
-				self.refactor_from(other)
-			},
-			(ConceptRef::String(ref r), ConceptRef::Abstract(_)) => {
-				*self = ConceptRef::new_abstract(r.borrow().get_id());
-				self.refactor_from(other)
-			},
+                let mut r_borrowed = r.borrow_mut();
+                // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
+                // then borrowing `other` will panic because `other` is already mutably borrowed.
+                if other.check_borrow_err() {
+                    return Err(ZiaError::Redundancy(
+                        "Concept already has this definition".to_string(),
+                    ));
+                }
+                r_borrowed.refactor_from(&o.borrow())
+            }
+            (ConceptRef::Abstract(ref r), ConceptRef::String(ref o)) => {
+                *self = ConceptRef::new_string(r.borrow().get_id(), &o.borrow().to_string());
+                self.refactor_from(other)
+            }
+            (ConceptRef::String(ref r), ConceptRef::Abstract(_)) => {
+                *self = ConceptRef::new_abstract(r.borrow().get_id());
+                self.refactor_from(other)
+            }
         }
     }
 }
@@ -95,8 +97,11 @@ impl fmt::Display for ConceptRef {
             f,
             "{}",
             match *self {
-                ConceptRef::String(ref s) => s.borrow().to_string(),
-                _ => "".to_string(),
+                ConceptRef::String(ref s) => "\"".to_string() + &s.borrow().to_string() + "\"",
+                ConceptRef::Abstract(_) => {
+                    let ast: AbstractSyntaxTree = self.to_ast().unwrap();
+                    ast.to_string()
+                }
             },
         )
     }
@@ -249,5 +254,14 @@ impl StringFactory for ConceptRef {
 impl AbstractFactory for ConceptRef {
     fn new_abstract(id: usize) -> ConceptRef {
         ConceptRef::Abstract(AbstractConcept::new_ref(id))
+    }
+}
+
+impl MaybeString for ConceptRef {
+    fn get_string(&self) -> String {
+        match *self {
+            ConceptRef::String(ref s) => s.borrow().get_string(),
+            _ => panic!("Wrong type"),
+        }
     }
 }

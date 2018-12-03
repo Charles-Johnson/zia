@@ -19,12 +19,12 @@ pub mod refactor_id;
 
 use self::delete_normal_form::DeleteNormalForm;
 use self::refactor_id::{RefactorFrom, RefactorId};
-use token::Token;
+use std::fmt::Display;
 use traits::call::label_getter::LabelGetter;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
-use traits::call::{HasToken, MaybeConcept};
+use traits::call::{MaybeConcept, MightExpand};
 use utils::{ZiaError, ZiaResult};
 
 pub trait Definer2<T, U>
@@ -36,19 +36,19 @@ where
         + DeleteNormalForm
         + UpdateNormalForm
         + LabelGetter,
-    U: HasToken + MaybeConcept<T>,
+    U: MightExpand + MaybeConcept<T> + Display,
     Self: Refactor<T> + Labeller<T>,
 {
     fn define2(&mut self, before_c: &mut T, after: &U) -> ZiaResult<()> {
         if let Some(mut after_c) = after.get_concept() {
             self.refactor(before_c, &mut after_c)
         } else {
-            match after.get_token() {
-                Token::Atom(s) => {
+            match after.get_expansion() {
+                None => {
                     try!(self.unlabel(before_c));
-                    self.label(before_c, &s)
+                    self.label(before_c, &after.to_string())
                 }
-                Token::Expression(_) => Err(ZiaError::Syntax(
+                Some(_) => Err(ZiaError::Syntax(
                     "Only symbols can have definitions".to_string(),
                 )),
             }

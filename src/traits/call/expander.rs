@@ -14,29 +14,51 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use token::Token;
+use std::fmt::Display;
+use std::ops::Add;
 use traits::call::label_getter::LabelGetter;
-use traits::call::{HasToken, MaybeConcept, MightExpand};
+use traits::call::left_hand_call::definer3::Pair;
+use traits::call::reduce::SyntaxFromConcept;
+use traits::call::{MaybeConcept, MightExpand};
+use traits::SyntaxFactory;
 use utils::ZiaResult;
 
 pub trait Expander<T>
 where
-    T: LabelGetter,
-    Self: MaybeConcept<T> + HasToken + MightExpand,
+    T: LabelGetter + Display + SyntaxFromConcept<Self>,
+    Self: MaybeConcept<T>
+        + MightExpand
+        + Display
+        + Clone
+        + Pair<Self>
+        + Add<Self, Output = ZiaResult<Self>>
+        + SyntaxFactory<T>,
 {
-    fn expand_ast_token(&self) -> ZiaResult<Token> {
+    fn expand(&self) -> ZiaResult<Self> {
+        println!("Expanding {:?}", self.to_string());
         if let Some(ref con) = self.get_concept() {
-            con.expand_as_token()
+            println!("{:?} has a concept", self.to_string());
+            if let Some((ref left, ref right)) = con.get_definition() {
+                try!(left.to_ast()).expand().unwrap() + try!(right.to_ast()).expand().unwrap()
+            } else {
+                con.to_ast()
+            }
         } else if let Some((ref left, ref right)) = self.get_expansion() {
-            Ok(try!(left.expand_ast_token()) + try!(right.expand_ast_token()))
+            try!(left.expand()) + try!(right.expand())
         } else {
-            Ok(self.get_token())
+            Ok(self.clone())
         }
     }
 }
 
 impl<S, T> Expander<T> for S
 where
-    T: LabelGetter,
-    S: MaybeConcept<T> + HasToken + MightExpand,
+    T: LabelGetter + Display + SyntaxFromConcept<S>,
+    S: MaybeConcept<T>
+        + MightExpand
+        + Display
+        + Clone
+        + Pair<S>
+        + Add<S, Output = ZiaResult<S>>
+        + SyntaxFactory<T>,
 {}

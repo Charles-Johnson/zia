@@ -14,11 +14,11 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use token::Token;
+use std::fmt::Display;
 use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
-use traits::call::{GetNormalForm, HasToken, LabelGetter, MaybeConcept, MightExpand};
+use traits::call::{GetNormalForm, LabelGetter, MaybeConcept, MightExpand};
 use utils::ZiaResult;
 
 pub trait ConceptMaker<T, U>
@@ -29,23 +29,28 @@ where
         + GetNormalForm<T>
         + UpdateNormalForm
         + LabelGetter,
-    U: MaybeConcept<T> + HasToken + MightExpand,
+    U: MaybeConcept<T> + MightExpand + Display,
     Self: Labeller<T>,
 {
     fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
+        println!("Generating concept from ast: {:?}", ast.to_string());
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
-            let mut c = match ast.get_token() {
-                Token::Atom(s) => try!(self.new_labelled_abstract(&s)),
-                Token::Expression(_) => self.new_abstract(),
-            };
-            if let Some((mut app, mut arg)) = ast.get_expansion() {
-                let mut appc = try!(self.concept_from_ast(&app));
-                let mut argc = try!(self.concept_from_ast(&arg));
-                c.insert_definition(&mut appc, &mut argc);
+            let string = &ast.to_string();
+            match ast.get_expansion() {
+                None => self.new_labelled_abstract(string),
+                Some((ref left, ref right)) => {
+                    let mut appc = try!(self.concept_from_ast(left));
+                    let mut argc = try!(self.concept_from_ast(right));
+                    println!("Defining new concept");
+                    let mut concept = try!(self.insert_definition(&mut appc, &mut argc));
+                    if !string.contains(' ') {
+                        try!(self.label(&mut concept, string));
+                    }
+                    Ok(concept)
+                }
             }
-            Ok(c)
         }
     }
 }
@@ -53,6 +58,6 @@ where
 impl<S, T, U> ConceptMaker<T, U> for S
 where
     T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
-    U: MaybeConcept<T> + HasToken + MightExpand,
+    U: MaybeConcept<T> + MightExpand + Display,
     S: Labeller<T>,
 {}

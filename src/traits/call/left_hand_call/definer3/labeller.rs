@@ -51,10 +51,10 @@ pub trait SetDefinition<T> {
     fn add_righthand_of(&mut self, &T);
 }
 
-impl<T,U> SetDefinition<T> for U 
+impl<T, U> SetDefinition<T> for U
 where
-	T: SetDefinition<T>,
-	U: MaybeConcept<T>,
+    T: SetDefinition<T>,
+    U: MaybeConcept<T>,
 {
     fn set_definition(&mut self, lefthand: &T, righthand: &T) {
         if let Some(mut c) = self.get_concept() {

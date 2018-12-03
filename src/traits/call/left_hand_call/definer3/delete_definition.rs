@@ -15,8 +15,8 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker;
-use traits::GetDefinition;
 use traits::call::MaybeConcept;
+use traits::GetDefinition;
 use utils::{ZiaError, ZiaResult};
 
 pub trait DeleteDefinition
@@ -39,23 +39,28 @@ impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> +
 
 pub trait TryDeleteDefinition<T>
 where
-	Self: MaybeConcept<T>,
-	T: DeleteDefinition,
+    Self: MaybeConcept<T>,
+    T: DeleteDefinition,
 {
-	fn try_delete_definition(&mut self) -> ZiaResult<()> {
-		match self.get_concept() {
-			None => return Err(ZiaError::Redundancy(
+    fn try_delete_definition(&mut self) -> ZiaResult<()> {
+        match self.get_concept() {
+            None => Err(ZiaError::Redundancy(
                 "Refactoring a symbol that was never previously used is redundant".to_string(),
             )),
-			Some(mut c) => {
-				c.delete_definition(); 
-				Ok(())
-			},
-		}
-	}
+            Some(mut c) => {
+                c.delete_definition();
+                Ok(())
+            }
+        }
+    }
 }
 
-impl<T, U> TryDeleteDefinition<T> for U where U: MaybeConcept<T>, T: DeleteDefinition {}
+impl<T, U> TryDeleteDefinition<T> for U
+where
+    U: MaybeConcept<T>,
+    T: DeleteDefinition,
+{
+}
 
 pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
@@ -63,10 +68,10 @@ pub trait RemoveDefinition<T> {
     fn remove_righthand_of(&mut self, &T);
 }
 
-impl<T,U> RemoveDefinition<T> for U 
+impl<T, U> RemoveDefinition<T> for U
 where
-	T: RemoveDefinition<T>,
-	U: MaybeConcept<T>,
+    T: RemoveDefinition<T>,
+    U: MaybeConcept<T>,
 {
     fn remove_definition(&mut self) {
         if let Some(mut c) = self.get_concept() {
