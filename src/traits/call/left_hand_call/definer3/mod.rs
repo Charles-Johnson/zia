@@ -65,20 +65,12 @@ where
             }
         } else if let Some(mut before_c) = before.get_concept() {
             self.define2(&mut before_c, after)
-        } else if let Some((ref before_left, ref before_right)) = before.get_expansion() {
-            if let Some(mut after_c) = after.get_concept() {
-                if let Some((ref mut after_left, ref mut after_right)) = after_c.get_definition() {
-                    try!(self.define2(after_left, before_left));
-                    self.define2(after_right, before_right)
-                } else {
-                    let mut left_concept = try!(self.concept_from_ast(before_left));
-                    let mut right_concept = try!(self.concept_from_ast(before_right));
-                    after_c.insert_definition(&mut left_concept, &mut right_concept);
-                    Ok(())
-                }
+        } else if let Some((ref left, ref right)) = before.get_expansion() {
+            if let Some(ref mut after_c) = after.get_concept() {
+                self.redefine(after_c, left, right)
             } else {
                 println!("Defining a new concept in terms of two other new concepts");
-                let new_syntax = try!(U::from_pair(&after.to_string(), before_left, before_right));
+                let new_syntax = try!(U::from_pair(&after.to_string(), left, right));
                 try!(self.concept_from_ast(&new_syntax));
                 Ok(())
             }
@@ -105,6 +97,21 @@ where
         }
         Ok(())
     }
+	fn redefine(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
+		if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
+            try!(self.relabel(left_concept, &left.to_string()));
+            self.relabel(right_concept, &right.to_string())
+        } else {
+            let mut left_concept = try!(self.concept_from_ast(left));
+            let mut right_concept = try!(self.concept_from_ast(right));
+            concept.insert_definition(&mut left_concept, &mut right_concept);
+            Ok(())
+        }
+	}
+	fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
+		try!(self.unlabel(concept));
+        self.label(concept, new_label)
+	}
 }
 
 impl<S, T, U> Definer3<T, U> for S
