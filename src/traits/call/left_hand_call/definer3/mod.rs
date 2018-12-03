@@ -69,10 +69,7 @@ where
             if let Some(ref mut after_c) = after.get_concept() {
                 self.redefine(after_c, left, right)
             } else {
-                println!("Defining a new concept in terms of two other new concepts");
-                let new_syntax = try!(U::from_pair(&after.to_string(), left, right));
-                try!(self.concept_from_ast(&new_syntax));
-                Ok(())
+                self.define_new_syntax(&after.to_string(), left, right)
             }
         } else {
             return Err(ZiaError::Redundancy(
@@ -111,6 +108,11 @@ where
 	fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
 		try!(self.unlabel(concept));
         self.label(concept, new_label)
+	}
+	fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
+		let new_syntax_tree = try!(U::from_pair(syntax, left, right));
+        try!(self.concept_from_ast(&new_syntax_tree));
+        Ok(())
 	}
 }
 
