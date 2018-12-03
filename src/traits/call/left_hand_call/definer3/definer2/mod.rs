@@ -25,7 +25,7 @@ use traits::call::left_hand_call::definer3::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
 use traits::call::{MaybeConcept, MightExpand};
-use utils::{ZiaError, ZiaResult};
+use utils::ZiaResult;
 
 pub trait Definer2<T, U>
 where
@@ -43,15 +43,8 @@ where
         if let Some(mut after_c) = after.get_concept() {
             self.refactor(before_c, &mut after_c)
         } else {
-            match after.get_expansion() {
-                None => {
-                    try!(self.unlabel(before_c));
-                    self.label(before_c, &after.to_string())
-                }
-                Some(_) => Err(ZiaError::Syntax(
-                    "Only symbols can have definitions".to_string(),
-                )),
-            }
+            try!(self.unlabel(before_c));
+            self.label(before_c, &after.to_string())
         }
     }
 }
