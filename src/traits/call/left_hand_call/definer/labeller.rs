@@ -16,7 +16,7 @@
 */
 use std::marker;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
-use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::left_hand_call::definer::ConceptNumber;
 use traits::call::MaybeConcept;
 use utils::ZiaResult;
 
@@ -89,11 +89,11 @@ impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized {}
 pub trait Labeller<T>
 where
     T: StringFactory + AbstractFactory + LabelGetter + InsertDefinition + UpdateNormalForm,
-    Self: StringMaker<T> + Definer<T> + LabelConcept<T>,
+    Self: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
-        let mut definition = try!(self.insert_definition(&mut label_concept, concept));
+        let mut definition = try!(self.find_or_insert_definition(&mut label_concept, concept));
         let mut string_ref = self.new_string(string);
         definition.update_normal_form(&mut string_ref)
     }
@@ -118,7 +118,7 @@ pub trait LabelConcept<T> {
 impl<S, T> Labeller<T> for S
 where
     T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
-    S: StringMaker<T> + Definer<T> + LabelConcept<T>,
+    S: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {}
 
 pub trait StringMaker<T>
@@ -141,12 +141,12 @@ where
 {
 }
 
-pub trait Definer<T>
+pub trait FindOrInsertDefinition<T>
 where
     T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
     Self: AbstractMaker<T>,
 {
-    fn insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
+    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
         let application = try!(lefthand.find_definition(righthand));
         match application {
             None => {
@@ -159,7 +159,7 @@ where
     }
 }
 
-impl<S, T> Definer<T> for S
+impl<S, T> FindOrInsertDefinition<T> for S
 where
     T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
     S: AbstractMaker<T>,

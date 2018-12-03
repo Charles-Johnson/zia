@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::left_hand_call::definer::ConceptNumber;
 use traits::Id;
 use utils::ZiaResult;
 

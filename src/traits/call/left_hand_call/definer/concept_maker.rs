@@ -15,7 +15,7 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::fmt::Display;
-use traits::call::left_hand_call::definer3::labeller::{
+use traits::call::left_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
 use traits::call::{GetNormalForm, LabelGetter, MaybeConcept, MightExpand};
@@ -44,7 +44,7 @@ where
                     let mut appc = try!(self.concept_from_ast(left));
                     let mut argc = try!(self.concept_from_ast(right));
                     println!("Defining new concept");
-                    let mut concept = try!(self.insert_definition(&mut appc, &mut argc));
+                    let mut concept = try!(self.find_or_insert_definition(&mut appc, &mut argc));
                     if !string.contains(' ') {
                         try!(self.label(&mut concept, string));
                     }
@@ -54,10 +54,3 @@ where
         }
     }
 }
-
-impl<S, T, U> ConceptMaker<T, U> for S
-where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
-    U: MaybeConcept<T> + MightExpand + Display,
-    S: Labeller<T>,
-{}

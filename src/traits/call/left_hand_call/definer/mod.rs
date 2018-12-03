@@ -14,15 +14,15 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod concept_maker;
-pub mod definer2;
+pub mod concept_maker;
+pub mod refactor;
 pub mod delete_definition;
 pub mod labeller;
 
 use self::concept_maker::ConceptMaker;
-use self::definer2::delete_normal_form::DeleteNormalForm;
-use self::definer2::refactor_id::RefactorFrom;
-use self::definer2::Definer2;
+use self::refactor::delete_normal_form::DeleteNormalForm;
+use self::refactor::refactor_id::RefactorFrom;
+use self::refactor::Refactor;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use constants::LABEL;
@@ -38,7 +38,7 @@ pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Definer3<T, U>
+pub trait Definer<T, U>
 where
     T: DeleteNormalForm
         + UpdateNormalForm
@@ -50,34 +50,49 @@ where
         + LabelGetter
         + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
-    Self: Definer2<T, U> + ConceptMaker<T, U>,
+    Self: Refactor<T> + ConceptMaker<T, U>,
 {
     fn define(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
         if after.get_expansion().is_some() {
             Err(ZiaError::Syntax(
                 "Only symbols can have definitions".to_string(),
             ))
-        } else if before == after {
-            if let Some(ref mut before_c) = before.get_concept() {
-                self.delete_definition(before_c)
-            } else {
-                Ok(())
-            }
-        } else if let Some(mut before_c) = before.get_concept() {
-            self.define2(&mut before_c, after)
-        } else if let Some((ref left, ref right)) = before.get_expansion() {
-            if let Some(ref mut after_c) = after.get_concept() {
-                self.redefine(after_c, left, right)
-            } else {
-                self.define_new_syntax(&after.to_string(), left, right)
-            }
         } else {
-            return Err(ZiaError::Redundancy(
-                "Refactoring a symbol that was never previously used is redundant".to_string(),
-            ));
-        }
+			match (after.get_concept(), before.get_concept(), before.get_expansion()) {
+				(_, None, None) => Err(ZiaError::Redundancy(
+                	"Refactoring an atom that was never previously used is redundant".to_string(),
+            	)),
+				(None, Some(ref mut b), _) => self.relabel(b, &after.to_string()),
+				(None, None, Some((ref left, ref right))) => self.define_new_syntax(
+					&after.to_string(),
+					left, 
+					right,
+				),
+				(Some(ref mut a), Some(ref mut b), None) => self.refactor_atom(b, a),
+				(Some(ref mut a), Some(ref mut b), Some(_)) => self.refactor_expression(b, a),
+				(Some(ref mut a), None, Some((ref left, ref right))) => self.redefine(
+					a,
+					left,
+					right,
+				),
+			}
+		}
     }
-    fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
+	fn refactor_atom(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+		if before == after {
+			self.delete_definition(before)
+		} else {
+			self.refactor(before, after)
+		}
+	}
+	fn refactor_expression(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+		if before == after {
+			Err(ZiaError::Redundancy("Concept already has this definition".to_string()))
+		} else {
+			self.refactor(before, after)
+		}
+	}
+	fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
         let definition = concept.get_definition();
         concept.delete_definition();
         try!(self.try_delete_concept(concept));
@@ -116,7 +131,7 @@ where
 	}
 }
 
-impl<S, T, U> Definer3<T, U> for S
+impl<S, T, U> Definer<T, U> for S
 where
     T: DeleteNormalForm
         + UpdateNormalForm
@@ -128,7 +143,7 @@ where
         + LabelGetter
         + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
-    S: Definer2<T, U> + ConceptMaker<T, U>,
+    S: Refactor<T> + ConceptMaker<T, U>,
 {}
 
 pub trait Pair<T>

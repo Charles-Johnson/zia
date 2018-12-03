@@ -16,7 +16,7 @@
 */
 use std::ops::Add;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
-use traits::call::left_hand_call::definer3::Pair;
+use traits::call::left_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
 use utils::ZiaResult;

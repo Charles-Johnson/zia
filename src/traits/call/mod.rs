@@ -21,13 +21,13 @@ pub mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::LabelGetter;
-use self::left_hand_call::definer3::definer2::delete_normal_form::DeleteNormalForm;
-use self::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
-use self::left_hand_call::definer3::delete_definition::DeleteDefinition;
-use self::left_hand_call::definer3::labeller::{
+use self::left_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
+use self::left_hand_call::definer::refactor::refactor_id::RefactorFrom;
+use self::left_hand_call::definer::delete_definition::DeleteDefinition;
+use self::left_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::left_hand_call::definer3::{MaybeDisconnected, Pair};
+use self::left_hand_call::definer::{MaybeDisconnected, Pair};
 use self::left_hand_call::{Container, LeftHandCall, MaybeId};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};

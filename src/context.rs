@@ -19,10 +19,10 @@ use concepts::string_concept::StringRef;
 use concepts::ConceptRef;
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::call::left_hand_call::definer3::definer2::refactor_id::ConceptTidyer;
-use traits::call::left_hand_call::definer3::definer2::Definer2;
-use traits::call::left_hand_call::definer3::labeller::{ConceptAdder, LabelConcept, Labeller};
-use traits::call::left_hand_call::definer3::ConceptNumber;
+use traits::call::left_hand_call::definer::refactor::refactor_id::ConceptTidyer;
+use traits::call::left_hand_call::definer::labeller::{ConceptAdder, LabelConcept, Labeller};
+use traits::call::left_hand_call::definer::ConceptNumber;
+use traits::call::left_hand_call::definer::concept_maker::ConceptMaker;
 use traits::call::Call;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
@@ -91,7 +91,7 @@ impl LabelConcept<ConceptRef> for Context {
     }
 }
 
-impl Definer2<ConceptRef, AbstractSyntaxTree> for Context {}
+impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
 
 #[cfg(test)]
 mod context {

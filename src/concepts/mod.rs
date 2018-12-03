@@ -22,10 +22,10 @@ use self::string_concept::{StringConcept, StringRef};
 use ast::AbstractSyntaxTree;
 use std::fmt;
 use traits::call::label_getter::{GetDefinitionOf, MaybeString};
-use traits::call::left_hand_call::definer3::definer2::delete_normal_form::RemoveNormalForm;
-use traits::call::left_hand_call::definer3::definer2::refactor_id::RefactorFrom;
-use traits::call::left_hand_call::definer3::delete_definition::RemoveDefinition;
-use traits::call::left_hand_call::definer3::labeller::{
+use traits::call::left_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
+use traits::call::left_hand_call::definer::refactor::refactor_id::RefactorFrom;
+use traits::call::left_hand_call::definer::delete_definition::RemoveDefinition;
+use traits::call::left_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetNormalForm, StringFactory,
 };
 use traits::call::reduce::SyntaxFromConcept;

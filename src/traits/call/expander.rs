@@ -17,7 +17,7 @@
 use std::fmt::Display;
 use std::ops::Add;
 use traits::call::label_getter::LabelGetter;
-use traits::call::left_hand_call::definer3::Pair;
+use traits::call::left_hand_call::definer::Pair;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;

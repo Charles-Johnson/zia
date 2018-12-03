@@ -14,15 +14,15 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub mod definer3;
+pub mod definer;
 
-use self::definer3::definer2::delete_normal_form::{DeleteNormalForm, DeleteReduction};
-use self::definer3::definer2::refactor_id::RefactorFrom;
-use self::definer3::delete_definition::DeleteDefinition;
-use self::definer3::labeller::{
+use self::definer::refactor::delete_normal_form::{DeleteNormalForm, DeleteReduction};
+use self::definer::refactor::refactor_id::RefactorFrom;
+use self::definer::delete_definition::DeleteDefinition;
+use self::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::definer3::{Definer3, MaybeDisconnected, Pair};
+use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use traits::call::label_getter::LabelGetter;
@@ -42,7 +42,7 @@ where
         + LabelGetter
         + MaybeDisconnected,
     U: MaybeId<T> + Container + Pair<U> + DeleteReduction<T> + Display,
-    Self: Definer3<T, U>,
+    Self: Definer<T, U>,
 {
     fn call_as_lefthand(&mut self, left: &U, right: &mut U) -> ZiaResult<String> {
         match left.get_expansion() {
@@ -98,7 +98,7 @@ where
         + LabelGetter
         + MaybeDisconnected,
     U: MaybeId<T> + Container + Pair<U> + Display,
-    Self: Definer3<T, U>,
+    Self: Definer<T, U>,
 {}
 
 pub trait Container
