@@ -35,9 +35,7 @@ where
         + SyntaxFactory<T>,
 {
     fn expand(&self) -> ZiaResult<Self> {
-        println!("Expanding {:?}", self.to_string());
         if let Some(ref con) = self.get_concept() {
-            println!("{:?} has a concept", self.to_string());
             if let Some((ref left, ref right)) = con.get_definition() {
                 try!(left.to_ast()).expand().unwrap() + try!(right.to_ast()).expand().unwrap()
             } else {

@@ -33,7 +33,6 @@ where
     Self: Labeller<T>,
 {
     fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
-        println!("Generating concept from ast: {:?}", ast.to_string());
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
@@ -43,7 +42,6 @@ where
                 Some((ref left, ref right)) => {
                     let mut appc = try!(self.concept_from_ast(left));
                     let mut argc = try!(self.concept_from_ast(right));
-                    println!("Defining new concept");
                     let mut concept = try!(self.find_or_insert_definition(&mut appc, &mut argc));
                     if !string.contains(' ') {
                         try!(self.label(&mut concept, string));

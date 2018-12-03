@@ -117,13 +117,13 @@ mod definitions {
     fn fresh_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
-        assert_eq!(cont.execute("* :=").unwrap(), "repeated +"); // returns "*"
+        assert_eq!(cont.execute("* :=").unwrap(), "repeated +"); 
     }
     #[test]
     fn fresh_nested_pairs() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(2 :=) (++ (++ 0))").unwrap(), "");
-        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)"); //returns "2"
+        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)"); 
     }
     #[test]
     fn left_fresh_pair() {
@@ -169,13 +169,13 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_eq!(cont.execute("(a :=) a").unwrap(), "");
         assert_eq!(cont.execute("a :=").unwrap(), "a");
-        assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_))); // returns Ok
+        assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn redundancy() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
-        assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_))); //returns Ok
+        assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn definition_reduction() {
@@ -183,7 +183,7 @@ mod definitions {
         assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
         assert_eq!(cont.execute("(b ->) d").unwrap(), "");
         assert_eq!(cont.execute("(c ->) e").unwrap(), "");
-        assert_eq!(cont.execute("a ->").unwrap(), "d e"); // returns "a"
+        assert_eq!(cont.execute("a ->").unwrap(), "d e");
         assert_eq!(cont.execute("(f :=) (d e)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "f");
     }
