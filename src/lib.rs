@@ -195,10 +195,10 @@ mod other {
 	fn not_a_program() {
 		let mut cont = Context::new().unwrap();
         assert_matches!(cont.execute("a"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("(a a)"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("(a (a a))"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
 		assert_eq!(cont.execute("a (-> b)").unwrap(), "");
-		assert_matches!(cont.execute("(a a)"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("(a (a a))"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
 	}
 }
