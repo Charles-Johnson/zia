@@ -119,9 +119,7 @@ impl GetNormalForm<ConceptRef> for AbstractConcept {
             None => Ok(None),
             Some(ref n) => {
                 if n.check_borrow_err() {
-                    return Err(ZiaError::Borrow(
-                        "Error while borrowing normal form".to_string(),
-                    ));
+                    return Err(ZiaError::Borrow)
                 }
                 match try!(n.get_normal_form()) {
                     None => Ok(Some(n.clone())),
@@ -150,13 +148,11 @@ impl SetNormalForm<ConceptRef> for AbstractConcept {
         // If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will
         // raise an error due to borrowing self which has already been mutably borrowed.
         if concept.get_normal_form().is_err() {
-            return Err(ZiaError::Loop("Cannot create a reduction loop".to_string()));
+            return Err(ZiaError::CyclicReduction);
         }
         if let Some(ref n) = try!(self.get_normal_form()) {
             if n == concept {
-                return Err(ZiaError::Redundancy(
-                    "Concept already has this normal form.".to_string(),
-                ));
+                return Err(ZiaError::RedundantReduction);
             }
         }
         self.normal_form = Some(concept.clone());

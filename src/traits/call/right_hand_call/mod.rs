@@ -48,22 +48,16 @@ where
                 Some(id) => match id {
                     REDUCTION => self.try_reduction(left, rightright),
                     DEFINE => self.try_definition(left, rightright),
-                    _ => Err(ZiaError::Absence(
-                        "This concept is not a program".to_string(),
-                    )),
+                    _ => Err(ZiaError::NotAProgram),
                 },
-                None => Err(ZiaError::Absence(
-                    "This concept is not a program".to_string(),
-                )),
+                None => Err(ZiaError::NotAProgram),
             },
-            None => Err(ZiaError::Absence(
-                "This concept is not a program".to_string(),
-            )),
+            None => Err(ZiaError::NotAProgram),
         }
     }
     fn try_reduction(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
-            Err(ZiaError::Loop("Reduction rule is infinite".to_string()))
+            Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
             try!(syntax.delete_reduction());
             Ok("".to_string())
@@ -76,7 +70,7 @@ where
     }
     fn try_definition(&mut self, new: &U, old: &mut U) -> ZiaResult<String> {
         if old.contains(new) {
-            Err(ZiaError::Loop("Definition is infinite".to_string()))
+            Err(ZiaError::InfiniteDefinition)
         } else {
             try!(self.define(old, new));
             Ok("".to_string())

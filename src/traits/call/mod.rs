@@ -101,9 +101,7 @@ where
                 },
                 None => self.call_as_righthand(left, right),
             },
-            None => Err(ZiaError::Absence(
-                "This concept is not a program".to_string(),
-            )),
+            None => Err(ZiaError:: NotAProgram),
         }
     }
 }

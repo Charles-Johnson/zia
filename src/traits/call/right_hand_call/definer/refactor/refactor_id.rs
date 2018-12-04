@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use std::marker::Sized;
 use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::Id;
 use utils::ZiaResult;
@@ -41,7 +42,10 @@ where
 {
 }
 
-pub trait RefactorFrom {
+pub trait RefactorFrom 
+where
+	Self: Sized,
+{
     fn refactor_from(&mut self, &Self) -> ZiaResult<()>;
 }
 

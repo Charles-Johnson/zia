@@ -31,15 +31,10 @@ where
     fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
-            0 => Err(ZiaError::Syntax(
-                "Parentheses need to contain an expression".to_string(),
-            )),
+            0 => Err(ZiaError::EmptyParentheses),
             1 => Ok(self.ast_from_atom(&tokens[0])),
             2 => self.ast_from_pair(&tokens[0], &tokens[1]),
-            _ => Err(ZiaError::Syntax(
-                "Expression composed of more than 2 tokens has not been implemented yet"
-                    .to_string(),
-            )),
+            _ => Err(ZiaError::AmbiguousExpression),
         }
     }
     fn ast_from_atom(&mut self, s: &str) -> U {

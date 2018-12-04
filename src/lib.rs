@@ -58,7 +58,7 @@ mod reductions {
     fn circular_loop() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("a (-> b)").unwrap(), "");
-        assert_matches!(cont.execute("b (-> a)"), Err(ZiaError::Loop(_)));
+        assert_matches!(cont.execute("b (-> a)"), Err(ZiaError::CyclicReduction));
         assert_eq!(cont.execute("b ->").unwrap(), "b");
     }
     #[test]
@@ -76,7 +76,7 @@ mod reductions {
     #[test]
     fn infinite_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("b (-> (a b))"), Err(ZiaError::Loop(_)));
+        assert_matches!(cont.execute("b (-> (a b))"), Err(ZiaError::ExpandingReduction));
     }
     #[test]
     fn broken_end_chain() {
@@ -106,7 +106,7 @@ mod reductions {
     fn redundancy() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("a (-> b)").unwrap(), "");
-        assert_matches!(cont.execute("a (-> b)"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (-> b)"), Err(ZiaError::RedundantReduction));
     }
 }
 #[cfg(test)]
@@ -150,17 +150,17 @@ mod definitions {
     #[test]
     fn pair_on_the_left() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("(a b) (:= c)"), Err(ZiaError::Syntax(_)));
+        assert_matches!(cont.execute("(a b) (:= c)"), Err(ZiaError::BadDefinition));
     }
     #[test]
     fn fresh_refactor() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::RedundantRefactor));
     }
     #[test]
     fn definition_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("a (:= (a b))"), Err(ZiaError::Loop(_)));
+        assert_matches!(cont.execute("a (:= (a b))"), Err(ZiaError::InfiniteDefinition));
     }
     #[test]
     fn remove_definition() {
@@ -168,13 +168,13 @@ mod definitions {
         assert_eq!(cont.execute("a (:= (b c))").unwrap(), "");
         assert_eq!(cont.execute("a (:= a)").unwrap(), "");
         assert_eq!(cont.execute("a :=").unwrap(), "a");
-        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::RedundantRefactor));
     }
     #[test]
     fn redundancy() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("a (:= (b c))").unwrap(), "");
-        assert_matches!(cont.execute("a (:= (b c))"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (:= (b c))"), Err(ZiaError::RedundantDefinition));
     }
     #[test]
     fn definition_reduction() {
@@ -194,11 +194,11 @@ mod other {
     #[test]
     fn not_a_program() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("a"), Err(ZiaError::Absence(_)));
-        assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
-        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
+        assert_matches!(cont.execute("a"), Err(ZiaError::NotAProgram));
+        assert_matches!(cont.execute("a a"), Err(ZiaError::NotAProgram));
+        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::NotAProgram)); 
         assert_eq!(cont.execute("a (-> b)").unwrap(), "");
-        assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
-        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
+        assert_matches!(cont.execute("a a"), Err(ZiaError::NotAProgram));
+        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::NotAProgram));
     }
 }

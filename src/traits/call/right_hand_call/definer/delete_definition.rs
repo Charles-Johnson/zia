@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::marker;
+use std::marker::Sized;
 use traits::call::MaybeConcept;
 use traits::GetDefinition;
-use utils::{ZiaError, ZiaResult};
 
 pub trait DeleteDefinition
 where
-    Self: GetDefinition<Self> + RemoveDefinition<Self> + marker::Sized,
+    Self: GetDefinition<Self> + RemoveDefinition<Self> + Sized,
 {
     fn delete_definition(&mut self) {
         match self.get_definition() {
@@ -35,32 +34,7 @@ where
     }
 }
 
-impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> + marker::Sized {}
-
-pub trait TryDeleteDefinition<T>
-where
-    Self: MaybeConcept<T>,
-    T: DeleteDefinition,
-{
-    fn try_delete_definition(&mut self) -> ZiaResult<()> {
-        match self.get_concept() {
-            None => Err(ZiaError::Redundancy(
-                "Refactoring a symbol that was never previously used is redundant".to_string(),
-            )),
-            Some(mut c) => {
-                c.delete_definition();
-                Ok(())
-            }
-        }
-    }
-}
-
-impl<T, U> TryDeleteDefinition<T> for U
-where
-    U: MaybeConcept<T>,
-    T: DeleteDefinition,
-{
-}
+impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> + Sized {}
 
 pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);

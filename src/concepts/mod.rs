@@ -62,9 +62,7 @@ impl RefactorFrom for ConceptRef {
                 // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
                 // then borrowing `other` will panic because `other` is already mutably borrowed.
                 if other.check_borrow_err() {
-                    return Err(ZiaError::Redundancy(
-                        "Concept already has this definition".to_string(),
-                    ));
+                    return Err(ZiaError::RedundantDefinition);
                 }
                 r_borrowed.refactor_from(&o.borrow())
             }
@@ -73,9 +71,7 @@ impl RefactorFrom for ConceptRef {
                 // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
                 // then borrowing `other` will panic because `other` is already mutably borrowed.
                 if other.check_borrow_err() {
-                    return Err(ZiaError::Redundancy(
-                        "Concept already has this definition".to_string(),
-                    ));
+                    return Err(ZiaError::RedundantDefinition);
                 }
                 r_borrowed.refactor_from(&o.borrow())
             }

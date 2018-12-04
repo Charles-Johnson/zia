@@ -24,31 +24,31 @@ use utils::ZiaResult;
 
 pub trait Refactor<T>
 where
-    T: RefactorFrom + DeleteNormalForm + LabelGetter,
-    Self: RefactorId<T> + Unlabeller<T>,
+    T: RefactorFrom + Unlabeller,
+    Self: RefactorId<T>,
 {
     fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-        try!(self.unlabel(before));
+        try!(before.unlabel());
         self.refactor_id(before, after)
     }
 }
 
 impl<S, T> Refactor<T> for S
 where
-    T: RefactorFrom + DeleteNormalForm + LabelGetter,
-    S: RefactorId<T> + Unlabeller<T>,
+    T: RefactorFrom + Unlabeller,
+    S: RefactorId<T>,
 {}
 
-pub trait Unlabeller<T>
+pub trait Unlabeller
 where
-    T: LabelGetter + DeleteNormalForm,
+    Self: LabelGetter + DeleteNormalForm,
 {
-    fn unlabel(&mut self, concept: &T) -> ZiaResult<()> {
-        match concept.get_concept_of_label() {
+    fn unlabel(&mut self) -> ZiaResult<()> {
+        match self.get_concept_of_label() {
             None => Ok(()),
             Some(mut d) => d.delete_normal_form(),
         }
     }
 }
 
-impl<S, T> Unlabeller<T> for S where T: LabelGetter + DeleteNormalForm {}
+impl<S> Unlabeller for S where S: LabelGetter + DeleteNormalForm {}

@@ -20,21 +20,33 @@ pub type ZiaResult<T> = Result<T, ZiaError>;
 
 #[derive(Debug)]
 pub enum ZiaError {
-    Borrow(String),
-    Redundancy(String),
-    Absence(String),
-    Syntax(String),
-    Loop(String),
+    Borrow,
+    RedundantReduction,
+	RedundantDefinition,
+	RedundantRefactor,
+    NotAProgram,
+    BadDefinition,
+	CyclicReduction,
+    ExpandingReduction,
+	InfiniteDefinition,
+	EmptyParentheses,
+	AmbiguousExpression,
 }
 
 impl fmt::Display for ZiaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ZiaError::Borrow(ref s) => write!(f, "{}", s),
-            ZiaError::Redundancy(ref s) => write!(f, "{}", s),
-            ZiaError::Absence(ref s) => write!(f, "{}", s),
-            ZiaError::Syntax(ref s) => write!(f, "{}", s),
-            ZiaError::Loop(ref s) => write!(f, "{}", s),
+            ZiaError::Borrow => write!(f, "Borrow error!"),
+            ZiaError::RedundantReduction => write!(f, "That reduction rule already exists."),
+			ZiaError::RedundantDefinition => write!(f, "That definition already exists."),
+			ZiaError::RedundantRefactor => write!(f, "Relabelling something that doesn't yet exist has no effect."),
+            ZiaError::NotAProgram => write!(f, "No program exists for this syntax."),
+            ZiaError::BadDefinition => write!(f, "Cannot define expressions."),
+            ZiaError::CyclicReduction => write!(f, "Cannot allow a chain of reduction rules to loop."),
+            ZiaError::ExpandingReduction => write!(f, "Cannot reduce a concept to an expression containing itself."),
+            ZiaError::InfiniteDefinition => write!(f, "Cannot define a concept as an expression containing itself."),
+			ZiaError::EmptyParentheses => write!(f, "Parentheses need to contain a symbol or expression."),
+			ZiaError::AmbiguousExpression => write!(f, "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression."),
         }
     }
 }

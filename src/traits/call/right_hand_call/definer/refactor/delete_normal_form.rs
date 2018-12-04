@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use std::marker::Sized;
 use traits::call::{GetNormalForm, MaybeConcept};
 use utils::{ZiaError, ZiaResult};
 
@@ -37,25 +38,21 @@ impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {
 
 pub trait DeleteReduction<T>
 where
-    Self: MaybeConcept<T>,
+    Self: MaybeConcept<T> + Sized,
     T: DeleteNormalForm,
 {
     fn delete_reduction(&mut self) -> ZiaResult<()> {
         if let Some(mut concept) = self.get_concept() {
             concept.delete_normal_form()
         } else {
-            Err(ZiaError::Redundancy(
-                "Removing the normal form of a symbol that was never previously used \
-                 is redundant"
-                    .to_string(),
-            ))
+            Err(ZiaError::RedundantReduction)
         }
     }
 }
 
 impl<T, U> DeleteReduction<T> for U
 where
-    U: MaybeConcept<T>,
+    U: MaybeConcept<T> + Sized,
     T: DeleteNormalForm,
 {
 }
