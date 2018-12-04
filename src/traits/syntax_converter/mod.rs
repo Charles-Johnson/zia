@@ -34,7 +34,7 @@ where
             0 => Err(ZiaError::Syntax(
                 "Parentheses need to contain an expression".to_string(),
             )),
-            1 => self.ast_from_atom(&tokens[0]),
+            1 => Ok(self.ast_from_atom(&tokens[0])),
             2 => self.ast_from_pair(&tokens[0], &tokens[1]),
             _ => Err(ZiaError::Syntax(
                 "Expression composed of more than 2 tokens has not been implemented yet"
@@ -42,9 +42,9 @@ where
             )),
         }
     }
-    fn ast_from_atom(&mut self, s: &str) -> ZiaResult<U> {
-        let concept_if_exists = try!(self.concept_from_label(s));
-        Ok(U::new(s, concept_if_exists))
+    fn ast_from_atom(&mut self, s: &str) -> U {
+        let concept_if_exists = self.concept_from_label(s);
+        U::new(s, concept_if_exists)
     }
     fn ast_from_pair(&mut self, left: &str, right: &str) -> ZiaResult<U> {
         let lefthand = try!(self.ast_from_token(left));
@@ -55,7 +55,7 @@ where
         if t.contains(' ') {
             self.ast_from_expression(t)
         } else {
-            self.ast_from_atom(t)
+            Ok(self.ast_from_atom(t))
         }
     }
 }
@@ -72,9 +72,9 @@ where
     T: Label<T> + GetDefinition<T> + Clone + Id,
 {
     fn get_string_concept(&self, &str) -> Option<T>;
-    fn concept_from_label(&self, s: &str) -> ZiaResult<Option<T>> {
+    fn concept_from_label(&self, s: &str) -> Option<T> {
         match self.get_string_concept(s) {
-            None => Ok(None),
+            None => None,
             Some(c) => c.get_labellee(),
         }
     }
