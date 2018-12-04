@@ -1,51 +1,87 @@
 # zia
-Library for the Zia programming language.
+Interpreter for the Zia programming language.
 
-Zia is a symbolic programming language that aims to have a minimal set of built-in features yet maximal expressive power by having the most extensible and flexible syntax.
+The Zia project aims to allow programs to be easily adaptable. In contrast to functional 
+programming, in which program data is immutable wherever possible, Zia program data is mutable 
+wherever possible. In contrast to traditional interpreted languages, Zia source code plays a role 
+similar to database query languages. In contrast to traditional databases, Zia further abstracts 
+away data representation details (such as tables and columns) and allows programs to be stored. 
 
-The current implementation exposes the `oracle` function that can be used in an interface such as [IZia](https://github.com/Charles-Johnson/izia):
-```
-pub fn oracle(buffer: &str, cont: &mut Context) -> ZiaResult<String>;
-```
-
-`oracle` accepts an expression as input (`buffer` references this string) and processes the command given the `Context` (`cont` mutably references this). A new `Context` can be constructed by `Context::new()`.
-
-An expression consists of an applicand and an argument, separated by spaces. Either of these could be another expression nested in parentheses.
+The Zia syntax represents a binary tree where parentheses group a pair of expressions and 
+a space separates a pair of expressions.
 
 e.g.
 ```
-(applicand1 argument1) (applicand2 argument2)
+(ll lr) (rl rr)
+```    
+represents the following binary tree:
+```
+    / \
+   /   \
+  /     \
+ / \   / \
+ll lr rl rr
 ```
 
-If an applicand or argument is not an expression, it is an atom: labelled by a string containing no spaces or parentheses.
+The leaves of the tree can be any unicode string without a space or parentheses. These symbols may 
+be recognised by the intepreter as concepts or if not used to label new concepts.
 
-We can change the label of an atom from "a" to "b" by the expression:
-```
-(b :=) a
-```
+Currently, 4 types of low-level operations have been implemented using 2 of the built-in symbols.
 
-Ideally, we would write:
-```
-b := a
-```
-but that would require Zia to know the precedence of atoms to order the applications without superfluous parentheses. This feature hasn't been implemented yet.
+Reduction symbol: `->`
 
-We can also define "c" as the application of "a" and "b" by:
-```
-(c :=) (a b)
-```
+`->` can be used to specify reduction rules for concepts represented by expressions. For example
+`(a ->) b` represents the command to specify the rule that the concept represented by `a` reduces 
+to the concept represented by `b`.
 
-If you want to know what "c" consists of, you can expand it by:
-```
-c :=
-```
+`->` is also used to print the symbol of the normal form of a concept. For example `a ->`
+represents the command to print `b` in the above case of `(a ->) b` but `c ->` prints `c` because
+no reduction rule exists for `c`.
 
-Reduction rules for expressions can be defined. If "a" reduces to "b" then we can write:
-```
-(a ->) b 
-```
+Reduction rules chain together. For example if `(d ->) e` and `(e ->) f` are executed then
+executing `d ->` will print `f`.
 
-If we want to find the normal form of "a" then we can write:
+You can modify existing reduction rules. For example you can change the reduction rule for `e` by 
+`(e ->) g`; `e ->` will now print `g` and `d ->` also prints `g`. You could also execute `(a ->) a`
+and so `a ->` now prints `a`.
+
+The intepreter will let you know if reduction rule commands are redundant. For example `(h ->) h`
+is redundant because all new concepts are by default their own normal form. Also `(e ->) g` is
+redundant because it's already been explicitly specified. However `(d ->) g` would not be redundant because this changes the rule from "The normal form of `d` is the normal form of `e`" to "The 
+normal form of `d` is the normal form of `g`" even though `d` already reduces to `g`.
+
+Definition symbol: `:=`
+
+`:=` can be used to give a binary tree of concepts its own symbol, change the symbol of a concept
+or merge concepts together. For example `(c :=) (a b)` means graphically:
 ```
-a ->
+ c
+/ \
+a b
+```
+The command `c :=` then prints `a b`. The command `a :=` prints `a`. We can change the symbol of
+`b` to `h` using `(b :=) h`. `c :=` would then print `a h`. We can merge the concepts of `a` and 
+`d` and drop the `d` symbol using `(a :=) d` so `a ->` prints `g` and also `c ->` prints `g h`.
+
+To prevent infinite loops, commands like `(i :=) (i j)` are not accepted by the interpreter nor
+are commands like `(i ->) (i j)`.
+
+API  
+
+The current implementation exposes the `Context` type that can be used in an interface such as [IZia](https://github.com/Charles-Johnson/izia). 
+
+```
+impl Context {
+	pub fn new() -> ZiaResult<Context> { 
+		// Constructs a new Context with 3 built-in concepts: one to encode the labels of concepts
+    	// (id=LABEL), one to encode commands to define or print the definitions of concepts (id = 
+    	// DEFINE) and one to encode commands to define reduction rules or print the normal forms 
+		// of concepts (id = REDUCTION).
+    }
+    pub fn execute(&mut self, command: &str) -> ZiaResult<String> { 
+		// Executes the commands given by the user. The command is converted into an abstract 
+		// syntax tree using the labels of built-in concepts. This abstract syntax tree is then 
+		// parsed and appropriate operations are performed.
+	}
+}
 ```
