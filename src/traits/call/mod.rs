@@ -16,20 +16,20 @@
 */
 mod expander;
 pub mod label_getter;
-pub mod right_hand_call;
 pub mod reduce;
+pub mod right_hand_call;
 
 use self::expander::Expander;
 use self::label_getter::LabelGetter;
-use self::right_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
-use self::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
+pub use self::reduce::{Reduce, SyntaxFromConcept};
 use self::right_hand_call::definer::delete_definition::DeleteDefinition;
 use self::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
+use self::right_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
+use self::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use self::right_hand_call::definer::{MaybeDisconnected, Pair};
-use self::right_hand_call::{Container, RightHandCall, MaybeId};
-pub use self::reduce::{Reduce, SyntaxFromConcept};
+use self::right_hand_call::{Container, MaybeId, RightHandCall};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use std::marker;
@@ -87,7 +87,7 @@ where
         + Container
         + MaybeId<T>
         + SyntaxFactory<T>
-        + Add<U, Output = ZiaResult<U>>
+        + Add<U, Output = U>
         + Clone
         + Display,
 {
@@ -99,7 +99,7 @@ where
                     DEFINE => Ok(try!(left.expand()).to_string()),
                     _ => self.call_as_righthand(left, right),
                 },
-				None => self.call_as_righthand(left, right),
+                None => self.call_as_righthand(left, right),
             },
             None => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
@@ -127,6 +127,6 @@ where
         + Container
         + MaybeId<T>
         + SyntaxFactory<T>
-        + Add<U, Output = ZiaResult<U>>
+        + Add<U, Output = U>
         + Display,
 {}

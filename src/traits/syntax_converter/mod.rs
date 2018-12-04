@@ -26,7 +26,7 @@ pub trait SyntaxConverter<T, U>
 where
     Self: SyntaxFinder<T>,
     T: Clone + Id + GetDefinition<T> + Label<T>,
-    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+    U: SyntaxFactory<T> + Add<U, Output = U>,
 {
     fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
@@ -49,7 +49,7 @@ where
     fn ast_from_pair(&mut self, left: &str, right: &str) -> ZiaResult<U> {
         let lefthand = try!(self.ast_from_token(left));
         let righthand = try!(self.ast_from_token(right));
-        lefthand + righthand
+        Ok(lefthand + righthand)
     }
     fn ast_from_token(&mut self, t: &str) -> ZiaResult<U> {
         if t.contains(' ') {
@@ -64,7 +64,7 @@ impl<S, T, U> SyntaxConverter<T, U> for S
 where
     S: SyntaxFinder<T>,
     T: Clone + Id + GetDefinition<T> + Label<T>,
-    U: SyntaxFactory<T> + Add<U, Output = ZiaResult<U>>,
+    U: SyntaxFactory<T> + Add<U, Output = U>,
 {}
 
 pub trait SyntaxFinder<T>

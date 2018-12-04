@@ -25,11 +25,11 @@ pub trait Reduce<T>
 where
     T: SyntaxFromConcept<Self>,
     Self: SyntaxFactory<T>
-        + Add<Self, Output = ZiaResult<Self>>
+        + Add<Self, Output = Self>
         + MaybeConcept<T>
         + MightExpand
         + Pair<Self>
-        + Add<Self, Output = ZiaResult<Self>>
+        + Add<Self, Output = Self>
         + Clone,
 {
     fn recursively_reduce(&self) -> ZiaResult<Self> {
@@ -57,18 +57,13 @@ where
 impl<S, T> Reduce<T> for S
 where
     T: SyntaxFromConcept<S> + LabelGetter,
-    S: SyntaxFactory<T>
-        + Add<S, Output = ZiaResult<S>>
-        + MaybeConcept<T>
-        + MightExpand
-        + Pair<S>
-        + Clone,
+    S: SyntaxFactory<T> + Add<S, Output = S> + MaybeConcept<T> + MightExpand + Pair<S> + Clone,
 {}
 
 pub trait SyntaxFromConcept<T>
 where
     Self: LabelGetter,
-    T: SyntaxFactory<Self> + Add<T, Output = ZiaResult<T>> + MaybeConcept<Self> + Pair<T> + Clone,
+    T: SyntaxFactory<Self> + Add<T, Output = T> + MaybeConcept<Self> + Pair<T> + Clone,
 {
     fn reduce(&self) -> ZiaResult<Option<T>> {
         match try!(self.get_normal_form()) {
@@ -92,7 +87,7 @@ where
         match try!(self.get_label()) {
             Some(ref s) => Ok(T::new(s, Some(self.clone()))),
             None => match self.get_definition() {
-                Some((ref left, ref right)) => try!(left.to_ast()) + try!(right.to_ast()),
+                Some((ref left, ref right)) => Ok(try!(left.to_ast()) + try!(right.to_ast())),
                 None => panic!("Unlabelled concept with no definition"),
             },
         }
@@ -102,13 +97,10 @@ where
 impl<S, T> SyntaxFromConcept<T> for S
 where
     S: LabelGetter,
-    T: SyntaxFactory<S> + Add<T, Output = ZiaResult<T>> + MaybeConcept<Self> + Pair<T> + Clone,
+    T: SyntaxFactory<S> + Add<T, Output = T> + MaybeConcept<Self> + Pair<T> + Clone,
 {}
 
-fn match_left_right<
-    T: LabelGetter,
-    U: Add<U, Output = ZiaResult<U>> + Pair<U> + MaybeConcept<T>,
->(
+fn match_left_right<T: LabelGetter, U: Add<U, Output = U> + Pair<U> + MaybeConcept<T>>(
     left: Option<U>,
     right: Option<U>,
     original_left: U,
@@ -124,16 +116,16 @@ fn match_left_right<
     }
 }
 
-fn contract_pair<T: LabelGetter, U: Add<U, Output = ZiaResult<U>> + Pair<U> + MaybeConcept<T>>(
+fn contract_pair<T: LabelGetter, U: Add<U, Output = U> + Pair<U> + MaybeConcept<T>>(
     lefthand: U,
     righthand: U,
 ) -> ZiaResult<U> {
     if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
-        if let Some(def) = try!(lc.find_definition(&rc)) {
+        if let Some(def) = lc.find_definition(&rc) {
             if let Some(ref a) = try!(def.get_label()) {
-                return U::from_pair(a, &lefthand, &righthand);
+                return Ok(U::from_pair(a, &lefthand, &righthand));
             }
         }
     }
-    lefthand + righthand
+    Ok(lefthand + righthand)
 }

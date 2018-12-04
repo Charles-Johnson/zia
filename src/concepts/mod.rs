@@ -22,13 +22,13 @@ use self::string_concept::{StringConcept, StringRef};
 use ast::AbstractSyntaxTree;
 use std::fmt;
 use traits::call::label_getter::{GetDefinitionOf, MaybeString};
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
-use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
+use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetNormalForm, StringFactory,
 };
-use traits::call::reduce::SyntaxFromConcept;
+use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
+use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use traits::call::GetNormalForm;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};

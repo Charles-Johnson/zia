@@ -93,7 +93,7 @@ where
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
-        let mut definition = try!(self.find_or_insert_definition(&mut label_concept, concept));
+        let mut definition = self.find_or_insert_definition(&mut label_concept, concept);
         let mut string_ref = self.new_string(string);
         definition.update_normal_form(&mut string_ref)
     }
@@ -146,15 +146,15 @@ where
     T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
     Self: AbstractMaker<T>,
 {
-    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
-        let application = try!(lefthand.find_definition(righthand));
+    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> T {
+        let application = lefthand.find_definition(righthand);
         match application {
             None => {
                 let mut definition = self.new_abstract();
                 definition.insert_definition(lefthand, righthand);
-                Ok(definition.clone())
+                definition.clone()
             }
-            Some(def) => Ok(def),
+            Some(def) => def,
         }
     }
 }

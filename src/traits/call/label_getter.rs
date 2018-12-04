@@ -18,7 +18,7 @@ use constants::LABEL;
 use std::fmt::Display;
 use traits::call::{GetNormalForm, MaybeConcept};
 use traits::{GetDefinition, Id};
-use utils::{ZiaError, ZiaResult};
+use utils::ZiaResult;
 
 pub trait LabelGetter
 where
@@ -72,7 +72,7 @@ where
     T: GetDefinitionOf<T> + Clone + PartialEq,
     Self: GetDefinitionOf<T>,
 {
-    fn find_definition(&self, righthand: &T) -> ZiaResult<Option<T>> {
+    fn find_definition(&self, righthand: &T) -> Option<T> {
         let mut candidates: Vec<T> = Vec::new();
         for candidate in self.get_lefthand_of() {
             let has_righthand = righthand.get_righthand_of().contains(&candidate);
@@ -82,13 +82,9 @@ where
             }
         }
         match candidates.len() {
-            0 => Ok(None),
-            1 => Ok(Some(candidates[0].clone())),
-            _ => Err(ZiaError::Ambiguity(
-                "Multiple definitions with the same lefthand and righthand pair 
-				exist."
-                    .to_string(),
-            )),
+            0 => None,
+            1 => Some(candidates[0].clone()),
+            _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
         }
     }
 }

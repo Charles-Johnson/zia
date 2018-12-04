@@ -17,8 +17,8 @@
 use std::fmt::Display;
 use std::ops::Add;
 use traits::call::label_getter::LabelGetter;
-use traits::call::right_hand_call::definer::Pair;
 use traits::call::reduce::SyntaxFromConcept;
+use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
 use utils::ZiaResult;
@@ -31,18 +31,18 @@ where
         + Display
         + Clone
         + Pair<Self>
-        + Add<Self, Output = ZiaResult<Self>>
+        + Add<Self, Output = Self>
         + SyntaxFactory<T>,
 {
     fn expand(&self) -> ZiaResult<Self> {
         if let Some(ref con) = self.get_concept() {
             if let Some((ref left, ref right)) = con.get_definition() {
-                try!(left.to_ast()).expand().unwrap() + try!(right.to_ast()).expand().unwrap()
+                Ok(try!(try!(left.to_ast()).expand()) + try!(try!(right.to_ast()).expand()))
             } else {
                 con.to_ast()
             }
         } else if let Some((ref left, ref right)) = self.get_expansion() {
-            try!(left.expand()) + try!(right.expand())
+            Ok(try!(left.expand()) + try!(right.expand()))
         } else {
             Ok(self.clone())
         }
@@ -57,6 +57,6 @@ where
         + Display
         + Clone
         + Pair<S>
-        + Add<S, Output = ZiaResult<S>>
+        + Add<S, Output = S>
         + SyntaxFactory<T>,
 {}

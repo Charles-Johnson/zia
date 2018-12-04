@@ -15,19 +15,18 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 pub mod concept_maker;
-pub mod refactor;
 pub mod delete_definition;
 pub mod labeller;
+pub mod refactor;
 
 use self::concept_maker::ConceptMaker;
+use self::delete_definition::DeleteDefinition;
+use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::refactor::delete_normal_form::DeleteNormalForm;
 use self::refactor::refactor_id::RefactorFrom;
 use self::refactor::Refactor;
-use self::delete_definition::DeleteDefinition;
-use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use constants::LABEL;
 use std::fmt::Display;
-use std::marker::Sized;
 use traits::call::label_getter::{GetDefinitionOf, LabelGetter};
 use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
 use traits::syntax_converter::label::GetNormalFormOf;
@@ -58,41 +57,43 @@ where
                 "Only symbols can have definitions".to_string(),
             ))
         } else {
-			match (after.get_concept(), before.get_concept(), before.get_expansion()) {
-				(_, None, None) => Err(ZiaError::Redundancy(
-                	"Refactoring an atom that was never previously used is redundant".to_string(),
-            	)),
-				(None, Some(ref mut b), _) => self.relabel(b, &after.to_string()),
-				(None, None, Some((ref left, ref right))) => self.define_new_syntax(
-					&after.to_string(),
-					left, 
-					right,
-				),
-				(Some(ref mut a), Some(ref mut b), None) => self.refactor_atom(b, a),
-				(Some(ref mut a), Some(ref mut b), Some(_)) => self.refactor_expression(b, a),
-				(Some(ref mut a), None, Some((ref left, ref right))) => self.redefine(
-					a,
-					left,
-					right,
-				),
-			}
-		}
+            match (
+                after.get_concept(),
+                before.get_concept(),
+                before.get_expansion(),
+            ) {
+                (_, None, None) => Err(ZiaError::Redundancy(
+                    "Refactoring an atom that was never previously used is redundant".to_string(),
+                )),
+                (None, Some(ref mut b), _) => self.relabel(b, &after.to_string()),
+                (None, None, Some((ref left, ref right))) => {
+                    self.define_new_syntax(&after.to_string(), left, right)
+                }
+                (Some(ref mut a), Some(ref mut b), None) => self.refactor_atom(b, a),
+                (Some(ref mut a), Some(ref mut b), Some(_)) => self.refactor_expression(b, a),
+                (Some(ref mut a), None, Some((ref left, ref right))) => {
+                    self.redefine(a, left, right)
+                }
+            }
+        }
     }
-	fn refactor_atom(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-		if before == after {
-			self.delete_definition(before)
-		} else {
-			self.refactor(before, after)
-		}
-	}
-	fn refactor_expression(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-		if before == after {
-			Err(ZiaError::Redundancy("Concept already has this definition".to_string()))
-		} else {
-			self.refactor(before, after)
-		}
-	}
-	fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
+    fn refactor_atom(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+        if before == after {
+            self.delete_definition(before)
+        } else {
+            self.refactor(before, after)
+        }
+    }
+    fn refactor_expression(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+        if before == after {
+            Err(ZiaError::Redundancy(
+                "Concept already has this definition".to_string(),
+            ))
+        } else {
+            self.refactor(before, after)
+        }
+    }
+    fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
         let definition = concept.get_definition();
         concept.delete_definition();
         try!(self.try_delete_concept(concept));
@@ -109,8 +110,8 @@ where
         }
         Ok(())
     }
-	fn redefine(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
-		if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
+    fn redefine(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
+        if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
             self.relabel(right_concept, &right.to_string())
         } else {
@@ -119,16 +120,16 @@ where
             concept.insert_definition(&mut left_concept, &mut right_concept);
             Ok(())
         }
-	}
-	fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
-		try!(self.unlabel(concept));
+    }
+    fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
+        try!(self.unlabel(concept));
         self.label(concept, new_label)
-	}
-	fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
-		let new_syntax_tree = try!(U::from_pair(syntax, left, right));
+    }
+    fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
+        let new_syntax_tree = U::from_pair(syntax, left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
-	}
+    }
 }
 
 impl<S, T, U> Definer<T, U> for S
@@ -146,11 +147,8 @@ where
     S: Refactor<T> + ConceptMaker<T, U>,
 {}
 
-pub trait Pair<T>
-where
-    Self: Sized,
-{
-    fn from_pair(&str, &T, &T) -> ZiaResult<Self>;
+pub trait Pair<T> {
+    fn from_pair(&str, &T, &T) -> Self;
 }
 
 pub trait MaybeDisconnected

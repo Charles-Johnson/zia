@@ -16,12 +16,10 @@
 */
 pub mod definer;
 
+use self::definer::delete_definition::DeleteDefinition;
+use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::definer::refactor::delete_normal_form::{DeleteNormalForm, DeleteReduction};
 use self::definer::refactor::refactor_id::RefactorFrom;
-use self::definer::delete_definition::DeleteDefinition;
-use self::definer::labeller::{
-    AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
-};
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;

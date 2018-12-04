@@ -22,7 +22,6 @@ use traits::call::label_getter::FindDefinition;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
-use utils::ZiaResult;
 
 pub enum AbstractSyntaxTree {
     Atom(SyntaxToMaybeConcept),
@@ -71,10 +70,8 @@ impl Pair<AbstractSyntaxTree> for AbstractSyntaxTree {
         syntax: &str,
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
-    ) -> ZiaResult<AbstractSyntaxTree> {
-        Ok(AbstractSyntaxTree::Expression(try!(Expression::from_pair(
-            syntax, lefthand, righthand
-        ))))
+    ) -> AbstractSyntaxTree {
+        AbstractSyntaxTree::Expression(Expression::from_pair(syntax, lefthand, righthand))
     }
 }
 
@@ -83,18 +80,18 @@ impl Pair<AbstractSyntaxTree> for Expression {
         syntax: &str,
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
-    ) -> ZiaResult<Expression> {
+    ) -> Expression {
         let mut concept: Option<ConceptRef> = None;
         if let Some(rc) = righthand.get_concept() {
-            if let Some(def) = try!(lefthand.find_definition(&rc)) {
+            if let Some(def) = lefthand.find_definition(&rc) {
                 concept = Some(def.clone());
             }
         }
-        Ok(Expression {
+        Expression {
             syntax_to_maybe_concept: SyntaxToMaybeConcept::new(syntax, concept),
             lefthand: Box::new(lefthand.clone()),
             righthand: Box::new(righthand.clone()),
-        })
+        }
     }
 }
 
@@ -188,8 +185,8 @@ impl Clone for SyntaxToMaybeConcept {
 }
 
 impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
-    type Output = ZiaResult<AbstractSyntaxTree>;
-    fn add(self, other: AbstractSyntaxTree) -> ZiaResult<AbstractSyntaxTree> {
+    type Output = AbstractSyntaxTree;
+    fn add(self, other: AbstractSyntaxTree) -> AbstractSyntaxTree {
         let left_string: String;
         match self {
             AbstractSyntaxTree::Expression(ref e) => {

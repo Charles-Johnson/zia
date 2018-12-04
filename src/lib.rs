@@ -117,13 +117,13 @@ mod definitions {
     fn fresh_pair() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("* (:= (repeated +))").unwrap(), "");
-        assert_eq!(cont.execute("* :=").unwrap(), "repeated +"); 
+        assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
     fn fresh_nested_pairs() {
         let mut cont = Context::new().unwrap();
         assert_eq!(cont.execute("2 (:= (++ (++ 0)))").unwrap(), "");
-        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)"); 
+        assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)");
     }
     #[test]
     fn left_fresh_pair() {
@@ -192,13 +192,13 @@ mod other {
     use utils::ZiaError;
     use Context;
     #[test]
-	fn not_a_program() {
-		let mut cont = Context::new().unwrap();
+    fn not_a_program() {
+        let mut cont = Context::new().unwrap();
         assert_matches!(cont.execute("a"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
-		assert_eq!(cont.execute("a (-> b)").unwrap(), "");
-		assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
-		assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
-	}
+        assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
+        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_matches!(cont.execute("a a"), Err(ZiaError::Absence(_)));
+        assert_matches!(cont.execute("a (a a)"), Err(ZiaError::Absence(_)));
+    }
 }
