@@ -26,7 +26,6 @@ use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::call::Call;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
-use utils::ZiaResult;
 
 pub struct Context {
     string_map: HashMap<String, StringRef>,
@@ -34,17 +33,23 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new() -> ZiaResult<Context> {
+    pub fn new() -> Context {
         let mut cont = Context {
             string_map: HashMap::new(),
             concepts: Vec::new(),
         };
-        try!(cont.setup());
-        Ok(cont)
+        cont.setup().unwrap();
+        cont
     }
-    pub fn execute(&mut self, command: &str) -> ZiaResult<String> {
-        let ast = try!(self.ast_from_expression(command));
-        self.call(&ast)
+    pub fn execute(&mut self, command: &str) -> String {
+        let ast = match self.ast_from_expression(command) {
+			Ok(a) => a,
+			Err(e) => return e.to_string(),
+		};
+        match self.call(&ast) {
+			Ok(s) => s,
+			Err(e) => e.to_string(),
+		}
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
@@ -98,6 +103,6 @@ mod context {
     use Context;
     #[test]
     fn new_context() {
-        let _cont = Context::new().unwrap();
+        let _cont = Context::new();
     }
 }

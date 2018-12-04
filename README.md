@@ -73,13 +73,13 @@ The current implementation exposes the `Context` type that can be used in an int
 
 ```
 impl Context {
-	pub fn new() -> ZiaResult<Context> { 
+	pub fn new() -> Context { 
 		// Constructs a new Context with 3 built-in concepts: one to encode the labels of concepts
     	// (id=LABEL), one to encode commands to define or print the definitions of concepts (id = 
     	// DEFINE) and one to encode commands to define reduction rules or print the normal forms 
 		// of concepts (id = REDUCTION).
     }
-    pub fn execute(&mut self, command: &str) -> ZiaResult<String> { 
+    pub fn execute(&mut self, command: &str) -> String { 
 		// Executes the commands given by the user. The command is converted into an abstract 
 		// syntax tree using the labels of built-in concepts. This abstract syntax tree is then 
 		// parsed and appropriate operations are performed.
