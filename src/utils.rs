@@ -21,8 +21,6 @@ pub type ZiaResult<T> = Result<T, ZiaError>;
 #[derive(Debug)]
 pub enum ZiaError {
     Borrow(String),
-    BorrowMut(String),
-    Ambiguity(String),
     Redundancy(String),
     Absence(String),
     Syntax(String),
@@ -33,8 +31,6 @@ impl fmt::Display for ZiaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ZiaError::Borrow(ref s) => write!(f, "{}", s),
-            ZiaError::BorrowMut(ref s) => write!(f, "{}", s),
-            ZiaError::Ambiguity(ref s) => write!(f, "{}", s),
             ZiaError::Redundancy(ref s) => write!(f, "{}", s),
             ZiaError::Absence(ref s) => write!(f, "{}", s),
             ZiaError::Syntax(ref s) => write!(f, "{}", s),
