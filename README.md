@@ -1,5 +1,4 @@
-# zia
-Interpreter for the Zia programming language.
+# `zia`: Interpreter for the Zia programming language.
 
 The Zia project aims to allow programs to be easily adaptable. In contrast to functional 
 programming, in which program data is immutable wherever possible, Zia program data is mutable 
@@ -30,45 +29,47 @@ Currently, 4 types of low-level operations have been implemented using 2 of the 
 
 Reduction symbol: `->`
 
-`->` can be used to specify reduction rules for concepts represented by expressions. For example
-`(a ->) b` represents the command to specify the rule that the concept represented by `a` reduces 
-to the concept represented by `b`.
+`->` can be used to specify reduction rules for concepts given by expressions. For example
+`a (-> b)` represents the command to specify the rule that the concept labelled by `a` reduces 
+to the concept labelled by `b`.
 
 `->` is also used to print the symbol of the normal form of a concept. For example `a ->`
-represents the command to print `b` in the above case of `(a ->) b` but `c ->` prints `c` because
+represents the command to print `b` in the above case of `a (-> b)` but `c ->` prints `c` because
 no reduction rule exists for `c`.
 
-Reduction rules chain together. For example if `(d ->) e` and `(e ->) f` are executed then
+Reduction rules chain together. For example if `d (-> e)` and `e (-> f)` are executed then
 executing `d ->` will print `f`.
 
 You can modify existing reduction rules. For example you can change the reduction rule for `e` by 
-`(e ->) g`; `e ->` will now print `g` and `d ->` also prints `g`. You could also execute `(a ->) a`
+`e (-> g)`; `e ->` will now print `g` and `d ->` also prints `g`. You could also execute `a (-> a)`
 and so `a ->` now prints `a`.
 
-The intepreter will let you know if reduction rule commands are redundant. For example `(h ->) h`
-is redundant because all new concepts are by default their own normal form. Also `(e ->) g` is
-redundant because it's already been explicitly specified. However `(d ->) g` would not be redundant because this changes the rule from "The normal form of `d` is the normal form of `e`" to "The 
+The intepreter will let you know if reduction rule commands are redundant. For example `h (-> h)`
+is redundant because all new concepts are by default their own normal form. Also `e (-> g)` is
+redundant because it's already been explicitly specified. However `d (-> g)` would not be redundant 
+because this changes the rule from "The normal form of `d` is the normal form of `e`" to "The 
 normal form of `d` is the normal form of `g`" even though `d` already reduces to `g`.
 
 Definition symbol: `:=`
 
-`:=` can be used to give a binary tree of concepts its own symbol, change the symbol of a concept
-or merge concepts together. For example `(c :=) (a b)` means graphically:
+`:=` can be used to label a binary tree of concepts, change the label of a concept
+or merge concepts together. For example `c (:= (a b))` means graphically:
 ```
  c
 / \
 a b
 ```
 The command `c :=` then prints `a b`. The command `a :=` prints `a`. We can change the symbol of
-`b` to `h` using `(b :=) h`. `c :=` would then print `a h`. We can merge the concepts of `a` and 
-`d` and drop the `d` symbol using `(a :=) d` so `a ->` prints `g` and also `c ->` prints `g h`.
+`b` to `h` using `b (:= h)`. `c :=` would then print `a h`. We can merge the concepts of `a` and 
+`d` and drop the `d` symbol using `a (:= d)` so `a ->` prints `g` and also `c ->` prints `g h`.
 
-To prevent infinite loops, commands like `(i :=) (i j)` are not accepted by the interpreter nor
-are commands like `(i ->) (i j)`.
+To prevent infinite loops, commands like `i (:= (i j))` are not accepted by the interpreter nor
+are commands like `i (-> (i j))`.
 
 API  
 
-The current implementation exposes the `Context` type that can be used in an interface such as [IZia](https://github.com/Charles-Johnson/izia). 
+The current implementation exposes the `Context` type that can be used in an interface such as 
+[IZia](https://github.com/Charles-Johnson/izia). 
 
 ```
 impl Context {

@@ -35,30 +35,30 @@ mod reductions {
     #[test]
     fn pair() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "b");
-        assert_eq!(cont.execute("((not true) ->) false").unwrap(), "");
+        assert_eq!(cont.execute("(not true) (-> false)").unwrap(), "");
         assert_eq!(cont.execute("(not true) ->").unwrap(), "false");
     }
     #[test]
     fn nested_pairs() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("((not true) ->) false").unwrap(), "");
-        assert_eq!(cont.execute("((not false) ->) true").unwrap(), "");
+        assert_eq!(cont.execute("(not true) (-> false)").unwrap(), "");
+        assert_eq!(cont.execute("(not false) (-> true)").unwrap(), "");
         assert_eq!(cont.execute("(not(not true))->").unwrap(), "true");
     }
     #[test]
     fn chain() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) c").unwrap(), "");
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_eq!(cont.execute("b (-> c)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "c");
     }
     #[test]
     fn circular_loop() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_matches!(cont.execute("(b ->) a"), Err(ZiaError::Loop(_)));
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_matches!(cont.execute("b (-> a)"), Err(ZiaError::Loop(_)));
         assert_eq!(cont.execute("b ->").unwrap(), "b");
     }
     #[test]
@@ -69,44 +69,44 @@ mod reductions {
     #[test]
     fn remove_reduction() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("((b c) ->) a").unwrap(), "");
-        assert_eq!(cont.execute("((b c) ->) (b c)").unwrap(), "");
+        assert_eq!(cont.execute("(b c) (-> a)").unwrap(), "");
+        assert_eq!(cont.execute("(b c) (-> (b c))").unwrap(), "");
         assert_eq!(cont.execute("(b c) ->").unwrap(), "b c");
     }
     #[test]
     fn infinite_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("(b ->) (a b)"), Err(ZiaError::Loop(_)));
+        assert_matches!(cont.execute("b (-> (a b))"), Err(ZiaError::Loop(_)));
     }
     #[test]
     fn broken_end_chain() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) c").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) b").unwrap(), "");
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_eq!(cont.execute("b (-> c)").unwrap(), "");
+        assert_eq!(cont.execute("b (-> b)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "b");
     }
     #[test]
     fn broken_middle_chain() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) c").unwrap(), "");
-        assert_eq!(cont.execute("(c ->) d").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) b").unwrap(), "");
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_eq!(cont.execute("b (-> c)").unwrap(), "");
+        assert_eq!(cont.execute("c (-> d)").unwrap(), "");
+        assert_eq!(cont.execute("b (-> b)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "b");
     }
     #[test]
     fn change_reduction_rule() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_eq!(cont.execute("(a ->) c").unwrap(), "");
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_eq!(cont.execute("a (-> c)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "c");
     }
     #[test]
     fn redundancy() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a ->) b").unwrap(), "");
-        assert_matches!(cont.execute("(a ->) b"), Err(ZiaError::Redundancy(_)));
+        assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+        assert_matches!(cont.execute("a (-> b)"), Err(ZiaError::Redundancy(_)));
     }
 }
 #[cfg(test)]
@@ -116,75 +116,75 @@ mod definitions {
     #[test]
     fn fresh_pair() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
+        assert_eq!(cont.execute("* (:= (repeated +))").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +"); 
     }
     #[test]
     fn fresh_nested_pairs() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(2 :=) (++ (++ 0))").unwrap(), "");
+        assert_eq!(cont.execute("2 (:= (++ (++ 0)))").unwrap(), "");
         assert_eq!(cont.execute("2 :=").unwrap(), "++ (++ 0)"); 
     }
     #[test]
     fn left_fresh_pair() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(((2 (repeated +)) 2) ->) 4").unwrap(), "",);
-        assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
+        assert_eq!(cont.execute("((2 (repeated +)) 2) (-> 4)").unwrap(), "",);
+        assert_eq!(cont.execute("* (:= (repeated +))").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
     fn right_fresh_pair() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(((2 *) 2) ->) 4").unwrap(), "");
-        assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
+        assert_eq!(cont.execute("((2 *) 2) (-> 4)").unwrap(), "");
+        assert_eq!(cont.execute("* (:= (repeated +))").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
     fn old_pair() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(((2 *) 2) ->) 4").unwrap(), "");
-        assert_eq!(cont.execute("(((2 (repeated +)) 2) ->) 4").unwrap(), "",);
-        assert_eq!(cont.execute("(* :=) (repeated +)").unwrap(), "");
+        assert_eq!(cont.execute("((2 *) 2) (-> 4)").unwrap(), "");
+        assert_eq!(cont.execute("((2 (repeated +)) 2) (-> 4)").unwrap(), "",);
+        assert_eq!(cont.execute("* (:= (repeated +))").unwrap(), "");
         assert_eq!(cont.execute("* :=").unwrap(), "repeated +");
     }
     #[test]
     fn pair_on_the_left() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("((x y) ->) c").unwrap(), "");
-        assert_matches!(cont.execute("((a b) :=) c"), Err(ZiaError::Syntax(_)));
+        assert_eq!(cont.execute("(x y) (-> c)").unwrap(), "");
+        assert_matches!(cont.execute("(a b) (:= c)"), Err(ZiaError::Syntax(_)));
     }
     #[test]
     fn fresh_refactor() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn definition_loop() {
         let mut cont = Context::new().unwrap();
-        assert_matches!(cont.execute("(a :=) (a b)"), Err(ZiaError::Loop(_)));
+        assert_matches!(cont.execute("a (:= (a b))"), Err(ZiaError::Loop(_)));
     }
     #[test]
     fn remove_definition() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
-        assert_eq!(cont.execute("(a :=) a").unwrap(), "");
+        assert_eq!(cont.execute("a (:= (b c))").unwrap(), "");
+        assert_eq!(cont.execute("a (:= a)").unwrap(), "");
         assert_eq!(cont.execute("a :=").unwrap(), "a");
-        assert_matches!(cont.execute("(a :=) b"), Err(ZiaError::Redundancy(_)));
+        assert_matches!(cont.execute("a (:= b)"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn redundancy() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
-        assert_matches!(cont.execute("(a :=) (b c)"), Err(ZiaError::Redundancy(_)));
+        assert_eq!(cont.execute("a (:= (b c))").unwrap(), "");
+        assert_matches!(cont.execute("a (:= (b c))"), Err(ZiaError::Redundancy(_)));
     }
     #[test]
     fn definition_reduction() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(a :=) (b c)").unwrap(), "");
-        assert_eq!(cont.execute("(b ->) d").unwrap(), "");
-        assert_eq!(cont.execute("(c ->) e").unwrap(), "");
+        assert_eq!(cont.execute("a (:= (b c))").unwrap(), "");
+        assert_eq!(cont.execute("b (-> d)").unwrap(), "");
+        assert_eq!(cont.execute("c (-> e)").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "d e");
-        assert_eq!(cont.execute("(f :=) (d e)").unwrap(), "");
+        assert_eq!(cont.execute("f (:= (d e))").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "f");
     }
 }

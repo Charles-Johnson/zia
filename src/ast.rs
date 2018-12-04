@@ -19,7 +19,7 @@ use std::borrow::Borrow;
 use std::fmt;
 use std::ops::Add;
 use traits::call::label_getter::FindDefinition;
-use traits::call::left_hand_call::definer::Pair;
+use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
 use utils::ZiaResult;

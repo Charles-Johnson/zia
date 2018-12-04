@@ -16,19 +16,19 @@
 */
 mod expander;
 pub mod label_getter;
-pub mod left_hand_call;
+pub mod right_hand_call;
 pub mod reduce;
 
 use self::expander::Expander;
 use self::label_getter::LabelGetter;
-use self::left_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
-use self::left_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use self::left_hand_call::definer::delete_definition::DeleteDefinition;
-use self::left_hand_call::definer::labeller::{
+use self::right_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
+use self::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
+use self::right_hand_call::definer::delete_definition::DeleteDefinition;
+use self::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::left_hand_call::definer::{MaybeDisconnected, Pair};
-use self::left_hand_call::{Container, LeftHandCall, MaybeId};
+use self::right_hand_call::definer::{MaybeDisconnected, Pair};
+use self::right_hand_call::{Container, RightHandCall, MaybeId};
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
@@ -70,7 +70,7 @@ where
 
 pub trait Call<T, U>
 where
-    Self: LeftHandCall<T, U>,
+    Self: RightHandCall<T, U>,
     T: RefactorFrom
         + StringFactory
         + AbstractFactory
@@ -93,16 +93,15 @@ where
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
         match ast.get_expansion() {
-            Some((ref left, ref mut right)) => if let Some(c) = right.get_concept() {
-                match c.get_id() {
+            Some((ref mut left, ref right)) => match right.get_id() {
+                Some(id) => match id {
                     REDUCTION => Ok(try!(left.recursively_reduce()).to_string()),
                     DEFINE => Ok(try!(left.expand()).to_string()),
-                    _ => self.call_as_lefthand(left, right),
-                }
-            } else {
-                self.call_as_lefthand(left, right)
+                    _ => self.call_as_righthand(left, right),
+                },
+				None => self.call_as_righthand(left, right),
             },
-            _ => Err(ZiaError::Absence(
+            None => Err(ZiaError::Absence(
                 "This concept is not a program".to_string(),
             )),
         }
@@ -111,7 +110,7 @@ where
 
 impl<S, T, U> Call<T, U> for S
 where
-    S: LeftHandCall<T, U>,
+    S: RightHandCall<T, U>,
     T: RefactorFrom
         + StringFactory
         + AbstractFactory
