@@ -150,7 +150,6 @@ mod definitions {
     #[test]
     fn pair_on_the_left() {
         let mut cont = Context::new().unwrap();
-        assert_eq!(cont.execute("(x y) (-> c)").unwrap(), "");
         assert_matches!(cont.execute("(a b) (:= c)"), Err(ZiaError::Syntax(_)));
     }
     #[test]
@@ -187,4 +186,19 @@ mod definitions {
         assert_eq!(cont.execute("f (:= (d e))").unwrap(), "");
         assert_eq!(cont.execute("a ->").unwrap(), "f");
     }
+}
+#[cfg(test)]
+mod other {
+    use utils::ZiaError;
+    use Context;
+    #[test]
+	fn not_a_program() {
+		let mut cont = Context::new().unwrap();
+        assert_matches!(cont.execute("a"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("(a a)"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("(a (a a))"), Err(ZiaError::Absence(_)));
+		assert_eq!(cont.execute("a (-> b)").unwrap(), "");
+		assert_matches!(cont.execute("(a a)"), Err(ZiaError::Absence(_)));
+		assert_matches!(cont.execute("(a (a a))"), Err(ZiaError::Absence(_)));
+	}
 }
