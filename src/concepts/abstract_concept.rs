@@ -100,10 +100,18 @@ impl RemoveDefinition<ConceptRef> for AbstractConcept {
         self.definition = None
     }
     fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
-        self.lefthand_of.remove_item(definition);
+        if let Some(pos) = self.lefthand_of.iter().position(|x| *x == *definition) {
+			self.lefthand_of.remove(pos);
+		}//else {
+		// panic!("Concept number {} does not exist in lefthand_of concept number {}", self.get_id(), definition.get_id()), 
+	//  {
     }
     fn remove_righthand_of(&mut self, definition: &ConceptRef) {
-        self.righthand_of.remove_item(definition);
+        if let Some(pos) = self.righthand_of.iter().position(|x| *x == *definition) {
+			self.righthand_of.remove(pos);
+		}//else {
+	// 		panic!("Concept number {} does not exist in righthand_of concept number {}", self.get_id(), definition.get_id()), 
+	//  }	
     }
 }
 
@@ -168,6 +176,10 @@ impl RemoveNormalForm<ConceptRef> for AbstractConcept {
         self.normal_form = None;
     }
     fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
-        self.normal_form_of.remove_item(concept);
-    }
+		if let Some(pos) = self.normal_form_of.iter().position(|x| *x == *concept) {
+			self.normal_form_of.remove(pos);
+		}//else {
+		//  panic!("Concept number {} does not exist in normal_form_of concept number {}", self.get_id(), concept.get_id()), 
+	//  }
+	}
 }

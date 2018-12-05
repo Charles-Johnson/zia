@@ -7,5 +7,3 @@ authors = ["Charles Johnson <charlesthomasjohnson0@gmail.com>"]
 name = "zia"
 crate-type = ["lib"]
 
-[dependencies]
-matches = "0.1.6"
