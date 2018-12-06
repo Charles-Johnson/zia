@@ -30,15 +30,19 @@ mod reductions {
     use utils::ZiaError;
     use Context;
     #[test]
-    fn pair() {
+    fn symbol_to_symbol() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (-> b)"), "");
         assert_eq!(cont.execute("a ->"), "b");
+	}
+	#[test]
+	fn pair_to_symbol() {
+		let mut cont = Context::new();
         assert_eq!(cont.execute("(not true) (-> false)"), "");
         assert_eq!(cont.execute("(not true) ->"), "false");
     }
     #[test]
-    fn nested_pairs() {
+    fn nested_pairs_to_symbol() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("(not true) (-> false)"), "");
         assert_eq!(cont.execute("(not false) (-> true)"), "");
@@ -52,7 +56,7 @@ mod reductions {
         assert_eq!(cont.execute("a ->"), "c");
     }
     #[test]
-    fn circular_loop() {
+    fn cycle() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (-> b)"), "");
         assert_eq!(
@@ -74,7 +78,7 @@ mod reductions {
         assert_eq!(cont.execute("(b c) ->"), "b c");
     }
     #[test]
-    fn infinite_loop() {
+    fn infinite_expansion() {
         let mut cont = Context::new();
         assert_eq!(
             cont.execute("b (-> (a b))"),
@@ -122,36 +126,36 @@ mod definitions {
     #[test]
     fn fresh_pair() {
         let mut cont = Context::new();
-        assert_eq!(cont.execute("* (:= (repeated +))"), "");
-        assert_eq!(cont.execute("* :="), "repeated +");
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("a :="), "b c");
     }
     #[test]
     fn fresh_nested_pairs() {
         let mut cont = Context::new();
-        assert_eq!(cont.execute("2 (:= (++ (++ 0)))"), "");
-        assert_eq!(cont.execute("2 :="), "++ (++ 0)");
+        assert_eq!(cont.execute("a (:= (b (c d)))"), "");
+        assert_eq!(cont.execute("a :="), "b (c d)");
     }
     #[test]
-    fn left_fresh_pair() {
+    fn defining_used_symbol_as_fresh_pair() {
         let mut cont = Context::new();
-        assert_eq!(cont.execute("((2 (repeated +)) 2) (-> 4)"), "",);
-        assert_eq!(cont.execute("* (:= (repeated +))"), "");
-        assert_eq!(cont.execute("* :="), "repeated +");
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("b (:= (d e))"), "");
+        assert_eq!(cont.execute("b :="), "d e");
     }
     #[test]
-    fn right_fresh_pair() {
+    fn defining_fresh_symbol_as_used_pair() {
         let mut cont = Context::new();
-        assert_eq!(cont.execute("((2 *) 2) (-> 4)"), "");
-        assert_eq!(cont.execute("* (:= (repeated +))"), "");
-        assert_eq!(cont.execute("* :="), "repeated +");
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("d (:= (b c))"), "");
+        assert_eq!(cont.execute("d :="), "b c");
     }
     #[test]
     fn old_pair() {
         let mut cont = Context::new();
-        assert_eq!(cont.execute("((2 *) 2) (-> 4)"), "");
-        assert_eq!(cont.execute("((2 (repeated +)) 2) (-> 4)"), "",);
-        assert_eq!(cont.execute("* (:= (repeated +))"), "");
-        assert_eq!(cont.execute("* :="), "repeated +");
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("d (:= (e f))"), "",);
+        assert_eq!(cont.execute("b (:= (e c))"), "");
+        assert_eq!(cont.execute("b :="), "e c");
     }
     #[test]
     fn pair_on_the_left() {
@@ -197,8 +201,12 @@ mod definitions {
             ZiaError::RedundantDefinition.to_string()
         );
     }
+}
+#[cfg(test)]
+mod definitions_and_reductions {
+	use Context;
     #[test]
-    fn definition_reduction() {
+    fn indirect_reduction() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (:= (b c))"), "");
         assert_eq!(cont.execute("b (-> d)"), "");
