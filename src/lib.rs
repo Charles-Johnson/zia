@@ -173,6 +173,13 @@ mod definitions {
             ZiaError::RedundantRefactor.to_string()
         );
     }
+	#[test]
+	fn refactor() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (:= (b c))"), "");
+		assert_eq!(cont.execute("d (:= b)"), "");
+		assert_eq!(cont.execute("a :="), "d c");
+	}
     #[test]
     fn definition_loop() {
         let mut cont = Context::new();
