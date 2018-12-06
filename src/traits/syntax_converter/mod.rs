@@ -32,7 +32,7 @@ where
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::EmptyParentheses),
-            1 => Ok(self.ast_from_atom(&tokens[0])),
+            1 => self.ast_from_token(&tokens[0]),
             2 => self.ast_from_pair(&tokens[0], &tokens[1]),
             _ => Err(ZiaError::AmbiguousExpression),
         }
