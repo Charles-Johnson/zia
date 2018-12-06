@@ -62,7 +62,12 @@ where
                 before.get_expansion(),
             ) {
                 (_, None, None) => Err(ZiaError::RedundantRefactor),
-                (None, Some(ref mut b), _) => self.relabel(b, &after.to_string()),
+                (None, Some(ref mut b), None) => self.relabel(b, &after.to_string()),
+				(None, Some(ref mut b), Some(_)) => if b.get_label().is_none() {
+					self.label(b, &after.to_string())
+				} else {
+					self.relabel(b, &after.to_string())
+				},
                 (None, None, Some((ref left, ref right))) => {
                     self.define_new_syntax(&after.to_string(), left, right)
                 }
