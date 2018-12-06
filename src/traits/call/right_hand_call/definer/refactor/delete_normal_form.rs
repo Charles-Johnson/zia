@@ -15,49 +15,26 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker::Sized;
-use traits::call::{GetNormalForm, MaybeConcept};
-use utils::{ZiaError, ZiaResult};
+use traits::call::GetReduction;
 
-pub trait DeleteNormalForm
+pub trait DeleteReduction
 where
-    Self: GetNormalForm + RemoveNormalForm<Self>,
+    Self: GetReduction<Self> + RemoveReduction<Self> + Sized,
 {
-    fn delete_normal_form(&mut self) {
-        match self.get_normal_form() {
+    fn delete_reduction(&mut self) {
+        match self.get_reduction() {
             None => panic!("No normal form to delete"),
             Some(mut n) => {
-                n.remove_normal_form_of(self);
-                self.remove_normal_form();
+                n.no_longer_reduces_from(self);
+                self.make_reduce_to_none();
             }
         };
     }
 }
 
-impl<T> DeleteNormalForm for T where T: GetNormalForm + RemoveNormalForm<T> {}
+impl<T> DeleteReduction for T where T: GetReduction<T> + RemoveReduction<T> {}
 
-pub trait DeleteReduction<T>
-where
-    Self: MaybeConcept<T> + Sized,
-    T: DeleteNormalForm,
-{
-    fn delete_reduction(&mut self) -> ZiaResult<()> {
-        if let Some(mut concept) = self.get_concept() {
-            concept.delete_normal_form();
-			Ok(())
-        } else {
-            Err(ZiaError::RedundantReduction)
-        }
-    }
-}
-
-impl<T, U> DeleteReduction<T> for U
-where
-    U: MaybeConcept<T> + Sized,
-    T: DeleteNormalForm,
-{
-}
-
-pub trait RemoveNormalForm<T> {
-    fn remove_normal_form(&mut self);
-    fn remove_normal_form_of(&mut self, &T);
+pub trait RemoveReduction<T> {
+    fn make_reduce_to_none(&mut self);
+    fn no_longer_reduces_from(&mut self, &T);
 }

@@ -25,9 +25,9 @@ use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{
-    AbstractFactory, SetDefinition, SetNormalForm, StringFactory,
+    AbstractFactory, SetDefinition, SetReduction, StringFactory,
 };
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
+use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
@@ -205,32 +205,32 @@ impl GetNormalFormOf<ConceptRef> for ConceptRef {
     }
 }
 
-impl SetNormalForm<ConceptRef> for ConceptRef {
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
+impl SetReduction<ConceptRef> for ConceptRef {
+    fn make_reduce_to(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_to(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_to(concept),
         }
     }
-    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
+    fn make_reduce_from(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_normal_form_of(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_normal_form_of(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_from(concept),
         }
     }
 }
 
-impl RemoveNormalForm<ConceptRef> for ConceptRef {
-    fn remove_normal_form(&mut self) {
+impl RemoveReduction<ConceptRef> for ConceptRef {
+    fn make_reduce_to_none(&mut self) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form(),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form(),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_to_none(),
+            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_to_none(),
         };
     }
-    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
+    fn no_longer_reduces_from(&mut self, concept: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_normal_form_of(concept),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().no_longer_reduces_from(concept),
+            ConceptRef::String(ref mut c) => c.borrow_mut().no_longer_reduces_from(concept),
         };
     }
 }

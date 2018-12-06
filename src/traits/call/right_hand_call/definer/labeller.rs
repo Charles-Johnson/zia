@@ -26,7 +26,7 @@ pub trait ConceptAdder<T> {
 
 pub trait UpdateNormalForm
 where
-    Self: GetNormalForm + SetNormalForm<Self> + PartialEq,
+    Self: GetNormalForm + SetReduction<Self> + PartialEq,
 {
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         if let Some(n) = normal_form.get_normal_form() {
@@ -39,20 +39,18 @@ where
                 return Err(ZiaError::RedundantReduction);
             }
         }
-        self.set_normal_form(normal_form);
-        normal_form.add_normal_form_of(self);
+        self.make_reduce_to(normal_form);
+        normal_form.make_reduce_from(self);
         Ok(())
     }
 }
 
-impl<T> UpdateNormalForm for T where T: GetNormalForm + SetNormalForm<Self> + PartialEq {}
+impl<T> UpdateNormalForm for T where T: GetNormalForm + SetReduction<Self> + PartialEq {}
 
-pub trait SetNormalForm<T>
-where
-    Self: marker::Sized,
+pub trait SetReduction<T>
 {
-    fn set_normal_form(&mut self, &T);
-    fn add_normal_form_of(&mut self, &T);
+    fn make_reduce_to(&mut self, &T);
+    fn make_reduce_from(&mut self, &T);
 }
 
 pub trait SetDefinition<T> {

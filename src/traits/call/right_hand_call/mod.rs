@@ -18,7 +18,7 @@ pub mod definer;
 
 use self::definer::delete_definition::DeleteDefinition;
 use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
-use self::definer::refactor::delete_normal_form::{DeleteNormalForm, DeleteReduction};
+use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::refactor::refactor_id::RefactorFrom;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
@@ -30,7 +30,7 @@ use utils::{ZiaError, ZiaResult};
 
 pub trait RightHandCall<T, U>
 where
-    T: DeleteNormalForm
+    T: DeleteReduction
         + UpdateNormalForm
         + InsertDefinition
         + DeleteDefinition
@@ -39,7 +39,7 @@ where
         + RefactorFrom
         + LabelGetter
         + MaybeDisconnected,
-    U: MaybeId<T> + Container + Pair<U> + DeleteReduction<T> + Display,
+    U: MaybeId<T> + Container + Pair<U> + Display,
     Self: Definer<T, U>,
 {
     fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
@@ -59,8 +59,12 @@ where
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
-            try!(syntax.delete_reduction());
-            Ok("".to_string())
+            if let Some(mut c) = syntax.get_concept() {
+				c.delete_reduction();
+            	Ok("".to_string())
+			} else {
+				Err(ZiaError::RedundantReduction)
+			}
         } else {
             let mut syntax_concept = try!(self.concept_from_ast(syntax));
             let mut normal_form_concept = try!(self.concept_from_ast(normal_form));
@@ -80,7 +84,7 @@ where
 
 impl<S, T, U> RightHandCall<T, U> for S
 where
-    T: DeleteNormalForm
+    T: DeleteReduction
         + UpdateNormalForm
         + InsertDefinition
         + DeleteDefinition

@@ -17,7 +17,7 @@
 pub mod delete_normal_form;
 pub mod refactor_id;
 
-use self::delete_normal_form::DeleteNormalForm;
+use self::delete_normal_form::DeleteReduction;
 use self::refactor_id::{RefactorFrom, RefactorId};
 use traits::call::label_getter::LabelGetter;
 use utils::ZiaResult;
@@ -44,14 +44,14 @@ where
 
 pub trait Unlabeller
 where
-    Self: LabelGetter + DeleteNormalForm,
+    Self: LabelGetter + DeleteReduction,
 {
     fn unlabel(&mut self) {
         match self.get_concept_of_label() {
             None => panic!("No label to remove"),
-            Some(mut d) => d.delete_normal_form(),
+            Some(mut d) => d.delete_reduction(),
         }
     }
 }
 
-impl<S> Unlabeller for S where S: LabelGetter + DeleteNormalForm {}
+impl<S> Unlabeller for S where S: LabelGetter + DeleteReduction {}

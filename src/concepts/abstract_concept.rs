@@ -19,8 +19,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
-use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
+use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
+use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
@@ -34,8 +34,8 @@ pub struct AbstractConcept {
     definition: Option<(ConceptRef, ConceptRef)>,
     lefthand_of: Vec<ConceptRef>,
     righthand_of: Vec<ConceptRef>,
-    normal_form: Option<ConceptRef>,
-    normal_form_of: Vec<ConceptRef>,
+    reduces_to: Option<ConceptRef>,
+    reduces_from: Vec<ConceptRef>,
 }
 
 impl AbstractConcept {
@@ -48,8 +48,8 @@ impl AbstractConcept {
             definition: None,
             lefthand_of: Vec::new(),
             righthand_of: Vec::new(),
-            normal_form: None,
-            normal_form_of: Vec::new(),
+            reduces_to: None,
+            reduces_from: Vec::new(),
         }
     }
     pub fn set_id(&mut self, number: usize) {
@@ -62,8 +62,8 @@ impl RefactorFrom for AbstractConcept {
         self.definition = other.definition.clone();
         self.lefthand_of = other.lefthand_of.clone();
         self.righthand_of = other.righthand_of.clone();
-        self.normal_form = other.get_reduction();
-        self.normal_form_of = other.normal_form_of.clone();
+        self.reduces_to = other.get_reduction();
+        self.reduces_from = other.reduces_from.clone();
         Ok(())
     }
 }
@@ -131,14 +131,14 @@ impl Id for AbstractConcept {
 
 impl GetReduction<ConceptRef> for AbstractConcept {
     fn get_reduction(&self) -> Option<ConceptRef> {
-        self.normal_form.clone()
+        self.reduces_to.clone()
     }
 }
 
 impl GetNormalFormOf<ConceptRef> for AbstractConcept {
     fn get_normal_form_of(&self) -> Vec<ConceptRef> {
         let mut normal_form_of: Vec<ConceptRef> = Vec::new();
-        for concept in self.normal_form_of.clone() {
+        for concept in self.reduces_from.clone() {
             normal_form_of.push(concept.clone());
             for concept2 in concept.get_normal_form_of() {
                 normal_form_of.push(concept2);
@@ -148,25 +148,25 @@ impl GetNormalFormOf<ConceptRef> for AbstractConcept {
     }
 }
 
-impl SetNormalForm<ConceptRef> for AbstractConcept {
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
-        self.normal_form = Some(concept.clone());
+impl SetReduction<ConceptRef> for AbstractConcept {
+    fn make_reduce_to(&mut self, concept: &ConceptRef) {
+        self.reduces_to = Some(concept.clone());
     }
-    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
-        self.normal_form_of.push(concept.clone());
+    fn make_reduce_from(&mut self, concept: &ConceptRef) {
+        self.reduces_from.push(concept.clone());
     }
 }
 
-impl RemoveNormalForm<ConceptRef> for AbstractConcept {
-    fn remove_normal_form(&mut self) {
-        self.normal_form = None;
+impl RemoveReduction<ConceptRef> for AbstractConcept {
+    fn make_reduce_to_none(&mut self) {
+        self.reduces_to = None;
     }
-    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
-        if let Some(pos) = self.normal_form_of.iter().position(|x| *x == *concept) {
-            self.normal_form_of.remove(pos);
+    fn no_longer_reduces_from(&mut self, concept: &ConceptRef) {
+        if let Some(pos) = self.reduces_from.iter().position(|x| *x == *concept) {
+            self.reduces_from.remove(pos);
         } else {
             panic!(
-                "Concept number {} does not exist in normal_form_of concept number {}",
+                "Concept number {} does not think it reduces from concept number {}",
                 self.get_id(),
                 concept.get_id()
             );

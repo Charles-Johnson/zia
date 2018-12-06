@@ -21,8 +21,8 @@ use std::fmt;
 use std::rc::Rc;
 use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
-use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
+use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
+use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
@@ -119,21 +119,21 @@ impl GetNormalFormOf<ConceptRef> for StringConcept {
     }
 }
 
-impl SetNormalForm<ConceptRef> for StringConcept {
-    fn set_normal_form(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.set_normal_form(concept)
+impl SetReduction<ConceptRef> for StringConcept {
+    fn make_reduce_to(&mut self, _: &ConceptRef) {
+		panic!("Concept number {} is a string so must be its own normal form", self.get_id())
     }
-    fn add_normal_form_of(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.add_normal_form_of(concept);
+    fn make_reduce_from(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.make_reduce_from(concept);
     }
 }
 
-impl RemoveNormalForm<ConceptRef> for StringConcept {
-    fn remove_normal_form(&mut self) {
-        self.abstract_concept.remove_normal_form();
-    }
-    fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
-        self.abstract_concept.remove_normal_form_of(concept);
+impl RemoveReduction<ConceptRef> for StringConcept {
+    fn make_reduce_to_none(&mut self) {
+		panic!("Concept number {} is a string so no need to remove reduction.", self.get_id())
+	}
+    fn no_longer_reduces_from(&mut self, concept: &ConceptRef) {
+        self.abstract_concept.no_longer_reduces_from(concept);
     }
 }
 

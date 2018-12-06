@@ -22,7 +22,7 @@ pub mod refactor;
 use self::concept_maker::ConceptMaker;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
-use self::refactor::delete_normal_form::DeleteNormalForm;
+use self::refactor::delete_normal_form::DeleteReduction;
 use self::refactor::refactor_id::RefactorFrom;
 use self::refactor::{Refactor, Unlabeller};
 use constants::LABEL;
@@ -40,7 +40,7 @@ pub trait ConceptNumber {
 
 pub trait Definer<T, U>
 where
-    T: DeleteNormalForm
+    T: DeleteReduction
         + UpdateNormalForm
         + RefactorFrom
         + InsertDefinition
@@ -133,7 +133,7 @@ where
 
 impl<S, T, U> Definer<T, U> for S
 where
-    T: DeleteNormalForm
+    T: DeleteReduction
         + UpdateNormalForm
         + RefactorFrom
         + InsertDefinition

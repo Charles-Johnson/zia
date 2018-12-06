@@ -26,7 +26,7 @@ use self::right_hand_call::definer::delete_definition::DeleteDefinition;
 use self::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
-use self::right_hand_call::definer::refactor::delete_normal_form::DeleteNormalForm;
+use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReduction;
 use self::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use self::right_hand_call::definer::{MaybeDisconnected, Pair};
 use self::right_hand_call::{Container, MaybeId, RightHandCall};
@@ -90,7 +90,7 @@ where
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
-        + DeleteNormalForm
+        + DeleteReduction
         + UpdateNormalForm
         + LabelGetter
         + MaybeDisconnected
@@ -128,7 +128,7 @@ where
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
-        + DeleteNormalForm
+        + DeleteReduction
         + UpdateNormalForm
         + LabelGetter
         + MaybeDisconnected
