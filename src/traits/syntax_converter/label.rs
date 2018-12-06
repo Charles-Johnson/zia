@@ -15,16 +15,17 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
+use std::marker::Sized;
+use traits::call::FindWhatReducesToIt;
 use traits::{GetDefinition, Id};
 
-pub trait Label<T>
+pub trait Label
 where
-    T: GetDefinition<T> + GetNormalFormOf<T> + Clone + Id,
-    Self: GetNormalFormOf<T>,
+    Self: FindWhatItsANormalFormOf + GetDefinition<Self> + Clone + Id,
 {
-    fn get_labellee(&self) -> Option<T> {
-        let mut candidates: Vec<T> = Vec::new();
-        for label in self.get_normal_form_of() {
+    fn get_labellee(&self) -> Option<Self> {
+        let mut candidates: Vec<Self> = Vec::new();
+        for label in self.find_what_its_a_normal_form_of() {
             match label.get_definition() {
                 None => continue,
                 Some((r, x)) => {
@@ -44,13 +45,29 @@ where
     }
 }
 
-impl<S, T> Label<T> for S
+impl<S> Label for S
 where
-    T: GetDefinition<T> + GetNormalFormOf<T> + Clone + Id,
-    S: GetNormalFormOf<T>,
+    S: GetDefinition<S> + FindWhatItsANormalFormOf + Clone + Id,
 {
 }
 
-pub trait GetNormalFormOf<T> {
-    fn get_normal_form_of(&self) -> Vec<T>;
+pub trait FindWhatItsANormalFormOf 
+where
+	Self: FindWhatReducesToIt<Self> + Sized + Clone,
+{
+    fn find_what_its_a_normal_form_of(&self) -> Vec<Self> {
+        let mut normal_form_of: Vec<Self> = Vec::new();
+        for concept in self.find_what_reduces_to_it() {
+            normal_form_of.push(concept.clone());
+            for concept2 in concept.find_what_its_a_normal_form_of() {
+                normal_form_of.push(concept2);
+            }
+        }
+        normal_form_of		
+	}
 }
+
+impl<T> FindWhatItsANormalFormOf for T
+where
+	T: FindWhatReducesToIt<T> + Sized + Clone,
+{}

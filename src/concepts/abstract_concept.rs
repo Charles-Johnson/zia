@@ -21,11 +21,8 @@ use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetReduction;
-use traits::syntax_converter::label::GetNormalFormOf;
+use traits::call::{GetReduction, FindWhatReducesToIt};
 use traits::{GetDefinition, Id};
-use utils::ZiaResult;
 
 pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
 
@@ -57,17 +54,6 @@ impl AbstractConcept {
     }
 }
 
-impl RefactorFrom for AbstractConcept {
-    fn refactor_from(&mut self, other: &AbstractConcept) -> ZiaResult<()> {
-        self.definition = other.definition.clone();
-        self.lefthand_of = other.lefthand_of.clone();
-        self.righthand_of = other.righthand_of.clone();
-        self.reduces_to = other.get_reduction();
-        self.reduces_from = other.reduces_from.clone();
-        Ok(())
-    }
-}
-
 impl GetDefinitionOf<ConceptRef> for AbstractConcept {
     fn get_lefthand_of(&self) -> Vec<ConceptRef> {
         self.lefthand_of.clone()
@@ -87,10 +73,10 @@ impl SetDefinition<ConceptRef> for AbstractConcept {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         self.definition = Some((lefthand.clone(), righthand.clone()));
     }
-    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
+    fn add_as_lefthand_of(&mut self, lefthand: &ConceptRef) {
         self.lefthand_of.push(lefthand.clone());
     }
-    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
+    fn add_as_righthand_of(&mut self, righthand: &ConceptRef) {
         self.righthand_of.push(righthand.clone());
     }
 }
@@ -99,7 +85,7 @@ impl RemoveDefinition<ConceptRef> for AbstractConcept {
     fn remove_definition(&mut self) {
         self.definition = None
     }
-    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_lefthand_of(&mut self, definition: &ConceptRef) {
         if let Some(pos) = self.lefthand_of.iter().position(|x| *x == *definition) {
             self.lefthand_of.remove(pos);
         } else {
@@ -110,7 +96,7 @@ impl RemoveDefinition<ConceptRef> for AbstractConcept {
             );
         }
     }
-    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_righthand_of(&mut self, definition: &ConceptRef) {
         if let Some(pos) = self.righthand_of.iter().position(|x| *x == *definition) {
             self.righthand_of.remove(pos);
         } else {
@@ -135,17 +121,10 @@ impl GetReduction<ConceptRef> for AbstractConcept {
     }
 }
 
-impl GetNormalFormOf<ConceptRef> for AbstractConcept {
-    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
-        let mut normal_form_of: Vec<ConceptRef> = Vec::new();
-        for concept in self.reduces_from.clone() {
-            normal_form_of.push(concept.clone());
-            for concept2 in concept.get_normal_form_of() {
-                normal_form_of.push(concept2);
-            }
-        }
-        normal_form_of
-    }
+impl FindWhatReducesToIt<ConceptRef> for AbstractConcept {
+	fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
+		self.reduces_from.clone()
+	}
 }
 
 impl SetReduction<ConceptRef> for AbstractConcept {

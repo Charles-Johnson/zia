@@ -28,11 +28,8 @@ use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetReduction, StringFactory,
 };
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetReduction;
-use traits::syntax_converter::label::GetNormalFormOf;
+use traits::call::{GetReduction, FindWhatReducesToIt};
 use traits::{GetDefinition, Id};
-use utils::{ZiaError, ZiaResult};
 
 pub enum ConceptRef {
     Abstract(AbstractRef),
@@ -44,45 +41,6 @@ impl ConceptRef {
         match *self {
             ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
             ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
-        }
-    }
-    pub fn check_borrow_err(&self) -> bool {
-        match *self {
-            ConceptRef::Abstract(ref r) => r.try_borrow().is_err(),
-            ConceptRef::String(ref r) => r.try_borrow().is_err(),
-        }
-    }
-}
-
-impl RefactorFrom for ConceptRef {
-    fn refactor_from(&mut self, other: &ConceptRef) -> ZiaResult<()> {
-        match (self.clone(), other.clone()) {
-            (ConceptRef::Abstract(ref mut r), ConceptRef::Abstract(ref o)) => {
-                let mut r_borrowed = r.borrow_mut();
-                // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-                // then borrowing `other` will panic because `other` is already mutably borrowed.
-                if other.check_borrow_err() {
-                    return Err(ZiaError::RedundantDefinition);
-                }
-                r_borrowed.refactor_from(&o.borrow())
-            }
-            (ConceptRef::String(ref mut r), ConceptRef::String(ref o)) => {
-                let mut r_borrowed = r.borrow_mut();
-                // In order to compare `other` to `self`, `other` needs to be borrowed. If `other == self`,
-                // then borrowing `other` will panic because `other` is already mutably borrowed.
-                if other.check_borrow_err() {
-                    return Err(ZiaError::RedundantDefinition);
-                }
-                r_borrowed.refactor_from(&o.borrow())
-            }
-            (ConceptRef::Abstract(ref r), ConceptRef::String(ref o)) => {
-                *self = ConceptRef::new_string(r.borrow().get_id(), &o.borrow().to_string());
-                self.refactor_from(other)
-            }
-            (ConceptRef::String(ref r), ConceptRef::Abstract(_)) => {
-                *self = ConceptRef::new_abstract(r.borrow().get_id());
-                self.refactor_from(other)
-            }
         }
     }
 }
@@ -143,16 +101,16 @@ impl SetDefinition<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
         }
     }
-    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
+    fn add_as_lefthand_of(&mut self, lefthand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_lefthand_of(lefthand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_lefthand_of(lefthand),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_as_lefthand_of(lefthand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_as_lefthand_of(lefthand),
         }
     }
-    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
+    fn add_as_righthand_of(&mut self, righthand: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_righthand_of(righthand),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_as_righthand_of(righthand),
+            ConceptRef::String(ref mut c) => c.borrow_mut().add_as_righthand_of(righthand),
         }
     }
 }
@@ -164,16 +122,16 @@ impl RemoveDefinition<ConceptRef> for ConceptRef {
             ConceptRef::String(ref mut c) => c.borrow_mut().remove_definition(),
         }
     }
-    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_lefthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_lefthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_lefthand_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_as_lefthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_as_lefthand_of(definition),
         }
     }
-    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_righthand_of(&mut self, definition: &ConceptRef) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_righthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_righthand_of(definition),
+            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_as_righthand_of(definition),
+            ConceptRef::String(ref mut c) => c.borrow_mut().remove_as_righthand_of(definition),
         }
     }
 }
@@ -196,11 +154,11 @@ impl GetReduction<ConceptRef> for ConceptRef {
     }
 }
 
-impl GetNormalFormOf<ConceptRef> for ConceptRef {
-    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
+impl FindWhatReducesToIt<ConceptRef> for ConceptRef {
+    fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_normal_form_of(),
-            ConceptRef::String(ref c) => c.borrow().get_normal_form_of(),
+            ConceptRef::Abstract(ref c) => c.borrow().find_what_reduces_to_it(),
+            ConceptRef::String(ref c) => c.borrow().find_what_reduces_to_it(),
         }
     }
 }

@@ -20,14 +20,13 @@ pub mod refactor_id;
 use self::delete_normal_form::DeleteReduction;
 use self::refactor_id::{RefactorFrom, RefactorId};
 use traits::call::label_getter::LabelGetter;
-use utils::ZiaResult;
 
 pub trait Refactor<T>
 where
     T: RefactorFrom + Unlabeller,
     Self: RefactorId<T>,
 {
-    fn refactor(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+    fn refactor(&mut self, before: &mut T, after: &mut T) {
 		if before.get_label().is_some() {
         	before.unlabel();
 		}

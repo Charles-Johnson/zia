@@ -30,7 +30,7 @@ use std::fmt::Display;
 use std::marker::Sized;
 use traits::call::label_getter::{GetDefinitionOf, LabelGetter};
 use traits::call::{GetReduction, MaybeConcept, MightExpand};
-use traits::syntax_converter::label::GetNormalFormOf;
+use traits::syntax_converter::label::FindWhatItsANormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
@@ -71,7 +71,10 @@ where
                 (None, None, Some((ref left, ref right))) => {
                     self.define_new_syntax(&after.to_string(), left, right)
                 }
-                (Some(ref mut a), Some(ref mut b), None) => self.refactor_atom(b, a),
+                (Some(ref mut a), Some(ref mut b), None) => {
+					self.refactor_atom(b, a);
+					Ok(())
+				},
                 (Some(ref mut a), Some(ref mut b), Some(_)) => self.refactor_expression(b, a),
                 (Some(ref mut a), None, Some((ref left, ref right))) => {
                     self.redefine(a, left, right)
@@ -79,19 +82,19 @@ where
             }
         }
     }
-    fn refactor_atom(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+    fn refactor_atom(&mut self, before: &mut T, after: &mut T) {
         if before == after {
             self.delete_definition(before);
-            Ok(())
         } else {
-            self.refactor(before, after)
+            self.refactor(before, after);
         }
     }
     fn refactor_expression(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
         if before == after {
             Err(ZiaError::RedundantDefinition)
         } else {
-            self.refactor(before, after)
+            self.refactor(before, after);
+			Ok(())
         }
     }
     fn delete_definition(&mut self, concept: &mut T) {
@@ -154,7 +157,7 @@ pub trait Pair<T> {
 pub trait MaybeDisconnected
 where
     Self: GetReduction<Self>
-        + GetNormalFormOf<Self>
+        + FindWhatItsANormalFormOf
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
         + Id
@@ -165,7 +168,7 @@ where
             && self.get_definition().is_none()
             && self.get_lefthand_of().is_empty()
             && self.righthand_of_without_label_is_empty()
-            && self.get_normal_form_of().is_empty()
+            && self.find_what_its_a_normal_form_of().is_empty()
     }
     fn righthand_of_without_label_is_empty(&self) -> bool {
         for concept in self.get_righthand_of() {
@@ -180,6 +183,6 @@ where
 }
 
 impl<T> MaybeDisconnected for T where
-    T: GetReduction<T> + GetNormalFormOf<T> + GetDefinition<T> + GetDefinitionOf<T> + Id
+    T: GetReduction<T> + FindWhatItsANormalFormOf + GetDefinition<T> + GetDefinitionOf<T> + Id
 {
 }

@@ -26,8 +26,8 @@ where
         match self.get_definition() {
             None => panic!("No definition to remove!"),
             Some((mut app, mut arg)) => {
-                app.remove_lefthand_of(self);
-                arg.remove_righthand_of(self);
+                app.remove_as_lefthand_of(self);
+                arg.remove_as_righthand_of(self);
                 self.remove_definition();
             }
         };
@@ -38,8 +38,8 @@ impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> +
 
 pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
-    fn remove_lefthand_of(&mut self, &T);
-    fn remove_righthand_of(&mut self, &T);
+    fn remove_as_lefthand_of(&mut self, &T);
+    fn remove_as_righthand_of(&mut self, &T);
 }
 
 impl<T, U> RemoveDefinition<T> for U
@@ -52,14 +52,14 @@ where
             c.remove_definition()
         }
     }
-    fn remove_lefthand_of(&mut self, definition: &T) {
+    fn remove_as_lefthand_of(&mut self, definition: &T) {
         if let Some(mut c) = self.get_concept() {
-            c.remove_lefthand_of(definition)
+            c.remove_as_lefthand_of(definition)
         }
     }
-    fn remove_righthand_of(&mut self, definition: &T) {
+    fn remove_as_righthand_of(&mut self, definition: &T) {
         if let Some(mut c) = self.get_concept() {
-            c.remove_righthand_of(definition)
+            c.remove_as_righthand_of(definition)
         }
     }
 }

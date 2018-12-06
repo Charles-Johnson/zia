@@ -37,6 +37,10 @@ use std::ops::Add;
 use traits::{SyntaxFactory, GetDefinition};
 use utils::{ZiaError, ZiaResult};
 
+pub trait FindWhatReducesToIt<T> {
+	fn find_what_reduces_to_it(&self) -> Vec<T>;
+}
+
 pub trait MightExpand
 where
     Self: Sized,

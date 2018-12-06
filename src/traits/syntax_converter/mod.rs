@@ -25,7 +25,7 @@ use utils::{ZiaError, ZiaResult};
 pub trait SyntaxConverter<T, U>
 where
     Self: SyntaxFinder<T>,
-    T: Clone + Id + GetDefinition<T> + Label<T>,
+    T: Clone + Id + GetDefinition<T> + Label,
     U: SyntaxFactory<T> + Add<U, Output = U>,
 {
     fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
@@ -58,14 +58,14 @@ where
 impl<S, T, U> SyntaxConverter<T, U> for S
 where
     S: SyntaxFinder<T>,
-    T: Clone + Id + GetDefinition<T> + Label<T>,
+    T: Clone + Id + GetDefinition<T> + Label,
     U: SyntaxFactory<T> + Add<U, Output = U>,
 {
 }
 
 pub trait SyntaxFinder<T>
 where
-    T: Label<T> + GetDefinition<T> + Clone + Id,
+    T: Label + GetDefinition<T> + Clone + Id,
 {
     fn get_string_concept(&self, &str) -> Option<T>;
     fn concept_from_label(&self, s: &str) -> Option<T> {

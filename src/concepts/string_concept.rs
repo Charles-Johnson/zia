@@ -23,11 +23,8 @@ use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetReduction;
-use traits::syntax_converter::label::GetNormalFormOf;
+use traits::call::{GetReduction, FindWhatReducesToIt};
 use traits::{GetDefinition, Id};
-use utils::ZiaResult;
 
 pub type StringRef = Rc<RefCell<StringConcept>>;
 
@@ -54,12 +51,10 @@ impl MaybeString for StringConcept {
     }
 }
 
-impl RefactorFrom for StringConcept {
-    fn refactor_from(&mut self, other: &StringConcept) -> ZiaResult<()> {
-        try!(self.abstract_concept.refactor_from(&other.abstract_concept));
-        self.string = other.string.clone();
-        Ok(())
-    }
+impl FindWhatReducesToIt<ConceptRef> for StringConcept {
+	fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
+		self.abstract_concept.find_what_reduces_to_it()
+	}
 }
 
 impl GetDefinitionOf<ConceptRef> for StringConcept {
@@ -81,11 +76,11 @@ impl SetDefinition<ConceptRef> for StringConcept {
     fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
         self.abstract_concept.set_definition(lefthand, righthand);
     }
-    fn add_lefthand_of(&mut self, lefthand: &ConceptRef) {
-        self.abstract_concept.add_lefthand_of(lefthand);
+    fn add_as_lefthand_of(&mut self, lefthand: &ConceptRef) {
+        self.abstract_concept.add_as_lefthand_of(lefthand);
     }
-    fn add_righthand_of(&mut self, righthand: &ConceptRef) {
-        self.abstract_concept.add_righthand_of(righthand);
+    fn add_as_righthand_of(&mut self, righthand: &ConceptRef) {
+        self.abstract_concept.add_as_righthand_of(righthand);
     }
 }
 
@@ -93,11 +88,11 @@ impl RemoveDefinition<ConceptRef> for StringConcept {
     fn remove_definition(&mut self) {
         self.abstract_concept.remove_definition();
     }
-    fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.remove_lefthand_of(definition)
+    fn remove_as_lefthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.remove_as_lefthand_of(definition)
     }
-    fn remove_righthand_of(&mut self, definition: &ConceptRef) {
-        self.abstract_concept.remove_righthand_of(definition)
+    fn remove_as_righthand_of(&mut self, definition: &ConceptRef) {
+        self.abstract_concept.remove_as_righthand_of(definition)
     }
 }
 
@@ -110,12 +105,6 @@ impl Id for StringConcept {
 impl GetReduction<ConceptRef> for StringConcept {
     fn get_reduction(&self) -> Option<ConceptRef> {
         self.abstract_concept.get_reduction()
-    }
-}
-
-impl GetNormalFormOf<ConceptRef> for StringConcept {
-    fn get_normal_form_of(&self) -> Vec<ConceptRef> {
-        self.abstract_concept.get_normal_form_of()
     }
 }
 

@@ -15,23 +15,22 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker::Sized;
+use traits::call::{GetReduction, FindWhatReducesToIt};
+use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::Id;
-use utils::ZiaResult;
+use traits::call::right_hand_call::definer::labeller::{SetReduction, SetDefinition};
+use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
+use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
+use traits::{Id, GetDefinition};
 
 pub trait RefactorId<T>
 where
     T: Id + RefactorFrom,
     Self: ConceptCleaner<T>,
 {
-    fn refactor_id(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-        if self.number_of_concepts() > before.get_id() {
-            try!(after.refactor_from(before));
-            self.cleanly_remove_concept(before);
-            Ok(())
-        } else {
-            panic!("refactoring id has gone wrong!")
-        }
+    fn refactor_id(&mut self, before: &mut T, after: &mut T) {
+        after.refactor_from(before);
+        self.cleanly_remove_concept(before);
     }
 }
 
@@ -44,9 +43,58 @@ where
 
 pub trait RefactorFrom
 where
-    Self: Sized,
+    Self: Sized 
+		+ GetDefinition<Self> 
+		+ SetDefinition<Self> 
+		+ GetDefinitionOf<Self> 
+		+ GetReduction<Self>
+		+ FindWhatReducesToIt<Self>
+		+ SetReduction<Self>
+		+ RemoveReduction<Self>
+		+ RemoveDefinition<Self>,
 {
-    fn refactor_from(&mut self, &Self) -> ZiaResult<()>;
+    fn refactor_from(&mut self, other: &Self) {
+		match other.get_definition() {
+			Some((ref left, ref right)) => self.set_definition(left, right),
+			None => self.remove_definition(),
+		};
+		for concept in self.get_lefthand_of() {
+			self.remove_as_lefthand_of(&concept);
+		}
+        for concept in other.get_lefthand_of() {
+			self.add_as_lefthand_of(&concept); 
+		}
+		for concept in self.get_righthand_of() {
+			self.remove_as_righthand_of(&concept);
+		}
+        for concept in other.get_righthand_of() {
+			self.add_as_righthand_of(&concept); 
+		}
+		match other.get_reduction() {
+			Some(concept) => self.make_reduce_to(&concept),
+			None => self.make_reduce_to_none(),
+		};
+		for concept in self.find_what_reduces_to_it() {
+			self.no_longer_reduces_from(&concept);
+		}
+		for concept in other.find_what_reduces_to_it() {
+			self.make_reduce_from(&concept);
+		}
+	}
+}
+
+impl<T> RefactorFrom for T 
+where
+    T: Sized 
+		+ GetDefinition<T> 
+		+ SetDefinition<T> 
+		+ GetDefinitionOf<T> 
+		+ GetReduction<T>
+		+ FindWhatReducesToIt<T>
+		+ SetReduction<T>
+		+ RemoveReduction<T>
+		+ RemoveDefinition<T>,
+{
 }
 
 pub trait ConceptTidyer<T> {
