@@ -34,7 +34,7 @@ use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use std::marker::Sized;
 use std::ops::Add;
-use traits::SyntaxFactory;
+use traits::{SyntaxFactory, GetDefinition};
 use utils::{ZiaError, ZiaResult};
 
 pub trait MightExpand
@@ -42,6 +42,15 @@ where
     Self: Sized,
 {
     fn get_expansion(&self) -> Option<(Self, Self)>;
+}
+
+impl<T> MightExpand for T
+where 
+	T: GetDefinition<T>,
+{
+	fn get_expansion(&self) -> Option<(T, T)> {
+		self.get_definition()
+	}
 }
 
 pub trait MaybeConcept<T> {

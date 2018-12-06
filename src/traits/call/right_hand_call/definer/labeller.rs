@@ -17,6 +17,7 @@
 use std::marker;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
 use traits::call::right_hand_call::definer::ConceptNumber;
+use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, MaybeConcept};
 use utils::{ZiaError, ZiaResult};
 
@@ -83,16 +84,21 @@ where
 
 pub trait InsertDefinition
 where
-    Self: SetDefinition<Self> + marker::Sized,
+    Self: SetDefinition<Self> + marker::Sized + Container,
 {
-    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) {
-        self.set_definition(lefthand, righthand);
-        lefthand.add_lefthand_of(self);
-        righthand.add_righthand_of(self);
+    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) -> ZiaResult<()> {
+		if lefthand.contains(self) || righthand.contains(self) {
+			Err(ZiaError::InfiniteDefinition)
+		} else {
+        	self.set_definition(lefthand, righthand);
+        	lefthand.add_lefthand_of(self);
+        	righthand.add_righthand_of(self);
+			Ok(())
+		}
     }
 }
 
-impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized {}
+impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized + Container {}
 
 pub trait Labeller<T>
 where
@@ -101,7 +107,7 @@ where
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
-        let mut definition = self.find_or_insert_definition(&mut label_concept, concept);
+        let mut definition = try!(self.find_or_insert_definition(&mut label_concept, concept));
         let mut string_ref = self.new_string(string);
         definition.update_normal_form(&mut string_ref)
     }
@@ -155,15 +161,15 @@ where
     T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
     Self: AbstractMaker<T>,
 {
-    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> T {
+    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
         let application = lefthand.find_definition(righthand);
         match application {
             None => {
                 let mut definition = self.new_abstract();
-                definition.insert_definition(lefthand, righthand);
-                definition.clone()
+                try!(definition.insert_definition(lefthand, righthand));
+                Ok(definition.clone())
             }
-            Some(def) => def,
+            Some(def) => Ok(def),
         }
     }
 }

@@ -116,7 +116,7 @@ where
         } else {
             let mut left_concept = try!(self.concept_from_ast(left));
             let mut right_concept = try!(self.concept_from_ast(right));
-            concept.insert_definition(&mut left_concept, &mut right_concept);
+            try!(concept.insert_definition(&mut left_concept, &mut right_concept));
             Ok(())
         }
     }

@@ -42,7 +42,7 @@ where
                 Some((ref left, ref right)) => {
                     let mut appc = try!(self.concept_from_ast(left));
                     let mut argc = try!(self.concept_from_ast(right));
-                    let mut concept = self.find_or_insert_definition(&mut appc, &mut argc);
+                    let mut concept = try!(self.find_or_insert_definition(&mut appc, &mut argc));
                     if !string.contains(' ') {
                         try!(self.label(&mut concept, string));
                     }
