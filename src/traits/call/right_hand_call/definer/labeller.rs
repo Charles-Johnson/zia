@@ -17,7 +17,7 @@
 use std::marker;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::call::{GetReduction, MaybeConcept};
+use traits::call::{GetNormalForm, MaybeConcept};
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptAdder<T> {
@@ -26,11 +26,13 @@ pub trait ConceptAdder<T> {
 
 pub trait UpdateNormalForm
 where
-    Self: GetReduction<Self> + SetNormalForm<Self> + PartialEq,
+    Self: GetNormalForm + SetNormalForm<Self> + PartialEq,
 {
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        if self == normal_form {
-            return Err(ZiaError::CyclicReduction);
+        if let Some(n) = normal_form.get_normal_form() {
+			if *self == n {
+            	return Err(ZiaError::CyclicReduction);
+			}
         }
         if let Some(ref n) = self.get_reduction() {
             if n == normal_form {
@@ -43,7 +45,7 @@ where
     }
 }
 
-impl<T> UpdateNormalForm for T where T: SetNormalForm<T> + GetReduction<T> + PartialEq {}
+impl<T> UpdateNormalForm for T where T: GetNormalForm + SetNormalForm<Self> + PartialEq {}
 
 pub trait SetNormalForm<T>
 where
