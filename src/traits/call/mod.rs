@@ -55,6 +55,12 @@ where
     fn get_normal_form(&self) -> ZiaResult<Option<T>>;
 }
 
+pub trait GetReduction<T>
+where
+{
+    fn get_reduction(&self) -> Option<T>;
+}
+
 impl<T, U> GetNormalForm<T> for U
 where
     T: GetNormalForm<T>,

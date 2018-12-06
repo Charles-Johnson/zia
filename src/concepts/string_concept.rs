@@ -24,7 +24,7 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetNormalForm;
+use traits::call::{GetReduction, GetNormalForm};
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
@@ -105,6 +105,12 @@ impl Id for StringConcept {
     fn get_id(&self) -> usize {
         self.abstract_concept.get_id()
     }
+}
+
+impl GetReduction<ConceptRef> for StringConcept {
+	fn get_reduction(&self) -> Option<ConceptRef> {
+		self.abstract_concept.get_reduction()
+	}
 }
 
 impl GetNormalForm<ConceptRef> for StringConcept {

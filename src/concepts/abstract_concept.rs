@@ -22,7 +22,7 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetNormalForm;
+use traits::call::{GetReduction, GetNormalForm};
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -62,7 +62,7 @@ impl RefactorFrom for AbstractConcept {
         self.definition = other.definition.clone();
         self.lefthand_of = other.lefthand_of.clone();
         self.righthand_of = other.righthand_of.clone();
-        self.normal_form = other.normal_form.clone();
+        self.normal_form = other.get_reduction();
         self.normal_form_of = other.normal_form_of.clone();
         Ok(())
     }
@@ -121,9 +121,15 @@ impl Id for AbstractConcept {
     }
 }
 
+impl GetReduction<ConceptRef> for AbstractConcept {
+	fn get_reduction(&self) -> Option<ConceptRef> {
+		self.normal_form.clone()
+	}
+}
+
 impl GetNormalForm<ConceptRef> for AbstractConcept {
     fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
-        match self.normal_form {
+        match self.get_reduction() {
             None => Ok(None),
             Some(ref n) => {
                 if n.check_borrow_err() {

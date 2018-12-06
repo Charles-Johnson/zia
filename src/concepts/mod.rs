@@ -29,7 +29,7 @@ use traits::call::right_hand_call::definer::labeller::{
 };
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::GetNormalForm;
+use traits::call::{GetReduction, GetNormalForm};
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -183,6 +183,15 @@ impl Id for ConceptRef {
         match *self {
             ConceptRef::Abstract(ref r) => r.borrow().get_id(),
             ConceptRef::String(ref r) => r.borrow().get_id(),
+        }
+    }
+}
+
+impl GetReduction<ConceptRef> for ConceptRef {
+	fn get_reduction(&self) -> Option<ConceptRef> {
+        match *self {
+            ConceptRef::Abstract(ref c) => c.borrow().get_reduction(),
+            ConceptRef::String(ref c) => c.borrow().get_reduction(),
         }
     }
 }
