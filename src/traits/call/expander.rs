@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::fmt::Display;
 use std::ops::Add;
@@ -21,7 +21,6 @@ use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
-use utils::ZiaResult;
 
 pub trait Expander<T>
 where
@@ -34,17 +33,17 @@ where
         + Add<Self, Output = Self>
         + SyntaxFactory<T>,
 {
-    fn expand(&self) -> ZiaResult<Self> {
+    fn expand(&self) -> Self {
         if let Some(ref con) = self.get_concept() {
             if let Some((ref left, ref right)) = con.get_definition() {
-                Ok(try!(try!(left.to_ast()).expand()) + try!(try!(right.to_ast()).expand()))
+                left.to_ast().expand() + right.to_ast().expand()
             } else {
                 con.to_ast()
             }
         } else if let Some((ref left, ref right)) = self.get_expansion() {
-            Ok(try!(left.expand()) + try!(right.expand()))
+            left.expand() + right.expand()
         } else {
-            Ok(self.clone())
+            self.clone()
         }
     }
 }
@@ -59,4 +58,5 @@ where
         + Pair<S>
         + Add<S, Output = S>
         + SyntaxFactory<T>,
-{}
+{
+}

@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 mod abstract_concept;
 pub mod string_concept;
@@ -29,7 +29,7 @@ use traits::call::right_hand_call::definer::labeller::{
 };
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::{GetReduction, GetNormalForm};
+use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -95,7 +95,7 @@ impl fmt::Display for ConceptRef {
             match *self {
                 ConceptRef::String(ref s) => "\"".to_string() + &s.borrow().to_string() + "\"",
                 ConceptRef::Abstract(_) => {
-                    let ast: AbstractSyntaxTree = self.to_ast().unwrap();
+                    let ast: AbstractSyntaxTree = self.to_ast();
                     ast.to_string()
                 }
             },
@@ -188,19 +188,10 @@ impl Id for ConceptRef {
 }
 
 impl GetReduction<ConceptRef> for ConceptRef {
-	fn get_reduction(&self) -> Option<ConceptRef> {
+    fn get_reduction(&self) -> Option<ConceptRef> {
         match *self {
             ConceptRef::Abstract(ref c) => c.borrow().get_reduction(),
             ConceptRef::String(ref c) => c.borrow().get_reduction(),
-        }
-    }
-}
-
-impl GetNormalForm<ConceptRef> for ConceptRef {
-    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
-        match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_normal_form(),
-            ConceptRef::String(ref c) => c.borrow().get_normal_form(),
         }
     }
 }
@@ -215,7 +206,7 @@ impl GetNormalFormOf<ConceptRef> for ConceptRef {
 }
 
 impl SetNormalForm<ConceptRef> for ConceptRef {
-    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
         match *self {
             ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_normal_form(concept),
             ConceptRef::String(ref mut c) => c.borrow_mut().set_normal_form(concept),

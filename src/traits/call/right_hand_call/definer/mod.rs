@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 pub mod concept_maker;
 pub mod delete_definition;
@@ -27,8 +27,9 @@ use self::refactor::refactor_id::RefactorFrom;
 use self::refactor::{Refactor, Unlabeller};
 use constants::LABEL;
 use std::fmt::Display;
+use std::marker::Sized;
 use traits::call::label_getter::{GetDefinitionOf, LabelGetter};
-use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
+use traits::call::{GetReduction, MaybeConcept, MightExpand};
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
@@ -75,7 +76,8 @@ where
     }
     fn refactor_atom(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
         if before == after {
-            self.delete_definition(before)
+            self.delete_definition(before);
+            Ok(())
         } else {
             self.refactor(before, after)
         }
@@ -87,22 +89,20 @@ where
             self.refactor(before, after)
         }
     }
-    fn delete_definition(&mut self, concept: &mut T) -> ZiaResult<()> {
+    fn delete_definition(&mut self, concept: &mut T) {
         let mut definition = concept.get_definition();
         concept.delete_definition();
-        try!(self.try_delete_concept(concept));
+        self.try_delete_concept(concept);
         if let Some((ref mut left, ref mut right)) = definition {
-            try!(self.try_delete_concept(left));
-            try!(self.try_delete_concept(right));
+            self.try_delete_concept(left);
+            self.try_delete_concept(right);
         }
-        Ok(())
     }
-    fn try_delete_concept(&mut self, concept: &mut T) -> ZiaResult<()> {
-        if try!(concept.is_disconnected()) {
-            try!(concept.unlabel());
+    fn try_delete_concept(&mut self, concept: &mut T) {
+        if concept.is_disconnected() {
+            concept.unlabel();
             self.cleanly_remove_concept(concept);
         }
-        Ok(())
     }
     fn redefine(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
         if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
@@ -116,7 +116,7 @@ where
         }
     }
     fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
-        try!(concept.unlabel());
+        concept.unlabel();
         self.label(concept, new_label)
     }
     fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
@@ -139,7 +139,8 @@ where
         + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
     S: Refactor<T> + ConceptMaker<T, U>,
-{}
+{
+}
 
 pub trait Pair<T> {
     fn from_pair(&str, &T, &T) -> Self;
@@ -147,18 +148,19 @@ pub trait Pair<T> {
 
 pub trait MaybeDisconnected
 where
-    Self: GetNormalForm<Self>
+    Self: GetReduction<Self>
         + GetNormalFormOf<Self>
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
-        + Id,
+        + Id
+        + Sized,
 {
-    fn is_disconnected(&self) -> ZiaResult<bool> {
-        Ok(try!(self.get_normal_form()).is_none()
+    fn is_disconnected(&self) -> bool {
+        self.get_reduction().is_none()
             && self.get_definition().is_none()
             && self.get_lefthand_of().is_empty()
             && self.righthand_of_without_label_is_empty()
-            && self.get_normal_form_of().is_empty())
+            && self.get_normal_form_of().is_empty()
     }
     fn righthand_of_without_label_is_empty(&self) -> bool {
         for concept in self.get_righthand_of() {
@@ -173,5 +175,6 @@ where
 }
 
 impl<T> MaybeDisconnected for T where
-    T: GetNormalForm<T> + GetNormalFormOf<T> + GetDefinition<T> + GetDefinitionOf<T> + Id
-{}
+    T: GetReduction<T> + GetNormalFormOf<T> + GetDefinition<T> + GetDefinitionOf<T> + Id
+{
+}

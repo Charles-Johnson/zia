@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::ConceptRef;
 use std::cell::RefCell;
@@ -22,10 +22,10 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::{GetReduction, GetNormalForm};
+use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
-use utils::{ZiaError, ZiaResult};
+use utils::ZiaResult;
 
 pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
 
@@ -101,17 +101,25 @@ impl RemoveDefinition<ConceptRef> for AbstractConcept {
     }
     fn remove_lefthand_of(&mut self, definition: &ConceptRef) {
         if let Some(pos) = self.lefthand_of.iter().position(|x| *x == *definition) {
-			self.lefthand_of.remove(pos);
-		} else {
-		   panic!("Concept number {} does not exist in lefthand_of concept number {}", self.get_id(), definition.get_id()); 
-	    }
+            self.lefthand_of.remove(pos);
+        } else {
+            panic!(
+                "Concept number {} does not exist in lefthand_of concept number {}",
+                self.get_id(),
+                definition.get_id()
+            );
+        }
     }
     fn remove_righthand_of(&mut self, definition: &ConceptRef) {
         if let Some(pos) = self.righthand_of.iter().position(|x| *x == *definition) {
-			self.righthand_of.remove(pos);
-		} else {
-	   		panic!("Concept number {} does not exist in righthand_of concept number {}", self.get_id(), definition.get_id()); 
-	    }	
+            self.righthand_of.remove(pos);
+        } else {
+            panic!(
+                "Concept number {} does not exist in righthand_of concept number {}",
+                self.get_id(),
+                definition.get_id()
+            );
+        }
     }
 }
 
@@ -122,25 +130,8 @@ impl Id for AbstractConcept {
 }
 
 impl GetReduction<ConceptRef> for AbstractConcept {
-	fn get_reduction(&self) -> Option<ConceptRef> {
-		self.normal_form.clone()
-	}
-}
-
-impl GetNormalForm<ConceptRef> for AbstractConcept {
-    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
-        match self.get_reduction() {
-            None => Ok(None),
-            Some(ref n) => {
-                if n.check_borrow_err() {
-                    return Err(ZiaError::Borrow)
-                }
-                match try!(n.get_normal_form()) {
-                    None => Ok(Some(n.clone())),
-                    Some(ref m) => Ok(Some(m.clone())),
-                }
-            }
-        }
+    fn get_reduction(&self) -> Option<ConceptRef> {
+        self.normal_form.clone()
     }
 }
 
@@ -158,19 +149,8 @@ impl GetNormalFormOf<ConceptRef> for AbstractConcept {
 }
 
 impl SetNormalForm<ConceptRef> for AbstractConcept {
-    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
-        // If `concept.get_normal_form() == self` then calling `concept.get_normal_form()` will
-        // raise an error due to borrowing self which has already been mutably borrowed.
-        if concept.get_normal_form().is_err() {
-            return Err(ZiaError::CyclicReduction);
-        }
-        if let Some(ref n) = try!(self.get_normal_form()) {
-            if n == concept {
-                return Err(ZiaError::RedundantReduction);
-            }
-        }
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
         self.normal_form = Some(concept.clone());
-        Ok(())
     }
     fn add_normal_form_of(&mut self, concept: &ConceptRef) {
         self.normal_form_of.push(concept.clone());
@@ -182,10 +162,14 @@ impl RemoveNormalForm<ConceptRef> for AbstractConcept {
         self.normal_form = None;
     }
     fn remove_normal_form_of(&mut self, concept: &ConceptRef) {
-		if let Some(pos) = self.normal_form_of.iter().position(|x| *x == *concept) {
-			self.normal_form_of.remove(pos);
-		}  else {
-		    panic!("Concept number {} does not exist in normal_form_of concept number {}", self.get_id(), concept.get_id()); 
-	    }
-	}
+        if let Some(pos) = self.normal_form_of.iter().position(|x| *x == *concept) {
+            self.normal_form_of.remove(pos);
+        } else {
+            panic!(
+                "Concept number {} does not exist in normal_form_of concept number {}",
+                self.get_id(),
+                concept.get_id()
+            );
+        }
+    }
 }

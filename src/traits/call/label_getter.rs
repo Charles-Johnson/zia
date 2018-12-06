@@ -12,18 +12,17 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
 use std::fmt::Display;
 use traits::call::{GetNormalForm, MaybeConcept};
 use traits::{GetDefinition, Id};
-use utils::ZiaResult;
 
 pub trait LabelGetter
 where
     Self: Id
-        + GetNormalForm<Self>
+        + GetNormalForm
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
         + Clone
@@ -34,34 +33,37 @@ where
         for candidate in self.get_righthand_of() {
             match candidate.get_definition() {
                 None => panic!("Candidate should have a definition!"),
-                Some((ref left, _)) => if left.get_id() == LABEL {
-                    return Some(candidate.clone());
-                },
+                Some((ref left, _)) => {
+                    if left.get_id() == LABEL {
+                        return Some(candidate.clone());
+                    }
+                }
             };
         }
         None
     }
-    fn get_label(&self) -> ZiaResult<Option<String>> {
-        Ok(match self.get_concept_of_label() {
+    fn get_label(&self) -> Option<String> {
+        match self.get_concept_of_label() {
             None => None,
-            Some(d) => match try!(d.get_normal_form()) {
+            Some(d) => match d.get_normal_form() {
                 None => None,
                 Some(n) => Some(n.get_string()),
             },
-        })
+        }
     }
 }
 
 impl<T> LabelGetter for T where
     T: Id
-        + GetNormalForm<T>
+        + GetNormalForm
         + GetDefinition<T>
         + GetDefinitionOf<T>
         + Clone
         + PartialEq
         + Display
         + MaybeString
-{}
+{
+}
 
 pub trait MaybeString {
     fn get_string(&self) -> String;
@@ -93,7 +95,8 @@ impl<S, T> FindDefinition<T> for S
 where
     T: GetDefinitionOf<T> + Clone + PartialEq,
     S: GetDefinitionOf<T>,
-{}
+{
+}
 
 pub trait GetDefinitionOf<T> {
     fn get_lefthand_of(&self) -> Vec<T>;

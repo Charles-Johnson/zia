@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker::Sized;
 use traits::call::{GetNormalForm, MaybeConcept};
@@ -20,21 +20,20 @@ use utils::{ZiaError, ZiaResult};
 
 pub trait DeleteNormalForm
 where
-    Self: GetNormalForm<Self> + RemoveNormalForm<Self>,
+    Self: GetNormalForm + RemoveNormalForm<Self>,
 {
-    fn delete_normal_form(&mut self) -> ZiaResult<()> {
-        match try!(self.get_normal_form()) {
-            None => Ok(()),
+    fn delete_normal_form(&mut self) {
+        match self.get_normal_form() {
+            None => panic!("No normal form to delete"),
             Some(mut n) => {
                 n.remove_normal_form_of(self);
                 self.remove_normal_form();
-                Ok(())
             }
-        }
+        };
     }
 }
 
-impl<T> DeleteNormalForm for T where T: GetNormalForm<T> + RemoveNormalForm<T> {}
+impl<T> DeleteNormalForm for T where T: GetNormalForm + RemoveNormalForm<T> {}
 
 pub trait DeleteReduction<T>
 where
@@ -43,7 +42,8 @@ where
 {
     fn delete_reduction(&mut self) -> ZiaResult<()> {
         if let Some(mut concept) = self.get_concept() {
-            concept.delete_normal_form()
+            concept.delete_normal_form();
+			Ok(())
         } else {
             Err(ZiaError::RedundantReduction)
         }

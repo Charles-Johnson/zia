@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::fmt;
 
@@ -20,23 +20,21 @@ pub type ZiaResult<T> = Result<T, ZiaError>;
 
 #[derive(Debug)]
 pub enum ZiaError {
-    Borrow,
     RedundantReduction,
-	RedundantDefinition,
-	RedundantRefactor,
+    RedundantDefinition,
+    RedundantRefactor,
     NotAProgram,
     BadDefinition,
-	CyclicReduction,
+    CyclicReduction,
     ExpandingReduction,
-	InfiniteDefinition,
-	EmptyParentheses,
-	AmbiguousExpression,
+    InfiniteDefinition,
+    EmptyParentheses,
+    AmbiguousExpression,
 }
 
 impl fmt::Display for ZiaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ZiaError::Borrow => write!(f, "Borrow error!"),
             ZiaError::RedundantReduction => write!(f, "That reduction rule already exists."),
 			ZiaError::RedundantDefinition => write!(f, "That definition already exists."),
 			ZiaError::RedundantRefactor => write!(f, "Relabelling something that doesn't yet exist has no effect."),

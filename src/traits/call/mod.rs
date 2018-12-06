@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 mod expander;
 pub mod label_getter;
@@ -32,14 +32,14 @@ use self::right_hand_call::definer::{MaybeDisconnected, Pair};
 use self::right_hand_call::{Container, MaybeId, RightHandCall};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
-use std::marker;
+use std::marker::Sized;
 use std::ops::Add;
 use traits::SyntaxFactory;
 use utils::{ZiaError, ZiaResult};
 
 pub trait MightExpand
 where
-    Self: marker::Sized,
+    Self: Sized,
 {
     fn get_expansion(&self) -> Option<(Self, Self)>;
 }
@@ -48,28 +48,36 @@ pub trait MaybeConcept<T> {
     fn get_concept(&self) -> Option<T>;
 }
 
-pub trait GetNormalForm<T>
+pub trait GetNormalForm
 where
-    Self: marker::Sized,
+    Self: GetReduction<Self> + Sized + Clone,
 {
-    fn get_normal_form(&self) -> ZiaResult<Option<T>>;
+    fn get_normal_form(&self) -> Option<Self> {
+        match self.get_reduction() {
+            None => None,
+            Some(ref n) => match n.get_normal_form() {
+                None => Some(n.clone()),
+                Some(ref m) => Some(m.clone()),
+            },
+        }
+    }
 }
 
-pub trait GetReduction<T>
-where
-{
+impl<S> GetNormalForm for S where S: GetReduction<S> + Sized + Clone {}
+
+pub trait GetReduction<T> {
     fn get_reduction(&self) -> Option<T>;
 }
 
-impl<T, U> GetNormalForm<T> for U
+impl<T, U> GetReduction<T> for U
 where
-    T: GetNormalForm<T>,
     U: MaybeConcept<T>,
+    T: GetReduction<T>,
 {
-    fn get_normal_form(&self) -> ZiaResult<Option<T>> {
+    fn get_reduction(&self) -> Option<T> {
         match self.get_concept() {
-            None => Ok(None),
-            Some(c) => c.get_normal_form(),
+            None => None,
+            Some(c) => c.get_reduction(),
         }
     }
 }
@@ -101,13 +109,13 @@ where
         match ast.get_expansion() {
             Some((ref mut left, ref right)) => match right.get_id() {
                 Some(id) => match id {
-                    REDUCTION => Ok(try!(left.recursively_reduce()).to_string()),
-                    DEFINE => Ok(try!(left.expand()).to_string()),
+                    REDUCTION => Ok(left.recursively_reduce().to_string()),
+                    DEFINE => Ok(left.expand().to_string()),
                     _ => self.call_as_righthand(left, right),
                 },
                 None => self.call_as_righthand(left, right),
             },
-            None => Err(ZiaError:: NotAProgram),
+            None => Err(ZiaError::NotAProgram),
         }
     }
 }
@@ -133,4 +141,5 @@ where
         + SyntaxFactory<T>
         + Add<U, Output = U>
         + Display,
-{}
+{
+}

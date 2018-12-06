@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::abstract_concept::AbstractConcept;
 use concepts::ConceptRef;
@@ -24,7 +24,7 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetNormalForm};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveNormalForm;
 use traits::call::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
-use traits::call::{GetReduction, GetNormalForm};
+use traits::call::GetReduction;
 use traits::syntax_converter::label::GetNormalFormOf;
 use traits::{GetDefinition, Id};
 use utils::ZiaResult;
@@ -108,14 +108,8 @@ impl Id for StringConcept {
 }
 
 impl GetReduction<ConceptRef> for StringConcept {
-	fn get_reduction(&self) -> Option<ConceptRef> {
-		self.abstract_concept.get_reduction()
-	}
-}
-
-impl GetNormalForm<ConceptRef> for StringConcept {
-    fn get_normal_form(&self) -> ZiaResult<Option<ConceptRef>> {
-        self.abstract_concept.get_normal_form()
+    fn get_reduction(&self) -> Option<ConceptRef> {
+        self.abstract_concept.get_reduction()
     }
 }
 
@@ -126,7 +120,7 @@ impl GetNormalFormOf<ConceptRef> for StringConcept {
 }
 
 impl SetNormalForm<ConceptRef> for StringConcept {
-    fn set_normal_form(&mut self, concept: &ConceptRef) -> ZiaResult<()> {
+    fn set_normal_form(&mut self, concept: &ConceptRef) {
         self.abstract_concept.set_normal_form(concept)
     }
     fn add_normal_form_of(&mut self, concept: &ConceptRef) {

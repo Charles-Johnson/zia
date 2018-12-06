@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use constants::LABEL;
 use traits::{GetDefinition, Id};
@@ -27,11 +27,13 @@ where
         for label in self.get_normal_form_of() {
             match label.get_definition() {
                 None => continue,
-                Some((r, x)) => if r.get_id() == LABEL {
-                    candidates.push(x)
-                } else {
-                    continue;
-                },
+                Some((r, x)) => {
+                    if r.get_id() == LABEL {
+                        candidates.push(x)
+                    } else {
+                        continue;
+                    }
+                }
             };
         }
         match candidates.len() {
@@ -46,7 +48,8 @@ impl<S, T> Label<T> for S
 where
     T: GetDefinition<T> + GetNormalFormOf<T> + Clone + Id,
     S: GetNormalFormOf<T>,
-{}
+{
+}
 
 pub trait GetNormalFormOf<T> {
     fn get_normal_form_of(&self) -> Vec<T>;

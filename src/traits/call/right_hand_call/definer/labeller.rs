@@ -12,13 +12,13 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::call::MaybeConcept;
-use utils::ZiaResult;
+use traits::call::{GetReduction, MaybeConcept};
+use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptAdder<T> {
     fn add_concept(&mut self, &T);
@@ -26,22 +26,30 @@ pub trait ConceptAdder<T> {
 
 pub trait UpdateNormalForm
 where
-    Self: SetNormalForm<Self>,
+    Self: GetReduction<Self> + SetNormalForm<Self> + PartialEq,
 {
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        try!(self.set_normal_form(normal_form));
+        if self == normal_form {
+            return Err(ZiaError::CyclicReduction);
+        }
+        if let Some(ref n) = self.get_reduction() {
+            if n == normal_form {
+                return Err(ZiaError::RedundantReduction);
+            }
+        }
+        self.set_normal_form(normal_form);
         normal_form.add_normal_form_of(self);
         Ok(())
     }
 }
 
-impl<T> UpdateNormalForm for T where T: SetNormalForm<T> {}
+impl<T> UpdateNormalForm for T where T: SetNormalForm<T> + GetReduction<T> + PartialEq {}
 
 pub trait SetNormalForm<T>
 where
     Self: marker::Sized,
 {
-    fn set_normal_form(&mut self, &T) -> ZiaResult<()>;
+    fn set_normal_form(&mut self, &T);
     fn add_normal_form_of(&mut self, &T);
 }
 
@@ -119,7 +127,8 @@ impl<S, T> Labeller<T> for S
 where
     T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
     S: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
-{}
+{
+}
 
 pub trait StringMaker<T>
 where
@@ -163,7 +172,8 @@ impl<S, T> FindOrInsertDefinition<T> for S
 where
     T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
     S: AbstractMaker<T>,
-{}
+{
+}
 
 pub trait AbstractMaker<T>
 where
@@ -182,7 +192,8 @@ impl<S, T> AbstractMaker<T> for S
 where
     T: AbstractFactory,
     S: ConceptAdder<T> + ConceptNumber,
-{}
+{
+}
 
 pub trait AbstractFactory {
     fn new_abstract(usize) -> Self;

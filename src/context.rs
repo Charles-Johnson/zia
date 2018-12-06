@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
 use concepts::string_concept::StringRef;
@@ -27,6 +27,7 @@ use traits::call::Call;
 use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
 use traits::Id;
 
+#[derive(Default)]
 pub struct Context {
     string_map: HashMap<String, StringRef>,
     concepts: Vec<ConceptRef>,
@@ -34,22 +35,19 @@ pub struct Context {
 
 impl Context {
     pub fn new() -> Context {
-        let mut cont = Context {
-            string_map: HashMap::new(),
-            concepts: Vec::new(),
-        };
+        let mut cont = Context::default();
         cont.setup().unwrap();
         cont
     }
     pub fn execute(&mut self, command: &str) -> String {
         let ast = match self.ast_from_expression(command) {
-			Ok(a) => a,
-			Err(e) => return e.to_string(),
-		};
+            Ok(a) => a,
+            Err(e) => return e.to_string(),
+        };
         match self.call(&ast) {
-			Ok(s) => s,
-			Err(e) => e.to_string(),
-		}
+            Ok(s) => s,
+            Err(e) => e.to_string(),
+        }
     }
     fn add_string(&mut self, string_ref: &StringRef) {
         self.string_map
