@@ -137,11 +137,13 @@ where
 				REDUCTION => Ok(left.recursively_reduce().to_string()),
 				DEFINE => Ok(left.expand().to_string()),
 				_ => {
-					let normal_form = &right.recursively_reduce();
-					if normal_form == right {
-						self.call_as_righthand(left, right)
+					println!("Concept number {}", c.get_id());
+					let right_reduction = c.get_reduction();
+					if let Some(r) = right_reduction  {
+						println!("Reduces to {}", r.to_string());
+						self.call_pair(left, &r.to_ast())
 					} else {
-						self.call_pair(left, normal_form)
+						self.call_as_righthand(left, right)
 					}
 				},
 			}
