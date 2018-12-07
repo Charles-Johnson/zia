@@ -110,6 +110,13 @@ mod reductions {
         assert_eq!(cont.execute("a ->"), "c");
     }
     #[test]
+    fn leapfrog_reduction_rule() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("a (-> b)"), "");
+        assert_eq!(cont.execute("b (-> c)"), "");
+        assert_eq!(cont.execute("a (-> c)"), "");
+    }
+    #[test]
     fn redundancy() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (-> b)"), "");
@@ -123,6 +130,11 @@ mod reductions {
 mod definitions {
     use utils::ZiaError;
     use Context;
+	#[test]
+    fn fresh_symbol() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("a :="), "a");
+    }
     #[test]
     fn fresh_pair() {
         let mut cont = Context::new();
@@ -208,6 +220,23 @@ mod definitions {
         );
     }
     #[test]
+    fn nested_definition_loop() {
+        let mut cont = Context::new();
+        assert_eq!(
+            cont.execute("a (:= ((a b) b))"),
+            ZiaError::InfiniteDefinition.to_string()
+        );
+    }
+    #[test]
+    fn chained_definitions_loop() {
+        let mut cont = Context::new();
+		assert_eq!(cont.execute("c (:= (a b))"), "");
+        assert_eq!(
+            cont.execute("a (:= (c b))"),
+            ZiaError::InfiniteDefinition.to_string()
+        );
+    }
+    #[test]
     fn remove_definition() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (:= (b c))"), "");
@@ -231,6 +260,7 @@ mod definitions {
 #[cfg(test)]
 mod definitions_and_reductions {
     use Context;
+	use utils::ZiaError;
     #[test]
     fn indirect_reduction() {
         let mut cont = Context::new();
@@ -240,6 +270,15 @@ mod definitions_and_reductions {
         assert_eq!(cont.execute("a ->"), "d e");
         assert_eq!(cont.execute("f (:= (d e))"), "");
         assert_eq!(cont.execute("a ->"), "f");
+    }
+	#[test]
+    fn sneeky_infinite_reduction_chain() {
+        let mut cont = Context::new();
+		assert_eq!(cont.execute("c (-> a)"), "");
+        assert_eq!(
+            cont.execute("a (:= (c b))"),
+            ZiaError::ExpandingReduction.to_string()
+        );
     }
 }
 #[cfg(test)]

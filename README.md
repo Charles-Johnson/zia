@@ -1,13 +1,14 @@
 # `zia`: Interpreter for the Zia programming language.
 
-The Zia project aims to allow programs to be easily adaptable. In contrast to functional 
-programming, in which program data is immutable wherever possible, Zia program data is mutable 
-wherever possible. In contrast to traditional interpreted languages, Zia source code plays a role 
-similar to database query languages. In contrast to traditional databases, Zia further abstracts 
-away data representation details (such as tables and columns) and allows programs to be stored. 
+The Zia project aims to allow programs to be easily adaptable to changing requirements with as much
+user-defined syntax as possible. In contrast to functional programmers, which avoid changing 
+state wherever possible, Zia programmers seek to change the state of their program wherever 
+possible without crashing. In contrast to traditional interpreted languages, Zia source code plays 
+a role similar to database query languages. In contrast to traditional databases, Zia further 
+abstracts away data representation details (such as tables and columns) and allows programs to be stored. 
 
-The Zia syntax represents a binary tree where parentheses group a pair of expressions and 
-a space separates a pair of expressions.
+The Zia syntax represents a binary tree where parentheses group a pair of expressions and a space 
+separates a pair of expressions.
 
 e.g.
 ```
@@ -30,12 +31,12 @@ Currently, 4 types of low-level operations have been implemented using 2 of the 
 Reduction symbol: `->`
 
 `->` can be used to specify reduction rules for concepts given by expressions. For example
-`a (-> b)` represents the command to specify the rule that the concept labelled by `a` reduces 
-to the concept labelled by `b`.
+`a (-> b)` represents the command to specify the rule that the concept labelled by `a` reduces to 
+the concept labelled by `b`.
 
-`->` is also used to print the symbol of the normal form of a concept. For example `a ->`
-represents the command to print `b` in the above case of `a (-> b)` but `c ->` prints `c` because
-no reduction rule exists for `c`.
+`->` is also used to print the symbol of the normal form (recursive reduction) of a concept. For 
+example `a ->` represents the command to print `b` in the above case of `a (-> b)` but `c ->` 
+prints `c` because no reduction rule exists for `c`.
 
 Reduction rules chain together. For example if `d (-> e)` and `e (-> f)` are executed then
 executing `d ->` will print `f`.
@@ -52,7 +53,8 @@ normal form of `d` is the normal form of `g`" even though `d` already reduces to
 
 Definition symbol: `:=`
 
-`:=` can be used to label a binary tree of concepts or relabel of a concept. For example `c (:= (a b))` means graphically:
+`:=` can be used to label a binary tree of concepts or relabel a concept. For example 
+`c (:= (a b))` means graphically:
 ```
  c
 / \
