@@ -297,6 +297,13 @@ mod other {
 		assert_eq!(cont.execute("a (-> :=)"), "");
         assert_eq!(cont.execute("b a"), "b");
 	}
+	#[test]
+	fn builtin_concept_reduction() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute(":= (-> a)"), "");
+		assert_eq!(cont.execute("b (-> :=)"), "");
+		assert_eq!(cont.execute("c b"), "c");
+	}
     #[test]
     fn empty_parentheses() {
         let mut cont = Context::new();
