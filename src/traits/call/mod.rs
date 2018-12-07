@@ -117,14 +117,7 @@ where
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
         match ast.get_expansion() {
-            Some((ref mut left, ref right)) => match right.get_id() {
-                Some(id) => match id {
-                    REDUCTION => Ok(left.recursively_reduce().to_string()),
-                    DEFINE => Ok(left.expand().to_string()),
-                    _ => self.call_as_righthand(left, right),
-                },
-                None => self.call_as_righthand(left, right),
-            },
+            Some((ref mut left, ref right)) => self.call_pair(left, right),
             None => {
 				match self.try_expanding_then_call(ast) {
 					Ok(s) => return Ok(s),
@@ -138,6 +131,23 @@ where
 			},
         }
     }
+	fn call_pair(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
+		match right.get_concept() {
+			Some(c) => match c.get_id() {
+				REDUCTION => Ok(left.recursively_reduce().to_string()),
+				DEFINE => Ok(left.expand().to_string()),
+				_ => {
+					let normal_form = &right.recursively_reduce();
+					if normal_form == right {
+						self.call_as_righthand(left, right)
+					} else {
+						self.call_pair(left, normal_form)
+					}
+				},
+			}
+			None => self.call_as_righthand(left, right),
+		}
+	}
 	fn try_expanding_then_call(&mut self, ast: &U) -> ZiaResult<String> {
 		let expansion = &ast.expand();
 		if expansion != ast {
