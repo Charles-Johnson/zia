@@ -247,15 +247,50 @@ mod other {
     use utils::ZiaError;
     use Context;
     #[test]
-    fn not_a_program() {
+    fn fresh_symbol_is_not_a_program() {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a"), ZiaError::NotAProgram.to_string());
+	}
+	#[test]
+    fn fresh_pair_is_not_a_program() {
+        let mut cont = Context::new();
         assert_eq!(cont.execute("a a"), ZiaError::NotAProgram.to_string());
+	}
+	#[test]
+    fn fresh_nested_pair_is_not_a_program() {
+        let mut cont = Context::new();
         assert_eq!(cont.execute("a (a a)"), ZiaError::NotAProgram.to_string());
-        assert_eq!(cont.execute("a (-> b)"), "");
+	}
+	#[test]
+	fn used_symbol_is_not_a_program() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (-> b)"), "");
+        assert_eq!(cont.execute("a"), ZiaError::NotAProgram.to_string());
+	}
+	#[test]
+	fn used_symbol_in_a_pair_is_not_a_program() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (-> b)"), "");
         assert_eq!(cont.execute("a a"), ZiaError::NotAProgram.to_string());
+	}
+	#[test]
+	fn used_symbol_in_a_nested_pair_is_not_a_program() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (-> b)"), "");
         assert_eq!(cont.execute("a (a a)"), ZiaError::NotAProgram.to_string());
-    }
+	}
+	#[test]
+	fn symbol_whose_normal_form_is_a_program_is_a_program() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (-> (a :=))"), "");
+        assert_eq!(cont.execute("a"), "a");
+	}
+	#[test]
+	fn symbol_whose_definition_is_a_program_is_a_program() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (:= (b :=))"), "");
+        assert_eq!(cont.execute("a"), "b");
+	}
     #[test]
     fn empty_parentheses() {
         let mut cont = Context::new();

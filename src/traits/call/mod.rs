@@ -113,7 +113,6 @@ where
         + MaybeId<T>
         + SyntaxFactory<T>
         + Add<U, Output = U>
-        + Clone
         + Display,
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
