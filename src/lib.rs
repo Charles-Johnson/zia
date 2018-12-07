@@ -300,15 +300,15 @@ mod other {
 	#[test]
 	fn lazy_normal_form_evaluation() {
 		let mut cont = Context::new();
-		assert_eq!(cont.execute(":= (-> a)"), "");
-		assert_eq!(cont.execute("b (-> :=)"), "");
+		assert_eq!(cont.execute("-> (-> a)"), "");
+		assert_eq!(cont.execute("b (-> ->)"), "");
 		assert_eq!(cont.execute("c b"), "c");
 	}
 	#[test]
 	fn lazy_reduction_evaluation() {
 		let mut cont = Context::new();
-		assert_eq!(cont.execute(":= (-> a)"), "");
-		assert_eq!(cont.execute("b (-> :=)"), "");
+		assert_eq!(cont.execute("-> (-> a)"), "");
+		assert_eq!(cont.execute("b (-> ->)"), "");
 		assert_eq!(cont.execute("c (b d)"), "");
 		assert_eq!(cont.execute("c b"), "d");
 	}

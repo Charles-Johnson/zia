@@ -22,9 +22,11 @@ use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
+use std::ops::Add;
 use traits::call::label_getter::LabelGetter;
+use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
-use traits::Id;
+use traits::{Id, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
 
 pub trait RightHandCall<T, U>
@@ -36,23 +38,34 @@ where
         + AbstractFactory
         + StringFactory
         + LabelGetter
-        + MaybeDisconnected,
-    U: MaybeId<T> + Container + Pair<U> + Display,
+        + MaybeDisconnected
+		+ SyntaxFromConcept<U>,
+    U: MaybeConcept<T> + Container + Pair<U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
     fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
         match right.get_expansion() {
-            Some((ref rightleft, ref mut rightright)) => match rightleft.get_id() {
-                Some(id) => match id {
-                    REDUCTION => self.try_reduction(left, rightright),
-                    DEFINE => self.try_definition(left, rightright),
-                    _ => Err(ZiaError::NotAProgram),
-                },
-                None => Err(ZiaError::NotAProgram),
-            },
+            Some((ref rightleft, ref mut rightright)) => self.match_righthand_pair(left, rightleft, rightright),
             None => Err(ZiaError::NotAProgram),
         }
     }
+	fn match_righthand_pair(&mut self, left: &mut U, rightleft: &U, rightright: &mut U) -> ZiaResult<String> {
+		match rightleft.get_concept() {
+            Some(c) => match c.get_id() {
+                REDUCTION => self.try_reduction(left, rightright),
+                DEFINE => self.try_definition(left, rightright),
+                _ => { 
+					let rightleft_reduction = c.get_reduction();
+					if let Some(r) = rightleft_reduction  {
+						self.match_righthand_pair(left, &r.to_ast(), rightright)
+					} else {
+						Err(ZiaError::NotAProgram)
+					}
+				},
+            },
+            None => Err(ZiaError::NotAProgram),
+		}
+	}
     fn try_reduction(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
@@ -89,8 +102,9 @@ where
         + AbstractFactory
         + StringFactory
         + LabelGetter
-        + MaybeDisconnected,
-    U: MaybeId<T> + Container + Pair<U> + Display,
+        + MaybeDisconnected
+		+ SyntaxFromConcept<U>,
+    U: MaybeConcept<T> + Container + Pair<U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
 }
