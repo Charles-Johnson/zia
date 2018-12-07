@@ -18,8 +18,6 @@
 pub mod call;
 pub mod syntax_converter;
 
-use self::call::{MaybeConcept, MightExpand};
-
 pub trait Id {
     fn get_id(&self) -> usize;
 }
@@ -30,26 +28,4 @@ pub trait SyntaxFactory<T> {
 
 pub trait GetDefinition<T> {
     fn get_definition(&self) -> Option<(T, T)>;
-}
-
-impl<S, T> GetDefinition<T> for S
-where
-    S: MaybeConcept<T> + MightExpand,
-    T: GetDefinition<T>,
-{
-    fn get_definition(&self) -> Option<(T, T)> {
-        match self.get_concept() {
-            None => match self.get_expansion() {
-                Some((left, right)) => {
-                    if let (Some(lc), Some(rc)) = (left.get_concept(), right.get_concept()) {
-                        Some((lc, rc))
-                    } else {
-                        None
-                    }
-                }
-                None => None,
-            },
-            Some(c) => c.get_definition(),
-        }
-    }
 }

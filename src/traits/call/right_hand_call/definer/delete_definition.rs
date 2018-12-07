@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker::Sized;
-use traits::call::MaybeConcept;
 use traits::GetDefinition;
 
 pub trait DeleteDefinition
@@ -40,26 +39,4 @@ pub trait RemoveDefinition<T> {
     fn remove_definition(&mut self);
     fn remove_as_lefthand_of(&mut self, &T);
     fn remove_as_righthand_of(&mut self, &T);
-}
-
-impl<T, U> RemoveDefinition<T> for U
-where
-    T: RemoveDefinition<T>,
-    U: MaybeConcept<T>,
-{
-    fn remove_definition(&mut self) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_definition()
-        }
-    }
-    fn remove_as_lefthand_of(&mut self, definition: &T) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_as_lefthand_of(definition)
-        }
-    }
-    fn remove_as_righthand_of(&mut self, definition: &T) {
-        if let Some(mut c) = self.get_concept() {
-            c.remove_as_righthand_of(definition)
-        }
-    }
 }

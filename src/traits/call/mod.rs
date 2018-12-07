@@ -20,20 +20,18 @@ pub mod reduce;
 pub mod right_hand_call;
 
 use self::expander::Expander;
-use self::label_getter::LabelGetter;
 pub use self::reduce::{Reduce, SyntaxFromConcept};
 use self::right_hand_call::definer::delete_definition::DeleteDefinition;
 use self::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
 use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReduction;
-use self::right_hand_call::definer::{MaybeDisconnected, Pair};
-use self::right_hand_call::{Container, MaybeId, RightHandCall};
+use self::right_hand_call::definer::MaybeDisconnected;
+use self::right_hand_call::{Container, RightHandCall};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use std::marker::Sized;
-use std::ops::Add;
-use traits::{GetDefinition, SyntaxFactory};
+use traits::GetDefinition;
 use utils::{ZiaError, ZiaResult};
 
 pub trait FindWhatReducesToIt<T> {
@@ -81,19 +79,6 @@ pub trait GetReduction<T> {
     fn get_reduction(&self) -> Option<T>;
 }
 
-impl<T, U> GetReduction<T> for U
-where
-    U: MaybeConcept<T>,
-    T: GetReduction<T>,
-{
-    fn get_reduction(&self) -> Option<T> {
-        match self.get_concept() {
-            None => None,
-            Some(c) => c.get_reduction(),
-        }
-    }
-}
-
 pub trait Call<T, U>
 where
     Self: RightHandCall<T, U>,
@@ -103,16 +88,12 @@ where
         + DeleteDefinition
         + DeleteReduction
         + UpdateNormalForm
-        + LabelGetter
+        + SyntaxFromConcept<U>
         + MaybeDisconnected
         + Display,
     U: Reduce<T>
         + Expander<T>
-        + Pair<U>
         + Container
-        + MaybeId<T>
-        + SyntaxFactory<T>
-        + Add<U, Output = U>
         + Display,
 {
     fn call(&mut self, ast: &U) -> ZiaResult<String> {
@@ -174,16 +155,12 @@ where
         + DeleteDefinition
         + DeleteReduction
         + UpdateNormalForm
-        + LabelGetter
+		+ SyntaxFromConcept<U>
         + MaybeDisconnected
         + Display,
     U: Expander<T>
         + Reduce<T>
-        + Pair<U>
         + Container
-        + MaybeId<T>
-        + SyntaxFactory<T>
-        + Add<U, Output = U>
         + Display,
 {
 }

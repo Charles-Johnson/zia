@@ -23,10 +23,9 @@ use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use std::ops::Add;
-use traits::call::label_getter::LabelGetter;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
-use traits::{Id, SyntaxFactory};
+use traits::SyntaxFactory;
 use utils::{ZiaError, ZiaResult};
 
 pub trait RightHandCall<T, U>
@@ -37,10 +36,9 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + LabelGetter
         + MaybeDisconnected
 		+ SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
+    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
     fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
@@ -101,10 +99,9 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + LabelGetter
         + MaybeDisconnected
 		+ SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
+    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
 }
@@ -123,23 +120,3 @@ where
 }
 
 impl<T> Container for T where T: PartialEq + MightExpand {}
-
-pub trait MaybeId<T>
-where
-    Self: MaybeConcept<T>,
-    T: Id,
-{
-    fn get_id(&self) -> Option<usize> {
-        match self.get_concept() {
-            None => None,
-            Some(c) => Some(c.get_id()),
-        }
-    }
-}
-
-impl<T, U> MaybeId<T> for U
-where
-    U: MaybeConcept<T>,
-    T: Id,
-{
-}

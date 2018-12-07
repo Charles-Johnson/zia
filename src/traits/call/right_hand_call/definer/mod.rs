@@ -28,9 +28,8 @@ use self::refactor::refactor_id::ConceptCleaner;
 use constants::LABEL;
 use std::fmt::Display;
 use std::marker::Sized;
-use traits::call::label_getter::{GetDefinitionOf, LabelGetter};
-use traits::call::{GetReduction, MaybeConcept, MightExpand};
-use traits::syntax_converter::label::FindWhatItsANormalFormOf;
+use traits::call::label_getter::{GetDefinitionOf, FindDefinition};
+use traits::call::{GetReduction, MaybeConcept, MightExpand, FindWhatReducesToIt};
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
@@ -47,8 +46,9 @@ where
         + StringFactory
         + AbstractFactory
         + Unlabeller
-        + MaybeDisconnected,
-    U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
+        + MaybeDisconnected
+		+ FindDefinition<T>,
+    U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
     Self: ConceptMaker<T, U> + ConceptCleaner<T>,
 {
     fn define(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
@@ -128,7 +128,11 @@ where
         self.label(concept, new_label)
     }
     fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
-        let new_syntax_tree = U::from_pair(syntax, left, right);
+		let mut definition_concept: Option<T> = None;
+		if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
+			definition_concept = l.find_definition(r);
+		} 
+        let new_syntax_tree = U::from_pair(syntax, definition_concept, left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
     }
@@ -142,21 +146,22 @@ where
         + DeleteDefinition
         + StringFactory
         + AbstractFactory
-        + LabelGetter
-        + MaybeDisconnected,
-    U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
+        + MaybeDisconnected
+		+ Unlabeller
+		+ FindDefinition<T>,
+    U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
     S: ConceptMaker<T, U> + ConceptCleaner<T>,
 {
 }
 
-pub trait Pair<T> {
-    fn from_pair(&str, &T, &T) -> Self;
+pub trait Pair<T, U> {
+    fn from_pair(&str, Option<T>, &U, &U) -> Self;
 }
 
 pub trait MaybeDisconnected
 where
     Self: GetReduction<Self>
-        + FindWhatItsANormalFormOf
+        + FindWhatReducesToIt<Self>
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
         + Id
@@ -167,7 +172,7 @@ where
             && self.get_definition().is_none()
             && self.get_lefthand_of().is_empty()
             && self.righthand_of_without_label_is_empty()
-            && self.find_what_its_a_normal_form_of().is_empty()
+            && self.find_what_reduces_to_it().is_empty()
     }
     fn righthand_of_without_label_is_empty(&self) -> bool {
         for concept in self.get_righthand_of() {
@@ -182,6 +187,6 @@ where
 }
 
 impl<T> MaybeDisconnected for T where
-    T: GetReduction<T> + FindWhatItsANormalFormOf + GetDefinition<T> + GetDefinitionOf<T> + Id
+    T: GetReduction<T> + FindWhatReducesToIt<T> + GetDefinition<T> + GetDefinitionOf<T> + Id
 {
 }

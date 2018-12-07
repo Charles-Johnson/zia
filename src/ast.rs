@@ -65,28 +65,24 @@ impl SyntaxFactory<ConceptRef> for SyntaxToMaybeConcept {
     }
 }
 
-impl Pair<AbstractSyntaxTree> for AbstractSyntaxTree {
+impl Pair<ConceptRef, AbstractSyntaxTree> for AbstractSyntaxTree {
     fn from_pair(
         syntax: &str,
+		concept: Option<ConceptRef>,
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
     ) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Expression(Expression::from_pair(syntax, lefthand, righthand))
+        AbstractSyntaxTree::Expression(Expression::from_pair(syntax, concept, lefthand, righthand))
     }
 }
 
-impl Pair<AbstractSyntaxTree> for Expression {
+impl Pair<ConceptRef, AbstractSyntaxTree> for Expression {
     fn from_pair(
         syntax: &str,
+		concept: Option<ConceptRef>,
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
     ) -> Expression {
-        let mut concept: Option<ConceptRef> = None;
-        if let Some(rc) = righthand.get_concept() {
-            if let Some(def) = lefthand.find_definition(&rc) {
-                concept = Some(def.clone());
-            }
-        }
         Expression {
             syntax_to_maybe_concept: SyntaxToMaybeConcept::new(syntax, concept),
             lefthand: Box::new(lefthand.clone()),
@@ -187,20 +183,22 @@ impl Clone for SyntaxToMaybeConcept {
 impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
     type Output = AbstractSyntaxTree;
     fn add(self, other: AbstractSyntaxTree) -> AbstractSyntaxTree {
-        let left_string: String;
-        match self {
-            AbstractSyntaxTree::Expression(ref e) => {
-                left_string = "(".to_string() + &e.to_string() + ")"
-            }
-            AbstractSyntaxTree::Atom(ref a) => left_string = a.to_string(),
-        };
-        let right_string: String;
-        match other {
-            AbstractSyntaxTree::Expression(ref e) => {
-                right_string = "(".to_string() + &e.to_string() + ")"
-            }
-            AbstractSyntaxTree::Atom(ref a) => right_string = a.to_string(),
-        };
-        AbstractSyntaxTree::from_pair(&(left_string + " " + &right_string), &self, &other)
+        let left_string = self.display_joint();
+        let right_string = other.display_joint();
+      	let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
+			l.find_definition(&r)
+		} else {
+			None
+		};
+        AbstractSyntaxTree::from_pair(&(left_string + " " + &right_string), definition, &self, &other)
     }
+}
+
+impl AbstractSyntaxTree {
+	fn display_joint(&self) -> String {
+		match *self {
+			AbstractSyntaxTree::Expression(ref e) => "(".to_string() + &e.to_string() + ")",
+			AbstractSyntaxTree::Atom(ref a) => a.to_string(),		
+		}
+	}
 }

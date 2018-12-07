@@ -18,7 +18,8 @@ use std::fmt::Display;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
-use traits::call::{GetNormalForm, LabelGetter, MaybeConcept, MightExpand};
+use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
+use traits::call::label_getter::GetDefinitionOf;
 use utils::ZiaResult;
 
 pub trait ConceptMaker<T, U>
@@ -28,7 +29,7 @@ where
         + InsertDefinition
         + GetNormalForm
         + UpdateNormalForm
-        + LabelGetter,
+		+ GetDefinitionOf<T>,
     U: MaybeConcept<T> + MightExpand + Display,
     Self: Labeller<T>,
 {

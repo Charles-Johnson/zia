@@ -16,7 +16,7 @@
 */
 use constants::LABEL;
 use std::fmt::Display;
-use traits::call::{GetNormalForm, MaybeConcept};
+use traits::call::GetNormalForm;
 use traits::{GetDefinition, Id};
 
 pub trait LabelGetter
@@ -26,7 +26,6 @@ where
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
         + Clone
-        + PartialEq
         + MaybeString,
 {
     fn get_concept_of_label(&self) -> Option<Self> {
@@ -59,7 +58,6 @@ impl<T> LabelGetter for T where
         + GetDefinition<T>
         + GetDefinitionOf<T>
         + Clone
-        + PartialEq
         + Display
         + MaybeString
 {
@@ -101,23 +99,4 @@ where
 pub trait GetDefinitionOf<T> {
     fn get_lefthand_of(&self) -> Vec<T>;
     fn get_righthand_of(&self) -> Vec<T>;
-}
-
-impl<T, U> GetDefinitionOf<T> for U
-where
-    T: GetDefinitionOf<T>,
-    U: MaybeConcept<T>,
-{
-    fn get_lefthand_of(&self) -> Vec<T> {
-        match self.get_concept() {
-            None => Vec::new(),
-            Some(c) => c.get_lefthand_of(),
-        }
-    }
-    fn get_righthand_of(&self) -> Vec<T> {
-        match self.get_concept() {
-            None => Vec::new(),
-            Some(c) => c.get_righthand_of(),
-        }
-    }
 }

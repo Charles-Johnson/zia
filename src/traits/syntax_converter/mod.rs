@@ -19,13 +19,13 @@ pub mod label;
 use self::label::Label;
 use std::ops::Add;
 use token::parse_line;
-use traits::{GetDefinition, Id, SyntaxFactory};
+use traits::SyntaxFactory;
 use utils::{ZiaError, ZiaResult};
 
 pub trait SyntaxConverter<T, U>
 where
     Self: SyntaxFinder<T>,
-    T: Clone + Id + GetDefinition<T> + Label,
+    T: Label,
     U: SyntaxFactory<T> + Add<U, Output = U>,
 {
     fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
@@ -58,14 +58,14 @@ where
 impl<S, T, U> SyntaxConverter<T, U> for S
 where
     S: SyntaxFinder<T>,
-    T: Clone + Id + GetDefinition<T> + Label,
+    T: Label,
     U: SyntaxFactory<T> + Add<U, Output = U>,
 {
 }
 
 pub trait SyntaxFinder<T>
 where
-    T: Label + GetDefinition<T> + Clone + Id,
+    T: Label,
 {
     fn get_string_concept(&self, &str) -> Option<T>;
     fn concept_from_label(&self, s: &str) -> Option<T> {

@@ -27,7 +27,7 @@ where
         + Add<Self, Output = Self>
         + MaybeConcept<T>
         + MightExpand
-        + Pair<Self>
+        + Pair<T, Self>
         + Add<Self, Output = Self>
         + Clone,
 {
@@ -52,15 +52,15 @@ where
 
 impl<S, T> Reduce<T> for S
 where
-    T: SyntaxFromConcept<S> + LabelGetter,
-    S: SyntaxFactory<T> + Add<S, Output = S> + MaybeConcept<T> + MightExpand + Pair<S> + Clone,
+    T: SyntaxFromConcept<S>,
+    S: SyntaxFactory<T> + Add<S, Output = S> + MaybeConcept<T> + MightExpand + Pair<T, S> + Clone,
 {
 }
 
 pub trait SyntaxFromConcept<T>
 where
-    Self: LabelGetter,
-    T: SyntaxFactory<Self> + Add<T, Output = T> + MaybeConcept<Self> + Pair<T> + Clone,
+    Self: LabelGetter + FindDefinition<Self> + PartialEq,
+    T: SyntaxFactory<Self> + Add<T, Output = T> + MaybeConcept<Self> + Pair<Self, T> + Clone,
 {
     fn reduce(&self) -> Option<T> {
         match self.get_normal_form() {
@@ -93,12 +93,12 @@ where
 
 impl<S, T> SyntaxFromConcept<T> for S
 where
-    S: LabelGetter,
-    T: SyntaxFactory<S> + Add<T, Output = T> + MaybeConcept<Self> + Pair<T> + Clone,
+    S: LabelGetter + FindDefinition<S> + PartialEq,
+    T: SyntaxFactory<S> + Add<T, Output = T> + MaybeConcept<Self> + Pair<S, T> + Clone,
 {
 }
 
-fn match_left_right<T: LabelGetter, U: Add<U, Output = U> + Pair<U> + MaybeConcept<T>>(
+fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Add<U, Output = U> + Pair<T, U> + MaybeConcept<T>>(
     left: Option<U>,
     right: Option<U>,
     original_left: U,
@@ -112,14 +112,14 @@ fn match_left_right<T: LabelGetter, U: Add<U, Output = U> + Pair<U> + MaybeConce
     }
 }
 
-fn contract_pair<T: LabelGetter, U: Add<U, Output = U> + Pair<U> + MaybeConcept<T>>(
+fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Add<U, Output = U> + Pair<T, U> + MaybeConcept<T>>(
     lefthand: U,
     righthand: U,
 ) -> U {
     if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
         if let Some(def) = lc.find_definition(&rc) {
             if let Some(ref a) = def.get_label() {
-                return U::from_pair(a, &lefthand, &righthand);
+                return U::from_pair(a, Some(def), &lefthand, &righthand);
             }
         }
     }

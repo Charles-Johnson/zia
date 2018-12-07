@@ -15,10 +15,11 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use std::marker;
-use traits::call::label_getter::{FindDefinition, LabelGetter};
+use traits::call::label_getter::FindDefinition;
 use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::call::right_hand_call::Container;
-use traits::call::{GetNormalForm, MaybeConcept, GetReduction};
+use traits::call::{GetNormalForm, GetReduction};
+use traits::call::label_getter::GetDefinitionOf;
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptAdder<T> {
@@ -59,28 +60,6 @@ pub trait SetDefinition<T> {
     fn add_as_righthand_of(&mut self, &T);
 }
 
-impl<T, U> SetDefinition<T> for U
-where
-    T: SetDefinition<T>,
-    U: MaybeConcept<T>,
-{
-    fn set_definition(&mut self, lefthand: &T, righthand: &T) {
-        if let Some(mut c) = self.get_concept() {
-            c.set_definition(lefthand, righthand)
-        }
-    }
-    fn add_as_lefthand_of(&mut self, concept: &T) {
-        if let Some(mut c) = self.get_concept() {
-            c.add_as_lefthand_of(concept)
-        }
-    }
-    fn add_as_righthand_of(&mut self, concept: &T) {
-        if let Some(mut c) = self.get_concept() {
-            c.add_as_righthand_of(concept)
-        }
-    }
-}
-
 pub trait InsertDefinition
 where
     Self: SetDefinition<Self> + marker::Sized + Container + GetReduction<Self>,
@@ -114,7 +93,7 @@ impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized + Conta
 
 pub trait Labeller<T>
 where
-    T: StringFactory + AbstractFactory + LabelGetter + InsertDefinition + UpdateNormalForm,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T>,
     Self: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
@@ -143,7 +122,7 @@ pub trait LabelConcept<T> {
 
 impl<S, T> Labeller<T> for S
 where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + LabelGetter,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T>,
     S: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {
 }

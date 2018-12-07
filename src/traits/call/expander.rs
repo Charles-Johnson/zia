@@ -16,7 +16,6 @@
 */
 use std::fmt::Display;
 use std::ops::Add;
-use traits::call::label_getter::LabelGetter;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
@@ -24,12 +23,12 @@ use traits::SyntaxFactory;
 
 pub trait Expander<T>
 where
-    T: LabelGetter + Display + SyntaxFromConcept<Self>,
+    T: Display + SyntaxFromConcept<Self>,
     Self: MaybeConcept<T>
         + MightExpand
         + Display
         + Clone
-        + Pair<Self>
+        + Pair<T, Self>
         + Add<Self, Output = Self>
         + SyntaxFactory<T>,
 {
@@ -50,12 +49,12 @@ where
 
 impl<S, T> Expander<T> for S
 where
-    T: LabelGetter + Display + SyntaxFromConcept<S>,
+    T: Display + SyntaxFromConcept<S>,
     S: MaybeConcept<T>
         + MightExpand
         + Display
         + Clone
-        + Pair<S>
+        + Pair<T, S>
         + Add<S, Output = S>
         + SyntaxFactory<T>,
 {
