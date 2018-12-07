@@ -282,8 +282,8 @@ mod other {
 	#[test]
 	fn symbol_whose_normal_form_is_a_program_is_a_program() {
 		let mut cont = Context::new();
-		assert_eq!(cont.execute("a (-> (a :=))"), "");
-        assert_eq!(cont.execute("a"), "a");
+		assert_eq!(cont.execute("a (-> (b :=))"), "");
+        assert_eq!(cont.execute("a"), "b");
 	}
 	#[test]
 	fn symbol_whose_definition_is_a_program_is_a_program() {
