@@ -23,8 +23,8 @@ use self::concept_maker::ConceptMaker;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::refactor::delete_normal_form::DeleteReduction;
-use self::refactor::refactor_id::RefactorFrom;
-use self::refactor::{Refactor, Unlabeller};
+use self::refactor::Unlabeller;
+use self::refactor::refactor_id::ConceptCleaner;
 use constants::LABEL;
 use std::fmt::Display;
 use std::marker::Sized;
@@ -42,7 +42,6 @@ pub trait Definer<T, U>
 where
     T: DeleteReduction
         + UpdateNormalForm
-        + RefactorFrom
         + InsertDefinition
         + DeleteDefinition
         + StringFactory
@@ -50,7 +49,7 @@ where
         + Unlabeller
         + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
-    Self: Refactor<T> + ConceptMaker<T, U>,
+    Self: ConceptMaker<T, U> + ConceptCleaner<T>,
 {
     fn define(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
         if after.get_expansion().is_some() {
@@ -139,7 +138,6 @@ impl<S, T, U> Definer<T, U> for S
 where
     T: DeleteReduction
         + UpdateNormalForm
-        + RefactorFrom
         + InsertDefinition
         + DeleteDefinition
         + StringFactory
@@ -147,7 +145,7 @@ where
         + LabelGetter
         + MaybeDisconnected,
     U: MightExpand + MaybeConcept<T> + Pair<U> + PartialEq + Display,
-    S: Refactor<T> + ConceptMaker<T, U>,
+    S: ConceptMaker<T, U> + ConceptCleaner<T>,
 {
 }
 

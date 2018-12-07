@@ -19,7 +19,6 @@ pub mod definer;
 use self::definer::delete_definition::DeleteDefinition;
 use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::definer::refactor::delete_normal_form::DeleteReduction;
-use self::definer::refactor::refactor_id::RefactorFrom;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
@@ -36,7 +35,6 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + RefactorFrom
         + LabelGetter
         + MaybeDisconnected,
     U: MaybeId<T> + Container + Pair<U> + Display,
@@ -90,7 +88,6 @@ where
         + DeleteDefinition
         + AbstractFactory
         + StringFactory
-        + RefactorFrom
         + LabelGetter
         + MaybeDisconnected,
     U: MaybeId<T> + Container + Pair<U> + Display,

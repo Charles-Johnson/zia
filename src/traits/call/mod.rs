@@ -27,7 +27,6 @@ use self::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm,
 };
 use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReduction;
-use self::right_hand_call::definer::refactor::refactor_id::RefactorFrom;
 use self::right_hand_call::definer::{MaybeDisconnected, Pair};
 use self::right_hand_call::{Container, MaybeId, RightHandCall};
 use constants::{DEFINE, REDUCTION};
@@ -98,8 +97,7 @@ where
 pub trait Call<T, U>
 where
     Self: RightHandCall<T, U>,
-    T: RefactorFrom
-        + StringFactory
+    T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
@@ -136,8 +134,7 @@ where
 impl<S, T, U> Call<T, U> for S
 where
     S: RightHandCall<T, U>,
-    T: RefactorFrom
-        + StringFactory
+    T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
