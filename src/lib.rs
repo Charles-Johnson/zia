@@ -189,6 +189,16 @@ mod definitions {
             ZiaError::DefinitionCollision.to_string()
         );
     }
+	#[test]
+    fn defining_used_symbol_as_used_pair() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("f (:= (d e))"), "");
+        assert_eq!(
+            cont.execute("d (:= (b c))"),
+            ZiaError::DefinitionCollision.to_string()
+        );
+    }
     #[test]
     fn definition_loop() {
         let mut cont = Context::new();
