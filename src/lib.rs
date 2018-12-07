@@ -298,11 +298,19 @@ mod other {
         assert_eq!(cont.execute("b a"), "b");
 	}
 	#[test]
-	fn builtin_concept_reduction() {
+	fn lazy_normal_form_evaluation() {
 		let mut cont = Context::new();
 		assert_eq!(cont.execute(":= (-> a)"), "");
 		assert_eq!(cont.execute("b (-> :=)"), "");
 		assert_eq!(cont.execute("c b"), "c");
+	}
+	#[test]
+	fn lazy_reduction_evaluation() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute(":= (-> a)"), "");
+		assert_eq!(cont.execute("b (-> :=)"), "");
+		assert_eq!(cont.execute("c (b d)"), "");
+		assert_eq!(cont.execute("c b"), "d");
 	}
 	#[test]
 	fn builtin_concept_definition() {
