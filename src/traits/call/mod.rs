@@ -125,9 +125,35 @@ where
                 },
                 None => self.call_as_righthand(left, right),
             },
-            None => Err(ZiaError::NotAProgram),
+            None => {
+				match self.try_expanding_then_call(ast) {
+					Ok(s) => return Ok(s),
+					Err(e) => if let ZiaError::NotAProgram = e {
+						()
+					} else {
+						return Err(e)
+					},
+				};
+				self.try_reducing_then_call(ast)
+			},
         }
     }
+	fn try_expanding_then_call(&mut self, ast: &U) -> ZiaResult<String> {
+		let expansion = &ast.expand();
+		if expansion != ast {
+			self.call(expansion)
+		} else {
+			Err(ZiaError::NotAProgram)
+		}
+	}
+	fn try_reducing_then_call(&mut self, ast: &U) -> ZiaResult<String> {
+		let normal_form = &ast.recursively_reduce();
+		if normal_form != ast {
+			self.call(normal_form)
+		} else {
+			Err(ZiaError::NotAProgram)
+		}
+	}
 }
 
 impl<S, T, U> Call<T, U> for S
