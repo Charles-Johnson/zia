@@ -291,6 +291,12 @@ mod other {
 		assert_eq!(cont.execute("a (:= (b :=))"), "");
         assert_eq!(cont.execute("a"), "b");
 	}
+	#[test]
+	fn symbol_whose_normal_form_is_a_builtin_concept() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute("a (-> :=)"), "");
+        assert_eq!(cont.execute("b a"), "b");
+	}
     #[test]
     fn empty_parentheses() {
         let mut cont = Context::new();
