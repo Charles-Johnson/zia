@@ -31,9 +31,9 @@ where
 {
     fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
         if let Some(n) = normal_form.get_normal_form() {
-			if *self == n {
-            	return Err(ZiaError::CyclicReduction);
-			}
+            if *self == n {
+                return Err(ZiaError::CyclicReduction);
+            }
         }
         if let Some(ref n) = self.get_reduction() {
             if n == normal_form {
@@ -48,8 +48,7 @@ where
 
 impl<T> UpdateNormalForm for T where T: GetNormalForm + SetReduction<Self> + PartialEq {}
 
-pub trait SetReduction<T>
-{
+pub trait SetReduction<T> {
     fn make_reduce_to(&mut self, &T);
     fn make_reduce_from(&mut self, &T);
 }
@@ -87,14 +86,14 @@ where
     Self: SetDefinition<Self> + marker::Sized + Container,
 {
     fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) -> ZiaResult<()> {
-		if lefthand.contains(self) || righthand.contains(self) {
-			Err(ZiaError::InfiniteDefinition)
-		} else {
-        	self.set_definition(lefthand, righthand);
-        	lefthand.add_as_lefthand_of(self);
-        	righthand.add_as_righthand_of(self);
-			Ok(())
-		}
+        if lefthand.contains(self) || righthand.contains(self) {
+            Err(ZiaError::InfiniteDefinition)
+        } else {
+            self.set_definition(lefthand, righthand);
+            lefthand.add_as_lefthand_of(self);
+            righthand.add_as_righthand_of(self);
+            Ok(())
+        }
     }
 }
 

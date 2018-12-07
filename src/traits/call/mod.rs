@@ -34,11 +34,11 @@ use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
 use std::marker::Sized;
 use std::ops::Add;
-use traits::{SyntaxFactory, GetDefinition};
+use traits::{GetDefinition, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
 
 pub trait FindWhatReducesToIt<T> {
-	fn find_what_reduces_to_it(&self) -> Vec<T>;
+    fn find_what_reduces_to_it(&self) -> Vec<T>;
 }
 
 pub trait MightExpand
@@ -49,12 +49,12 @@ where
 }
 
 impl<T> MightExpand for T
-where 
-	T: GetDefinition<T>,
+where
+    T: GetDefinition<T>,
 {
-	fn get_expansion(&self) -> Option<(T, T)> {
-		self.get_definition()
-	}
+    fn get_expansion(&self) -> Option<(T, T)> {
+        self.get_definition()
+    }
 }
 
 pub trait MaybeConcept<T> {

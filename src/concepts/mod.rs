@@ -28,7 +28,7 @@ use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetReduction, StringFactory,
 };
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::{GetReduction, FindWhatReducesToIt};
+use traits::call::{FindWhatReducesToIt, GetReduction};
 use traits::{GetDefinition, Id};
 
 pub enum ConceptRef {

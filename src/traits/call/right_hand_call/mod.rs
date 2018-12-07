@@ -60,11 +60,11 @@ where
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
             if let Some(mut c) = syntax.get_concept() {
-				c.delete_reduction();
-            	Ok("".to_string())
-			} else {
-				Err(ZiaError::RedundantReduction)
-			}
+                c.delete_reduction();
+                Ok("".to_string())
+            } else {
+                Err(ZiaError::RedundantReduction)
+            }
         } else {
             let mut syntax_concept = try!(self.concept_from_ast(syntax));
             let mut normal_form_concept = try!(self.concept_from_ast(normal_form));

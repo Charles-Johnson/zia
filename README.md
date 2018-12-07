@@ -52,18 +52,16 @@ normal form of `d` is the normal form of `g`" even though `d` already reduces to
 
 Definition symbol: `:=`
 
-`:=` can be used to label a binary tree of concepts, change the label of a concept
-or merge concepts together. For example `c (:= (a b))` means graphically:
+`:=` can be used to label a binary tree of concepts or relabel of a concept. For example `c (:= (a b))` means graphically:
 ```
  c
 / \
 a b
 ```
 The command `c :=` then prints `a b`. The command `a :=` prints `a`. We can change the symbol of
-`b` to `h` using `b (:= h)`. `c :=` would then print `a h`. We can merge the concepts of `a` and 
-`d` and drop the `d` symbol using `a (:= d)` so `a ->` prints `g` and also `c ->` prints `g h`.
+`b` to `h` using `b (:= h)`. `c :=` would then print `a h`.
 
-To prevent infinite loops, commands like `i (:= (i j))` are not accepted by the interpreter nor
+To prevent infinite recursion, commands like `i (:= (i j))` are not accepted by the interpreter nor
 are commands like `i (-> (i j))`.
 
 API  

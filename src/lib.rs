@@ -34,10 +34,10 @@ mod reductions {
         let mut cont = Context::new();
         assert_eq!(cont.execute("a (-> b)"), "");
         assert_eq!(cont.execute("a ->"), "b");
-	}
-	#[test]
-	fn pair_to_symbol() {
-		let mut cont = Context::new();
+    }
+    #[test]
+    fn pair_to_symbol() {
+        let mut cont = Context::new();
         assert_eq!(cont.execute("(not true) (-> false)"), "");
         assert_eq!(cont.execute("(not true) ->"), "false");
     }
@@ -173,19 +173,22 @@ mod definitions {
             ZiaError::RedundantRefactor.to_string()
         );
     }
-	#[test]
-	fn refactor() {
-		let mut cont = Context::new();
-		assert_eq!(cont.execute("a (:= (b c))"), "");
-		assert_eq!(cont.execute("d (:= b)"), "");
-		assert_eq!(cont.execute("a :="), "d c");
-	}
-	#[test]
-	fn bad_refactor() {
-		let mut cont = Context::new();
-		assert_eq!(cont.execute("a (:= (b c))"), "");
-		assert_eq!(cont.execute("b (:= a)"), ZiaError::InfiniteDefinition.to_string());
-	}
+    #[test]
+    fn refactor() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(cont.execute("d (:= b)"), "");
+        assert_eq!(cont.execute("a :="), "d c");
+    }
+    #[test]
+    fn bad_refactor() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("a (:= (b c))"), "");
+        assert_eq!(
+            cont.execute("b (:= a)"),
+            ZiaError::DefinitionCollision.to_string()
+        );
+    }
     #[test]
     fn definition_loop() {
         let mut cont = Context::new();
@@ -217,7 +220,7 @@ mod definitions {
 }
 #[cfg(test)]
 mod definitions_and_reductions {
-	use Context;
+    use Context;
     #[test]
     fn indirect_reduction() {
         let mut cont = Context::new();
@@ -243,14 +246,17 @@ mod other {
         assert_eq!(cont.execute("a a"), ZiaError::NotAProgram.to_string());
         assert_eq!(cont.execute("a (a a)"), ZiaError::NotAProgram.to_string());
     }
-	#[test]
-	fn empty_parentheses() {
-		let mut cont = Context::new();
-		assert_eq!(cont.execute("()"), ZiaError::EmptyParentheses.to_string());
-	}
-	#[test]
-	fn ambiguous_expression() {
-		let mut cont = Context::new();
-		assert_eq!(cont.execute("(a b c)"), ZiaError::AmbiguousExpression.to_string());
-	}
+    #[test]
+    fn empty_parentheses() {
+        let mut cont = Context::new();
+        assert_eq!(cont.execute("()"), ZiaError::EmptyParentheses.to_string());
+    }
+    #[test]
+    fn ambiguous_expression() {
+        let mut cont = Context::new();
+        assert_eq!(
+            cont.execute("(a b c)"),
+            ZiaError::AmbiguousExpression.to_string()
+        );
+    }
 }

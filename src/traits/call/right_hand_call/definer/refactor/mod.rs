@@ -27,9 +27,9 @@ where
     Self: RefactorId<T>,
 {
     fn refactor(&mut self, before: &mut T, after: &mut T) {
-		if before.get_label().is_some() {
-        	before.unlabel();
-		}
+        if before.get_label().is_some() {
+            before.unlabel();
+        }
         self.refactor_id(before, after)
     }
 }

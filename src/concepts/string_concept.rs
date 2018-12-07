@@ -23,7 +23,7 @@ use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::{GetReduction, FindWhatReducesToIt};
+use traits::call::{FindWhatReducesToIt, GetReduction};
 use traits::{GetDefinition, Id};
 
 pub type StringRef = Rc<RefCell<StringConcept>>;
@@ -52,9 +52,9 @@ impl MaybeString for StringConcept {
 }
 
 impl FindWhatReducesToIt<ConceptRef> for StringConcept {
-	fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
-		self.abstract_concept.find_what_reduces_to_it()
-	}
+    fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
+        self.abstract_concept.find_what_reduces_to_it()
+    }
 }
 
 impl GetDefinitionOf<ConceptRef> for StringConcept {
@@ -110,7 +110,10 @@ impl GetReduction<ConceptRef> for StringConcept {
 
 impl SetReduction<ConceptRef> for StringConcept {
     fn make_reduce_to(&mut self, _: &ConceptRef) {
-		panic!("Concept number {} is a string so must be its own normal form", self.get_id())
+        panic!(
+            "Concept number {} is a string so must be its own normal form",
+            self.get_id()
+        )
     }
     fn make_reduce_from(&mut self, concept: &ConceptRef) {
         self.abstract_concept.make_reduce_from(concept);
@@ -119,8 +122,11 @@ impl SetReduction<ConceptRef> for StringConcept {
 
 impl RemoveReduction<ConceptRef> for StringConcept {
     fn make_reduce_to_none(&mut self) {
-		panic!("Concept number {} is a string so no need to remove reduction.", self.get_id())
-	}
+        panic!(
+            "Concept number {} is a string so no need to remove reduction.",
+            self.get_id()
+        )
+    }
     fn no_longer_reduces_from(&mut self, concept: &ConceptRef) {
         self.abstract_concept.no_longer_reduces_from(concept);
     }

@@ -21,7 +21,7 @@ use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::{GetReduction, FindWhatReducesToIt};
+use traits::call::{FindWhatReducesToIt, GetReduction};
 use traits::{GetDefinition, Id};
 
 pub type AbstractRef = Rc<RefCell<AbstractConcept>>;
@@ -122,9 +122,9 @@ impl GetReduction<ConceptRef> for AbstractConcept {
 }
 
 impl FindWhatReducesToIt<ConceptRef> for AbstractConcept {
-	fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
-		self.reduces_from.clone()
-	}
+    fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
+        self.reduces_from.clone()
+    }
 }
 
 impl SetReduction<ConceptRef> for AbstractConcept {

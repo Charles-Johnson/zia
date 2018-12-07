@@ -63,38 +63,39 @@ where
             ) {
                 (_, None, None) => Err(ZiaError::RedundantRefactor),
                 (None, Some(ref mut b), None) => self.relabel(b, &after.to_string()),
-				(None, Some(ref mut b), Some(_)) => if b.get_label().is_none() {
-					self.label(b, &after.to_string())
-				} else {
-					self.relabel(b, &after.to_string())
-				},
+                (None, Some(ref mut b), Some(_)) => {
+                    if b.get_label().is_none() {
+                        self.label(b, &after.to_string())
+                    } else {
+                        self.relabel(b, &after.to_string())
+                    }
+                }
                 (None, None, Some((ref left, ref right))) => {
                     self.define_new_syntax(&after.to_string(), left, right)
                 }
-                (Some(ref mut a), Some(ref mut b), None) => {
-					self.refactor_atom(b, a);
-					Ok(())
-				},
-                (Some(ref mut a), Some(ref mut b), Some(_)) => self.refactor_expression(b, a),
+                (Some(ref mut a), Some(ref mut b), None) => self.check_to_delete_definition(b, a),
+                (Some(ref mut a), Some(ref mut b), Some(_)) => {
+                    self.check_for_redundant_definition(b, a)
+                }
                 (Some(ref mut a), None, Some((ref left, ref right))) => {
                     self.redefine(a, left, right)
                 }
             }
         }
     }
-    fn refactor_atom(&mut self, before: &mut T, after: &mut T) {
+    fn check_to_delete_definition(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
         if before == after {
             self.delete_definition(before);
+            Ok(())
         } else {
-            self.refactor(before, after);
+            Err(ZiaError::DefinitionCollision)
         }
     }
-    fn refactor_expression(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
+    fn check_for_redundant_definition(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
         if before == after {
             Err(ZiaError::RedundantDefinition)
         } else {
-            self.refactor(before, after);
-			Ok(())
+            Err(ZiaError::DefinitionCollision)
         }
     }
     fn delete_definition(&mut self, concept: &mut T) {

@@ -45,15 +45,11 @@ where
     }
 }
 
-impl<S> Label for S
-where
-    S: GetDefinition<S> + FindWhatItsANormalFormOf + Clone + Id,
-{
-}
+impl<S> Label for S where S: GetDefinition<S> + FindWhatItsANormalFormOf + Clone + Id {}
 
-pub trait FindWhatItsANormalFormOf 
+pub trait FindWhatItsANormalFormOf
 where
-	Self: FindWhatReducesToIt<Self> + Sized + Clone,
+    Self: FindWhatReducesToIt<Self> + Sized + Clone,
 {
     fn find_what_its_a_normal_form_of(&self) -> Vec<Self> {
         let mut normal_form_of: Vec<Self> = Vec::new();
@@ -63,11 +59,8 @@ where
                 normal_form_of.push(concept2);
             }
         }
-        normal_form_of		
-	}
+        normal_form_of
+    }
 }
 
-impl<T> FindWhatItsANormalFormOf for T
-where
-	T: FindWhatReducesToIt<T> + Sized + Clone,
-{}
+impl<T> FindWhatItsANormalFormOf for T where T: FindWhatReducesToIt<T> + Sized + Clone {}

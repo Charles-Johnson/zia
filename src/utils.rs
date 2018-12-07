@@ -30,6 +30,7 @@ pub enum ZiaError {
     InfiniteDefinition,
     EmptyParentheses,
     AmbiguousExpression,
+    DefinitionCollision,
 }
 
 impl fmt::Display for ZiaError {
@@ -45,6 +46,7 @@ impl fmt::Display for ZiaError {
             ZiaError::InfiniteDefinition => write!(f, "Cannot define a concept as an expression containing itself."),
 			ZiaError::EmptyParentheses => write!(f, "Parentheses need to contain a symbol or expression."),
 			ZiaError::AmbiguousExpression => write!(f, "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression."),
+			ZiaError::DefinitionCollision => write!(f, "Cannot define a used symbol as another used symbol or expression."),
         }
     }
 }
