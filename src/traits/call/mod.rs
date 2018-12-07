@@ -122,7 +122,6 @@ where
 				match self.try_expanding_then_call(ast) {
 					Ok(s) => return Ok(s),
 					Err(e) => if let ZiaError::NotAProgram = e {
-						()
 					} else {
 						return Err(e)
 					},
