@@ -304,6 +304,13 @@ mod other {
 		assert_eq!(cont.execute("b (-> :=)"), "");
 		assert_eq!(cont.execute("c b"), "c");
 	}
+	#[test]
+	fn builtin_concept_definition() {
+		let mut cont = Context::new();
+		assert_eq!(cont.execute(":= (:= (a b))"), "");
+		assert_eq!(cont.execute("c (:= (d :=))"), "");
+		assert_eq!(cont.execute("c"), "d");
+	}
     #[test]
     fn empty_parentheses() {
         let mut cont = Context::new();
