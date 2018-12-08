@@ -75,7 +75,11 @@ impl<T: FindDefinition<T> + PartialEq + Clone> Add<AbstractSyntaxTree<T>> for Ab
     }
 }
 
-impl<T> AbstractSyntaxTree<T> {
+trait DisplayJoint {
+	fn display_joint(&self) -> String;
+}
+
+impl<T> DisplayJoint for AbstractSyntaxTree<T> {
 	fn display_joint(&self) -> String {
 		match *self {
 			AbstractSyntaxTree::Expression(ref e) => "(".to_string() + &e.to_string() + ")",
