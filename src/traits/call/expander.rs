@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use ast::Combine;
 use std::fmt::Display;
-use std::ops::Add;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
@@ -29,18 +29,18 @@ where
         + Display
         + Clone
         + Pair<T, Self>
-        + Add<Self, Output = Self>
+        + Combine<T>
         + SyntaxFactory<T>,
 {
     fn expand(&self) -> Self {
         if let Some(ref con) = self.get_concept() {
             if let Some((ref left, ref right)) = con.get_definition() {
-                left.to_ast().expand() + right.to_ast().expand()
+                left.to_ast().expand().combine_with(&right.to_ast().expand())
             } else {
                 con.to_ast()
             }
         } else if let Some((ref left, ref right)) = self.get_expansion() {
-            left.expand() + right.expand()
+            left.expand().combine_with(&right.expand())
         } else {
             self.clone()
         }
@@ -55,7 +55,7 @@ where
         + Display
         + Clone
         + Pair<T, S>
-        + Add<S, Output = S>
+        + Combine<T>
         + SyntaxFactory<T>,
 {
 }

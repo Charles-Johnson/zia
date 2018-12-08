@@ -16,13 +16,13 @@
 */
 pub mod definer;
 
+use ast::Combine;
 use self::definer::delete_definition::DeleteDefinition;
 use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use constants::{DEFINE, REDUCTION};
 use std::fmt::Display;
-use std::ops::Add;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
@@ -38,7 +38,7 @@ where
         + StringFactory
         + MaybeDisconnected
 		+ SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
+    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
     fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
@@ -101,7 +101,7 @@ where
         + StringFactory
         + MaybeDisconnected
 		+ SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Add<U, Output=U> + SyntaxFactory<T>,
+    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
 }

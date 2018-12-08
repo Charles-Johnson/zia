@@ -16,17 +16,17 @@
 */
 pub mod label;
 
+use ast::Combine;
 use self::label::Label;
-use std::ops::Add;
 use token::parse_line;
-use traits::SyntaxFactory;
+use traits::{SyntaxFactory, call::label_getter::GetDefinitionOf};
 use utils::{ZiaError, ZiaResult};
 
 pub trait SyntaxConverter<T, U>
 where
     Self: SyntaxFinder<T>,
-    T: Label,
-    U: SyntaxFactory<T> + Add<U, Output = U>,
+    T: Label + GetDefinitionOf<T> + PartialEq,
+    U: SyntaxFactory<T> + Combine<T>,
 {
     fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
@@ -44,7 +44,7 @@ where
     fn ast_from_pair(&mut self, left: &str, right: &str) -> ZiaResult<U> {
         let lefthand = try!(self.ast_from_token(left));
         let righthand = try!(self.ast_from_token(right));
-        Ok(lefthand + righthand)
+        Ok(lefthand.combine_with(&righthand))
     }
     fn ast_from_token(&mut self, t: &str) -> ZiaResult<U> {
         if t.contains(' ') {
@@ -58,8 +58,8 @@ where
 impl<S, T, U> SyntaxConverter<T, U> for S
 where
     S: SyntaxFinder<T>,
-    T: Label,
-    U: SyntaxFactory<T> + Add<U, Output = U>,
+    T: Label + GetDefinitionOf<T> + PartialEq,
+    U: SyntaxFactory<T> + Combine<T>,
 {
 }
 

@@ -20,7 +20,6 @@ mod symbol;
 use self::expression::Expression;
 use self::symbol::Symbol;
 use std::fmt;
-use std::ops::Add;
 use traits::{SyntaxFactory, call::{MightExpand, MaybeConcept, right_hand_call::definer::Pair, label_getter::FindDefinition}};
 
 pub enum AbstractSyntaxTree<T> {
@@ -61,21 +60,30 @@ impl<T: Clone> MightExpand for AbstractSyntaxTree<T> {
     }
 }
 
-impl<T: FindDefinition<T> + PartialEq + Clone> Add<AbstractSyntaxTree<T>> for AbstractSyntaxTree<T> {
-    type Output = AbstractSyntaxTree<T>;
-    fn add(self, other: AbstractSyntaxTree<T>) -> AbstractSyntaxTree<T> {
-        let left_string = self.display_joint();
+pub trait Combine<T> 
+where
+	Self: DisplayJoint + MaybeConcept<T> + Pair<T,Self> + Sized,
+	T: FindDefinition<T> + Clone + PartialEq,
+{
+	fn combine_with(&self, other: &Self) -> Self {
+		let left_string = self.display_joint();
         let right_string = other.display_joint();
       	let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
 			l.find_definition(&r)
 		} else {
 			None
 		};
-        AbstractSyntaxTree::<T>::from_pair(&(left_string + " " + &right_string), definition, &self, &other)
-    }
+        Self::from_pair(&(left_string + " " + &right_string), definition, self, other)
+	}
 }
 
-trait DisplayJoint {
+impl<T, U> Combine<T> for U
+where
+	U: DisplayJoint + MaybeConcept<T> + Pair<T,U> + Sized,
+	T: FindDefinition<T> + Clone + PartialEq,
+{}
+
+pub trait DisplayJoint {
 	fn display_joint(&self) -> String;
 }
 

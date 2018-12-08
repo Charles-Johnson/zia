@@ -14,21 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::ops::Add;
+use ast::Combine;
 use traits::call::label_getter::{FindDefinition, LabelGetter};
-use traits::call::right_hand_call::definer::Pair;
-use traits::call::{MaybeConcept, MightExpand};
+use traits::call::MightExpand;
 use traits::SyntaxFactory;
 
 pub trait Reduce<T>
 where
     T: SyntaxFromConcept<Self>,
     Self: SyntaxFactory<T>
-        + Add<Self, Output = Self>
-        + MaybeConcept<T>
+        + Combine<T>
         + MightExpand
-        + Pair<T, Self>
-        + Add<Self, Output = Self>
         + Clone,
 {
     fn recursively_reduce(&self) -> Self {
@@ -42,7 +38,7 @@ where
             Some(ref c) => c.reduce(),
             None => match self.get_expansion() {
                 None => None,
-                Some((left, right)) => {
+                Some((ref left, ref right)) => {
                     match_left_right::<T, Self>(left.reduce(), right.reduce(), left, right)
                 }
             },
@@ -53,14 +49,14 @@ where
 impl<S, T> Reduce<T> for S
 where
     T: SyntaxFromConcept<S>,
-    S: SyntaxFactory<T> + Add<S, Output = S> + MaybeConcept<T> + MightExpand + Pair<T, S> + Clone,
+    S: SyntaxFactory<T> + Combine<T> + MightExpand + Clone,
 {
 }
 
 pub trait SyntaxFromConcept<T>
 where
     Self: LabelGetter + FindDefinition<Self> + PartialEq,
-    T: SyntaxFactory<Self> + Add<T, Output = T> + MaybeConcept<Self> + Pair<Self, T> + Clone,
+    T: SyntaxFactory<Self> + Combine<Self> + Clone,
 {
     fn reduce(&self) -> Option<T> {
         match self.get_normal_form() {
@@ -71,8 +67,8 @@ where
                     match_left_right::<Self, T>(
                         left_result,
                         right_result,
-                        left.to_ast(),
-                        right.to_ast(),
+                        &left.to_ast(),
+                        &right.to_ast(),
                     )
                 }
                 None => None,
@@ -84,7 +80,7 @@ where
         match self.get_label() {
             Some(ref s) => T::new(s, Some(self.clone())),
             None => match self.get_definition() {
-                Some((ref left, ref right)) => left.to_ast() + right.to_ast(),
+                Some((ref left, ref right)) => left.to_ast().combine_with(&right.to_ast()),
                 None => panic!("Unlabelled concept with no definition"),
             },
         }
@@ -94,27 +90,27 @@ where
 impl<S, T> SyntaxFromConcept<T> for S
 where
     S: LabelGetter + FindDefinition<S> + PartialEq,
-    T: SyntaxFactory<S> + Add<T, Output = T> + MaybeConcept<Self> + Pair<S, T> + Clone,
+    T: SyntaxFactory<S> + Combine<S> + Clone,
 {
 }
 
-fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Add<U, Output = U> + Pair<T, U> + MaybeConcept<T>>(
+fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
     left: Option<U>,
     right: Option<U>,
-    original_left: U,
-    original_right: U,
+    original_left: &U,
+    original_right: &U,
 ) -> Option<U> {
     match (left, right) {
         (None, None) => None,
-        (Some(new_left), None) => Some(contract_pair::<T, U>(new_left, original_right)),
-        (None, Some(new_right)) => Some(contract_pair::<T, U>(original_left, new_right)),
-        (Some(new_left), Some(new_right)) => Some(contract_pair::<T, U>(new_left, new_right)),
+        (Some(new_left), None) => Some(contract_pair::<T, U>(&new_left, original_right)),
+        (None, Some(new_right)) => Some(contract_pair::<T, U>(original_left, &new_right)),
+        (Some(new_left), Some(new_right)) => Some(contract_pair::<T, U>(&new_left, &new_right)),
     }
 }
 
-fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Add<U, Output = U> + Pair<T, U> + MaybeConcept<T>>(
-    lefthand: U,
-    righthand: U,
+fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
+    lefthand: &U,
+    righthand: &U,
 ) -> U {
     if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
         if let Some(def) = lc.find_definition(&rc) {
@@ -123,5 +119,5 @@ fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Add<U, Outpu
             }
         }
     }
-    lefthand + righthand
+    lefthand.combine_with(righthand)
 }
