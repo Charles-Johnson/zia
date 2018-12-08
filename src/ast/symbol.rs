@@ -14,17 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::ConceptRef;
+
 use std::fmt;
 use traits::{SyntaxFactory, call::MaybeConcept};
 
-pub struct Symbol {
+pub struct Symbol<T> {
     syntax: String,
-    concept: Option<ConceptRef>,
+    concept: Option<T>,
 }
 
-impl SyntaxFactory<ConceptRef> for Symbol {
-    fn new(s: &str, concept: Option<ConceptRef>) -> Symbol {
+impl<T> SyntaxFactory<T> for Symbol<T> {
+    fn new(s: &str, concept: Option<T>) -> Symbol<T> {
         Symbol {
             syntax: s.to_string(),
             concept,
@@ -32,21 +32,21 @@ impl SyntaxFactory<ConceptRef> for Symbol {
     }
 }
 
-impl fmt::Display for Symbol {
+impl<T> fmt::Display for Symbol<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.syntax.clone(),)
     }
 }
 
-impl MaybeConcept<ConceptRef> for Symbol {
-    fn get_concept(&self) -> Option<ConceptRef> {
+impl<T: Clone> MaybeConcept<T> for Symbol<T> {
+    fn get_concept(&self) -> Option<T> {
         self.concept.clone()
     }
 }
 
-impl Clone for Symbol {
-    fn clone(&self) -> Symbol {
-        Symbol {
+impl<T: Clone> Clone for Symbol<T> {
+    fn clone(&self) -> Symbol<T> {
+        Symbol::<T> {
             syntax: self.syntax.clone(),
             concept: self.concept.clone(),
         }

@@ -23,7 +23,7 @@ use traits::call::MaybeConcept;
 use traits::SyntaxFactory;
 
 pub struct Expression<T> {
-    symbol: Symbol,
+    symbol: Symbol<ConceptRef>,
     lefthand: Box<T>,
     righthand: Box<T>,
 }

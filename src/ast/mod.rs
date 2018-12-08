@@ -25,7 +25,7 @@ use std::ops::Add;
 use traits::{SyntaxFactory, call::{MightExpand, MaybeConcept, right_hand_call::definer::Pair, label_getter::FindDefinition}};
 
 pub enum AbstractSyntaxTree {
-    Symbol(Symbol),
+    Symbol(Symbol<ConceptRef>),
     Expression(Expression<AbstractSyntaxTree>),
 }
 
@@ -111,6 +111,6 @@ impl Pair<ConceptRef, AbstractSyntaxTree> for AbstractSyntaxTree {
 
 impl SyntaxFactory<ConceptRef> for AbstractSyntaxTree {
     fn new(s: &str, concept: Option<ConceptRef>) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Symbol(Symbol::new(s, concept))
+        AbstractSyntaxTree::Symbol(Symbol::<ConceptRef>::new(s, concept))
     }
 }
