@@ -16,38 +16,37 @@
 */
 use concepts::ConceptRef;
 use super::symbol::Symbol;
-use super::AbstractSyntaxTree;
 use std::borrow::Borrow;
 use std::fmt;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::MaybeConcept;
 use traits::SyntaxFactory;
 
-pub struct Expression {
+pub struct Expression<T> {
     symbol: Symbol,
-    lefthand: Box<AbstractSyntaxTree>,
-    righthand: Box<AbstractSyntaxTree>,
+    lefthand: Box<T>,
+    righthand: Box<T>,
 }
 
-impl Expression {
-    pub fn get_lefthand(&self) -> AbstractSyntaxTree {
-        let borrowed_left: &AbstractSyntaxTree = self.lefthand.borrow();
+impl<T: Clone> Expression<T> {
+    pub fn get_lefthand(&self) -> T {
+        let borrowed_left: &T = self.lefthand.borrow();
         borrowed_left.clone()
     }
-    pub fn get_righthand(&self) -> AbstractSyntaxTree {
-        let borrowed_right: &AbstractSyntaxTree = self.righthand.borrow();
+    pub fn get_righthand(&self) -> T {
+        let borrowed_right: &T = self.righthand.borrow();
         borrowed_right.clone()
     }
 }
 
-impl Pair<ConceptRef, AbstractSyntaxTree> for Expression {
+impl<T: Clone> Pair<ConceptRef, T> for Expression<T> {
     fn from_pair(
         syntax: &str,
 		concept: Option<ConceptRef>,
-        lefthand: &AbstractSyntaxTree,
-        righthand: &AbstractSyntaxTree,
-    ) -> Expression {
-        Expression {
+        lefthand: &T,
+        righthand: &T,
+    ) -> Expression<T> {
+        Expression::<T> {
             symbol: Symbol::new(syntax, concept),
             lefthand: Box::new(lefthand.clone()),
             righthand: Box::new(righthand.clone()),
@@ -55,21 +54,21 @@ impl Pair<ConceptRef, AbstractSyntaxTree> for Expression {
     }
 }
 
-impl fmt::Display for Expression {
+impl<T> fmt::Display for Expression<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.symbol.to_string(),)
     }
 }
 
-impl MaybeConcept<ConceptRef> for Expression {
+impl<T> MaybeConcept<ConceptRef> for Expression<T> {
     fn get_concept(&self) -> Option<ConceptRef> {
         self.symbol.get_concept()
     }
 }
 
-impl Clone for Expression {
-    fn clone(&self) -> Expression {
-        Expression {
+impl<T: Clone> Clone for Expression<T> {
+    fn clone(&self) -> Expression<T> {
+        Expression::<T> {
             symbol: self.symbol.clone(),
             lefthand: Box::new(self.get_lefthand()),
             righthand: Box::new(self.get_righthand()),

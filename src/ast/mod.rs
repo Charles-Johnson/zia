@@ -26,7 +26,7 @@ use traits::{SyntaxFactory, call::{MightExpand, MaybeConcept, right_hand_call::d
 
 pub enum AbstractSyntaxTree {
     Symbol(Symbol),
-    Expression(Expression),
+    Expression(Expression<AbstractSyntaxTree>),
 }
 
 impl MaybeConcept<ConceptRef> for AbstractSyntaxTree {
@@ -105,7 +105,7 @@ impl Pair<ConceptRef, AbstractSyntaxTree> for AbstractSyntaxTree {
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
     ) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Expression(Expression::from_pair(syntax, concept, lefthand, righthand))
+        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree>::from_pair(syntax, concept, lefthand, righthand))
     }
 }
 
