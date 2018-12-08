@@ -17,20 +17,19 @@
 mod expression;
 mod symbol;
 
-use concepts::ConceptRef;
 use self::expression::Expression;
 use self::symbol::Symbol;
 use std::fmt;
 use std::ops::Add;
 use traits::{SyntaxFactory, call::{MightExpand, MaybeConcept, right_hand_call::definer::Pair, label_getter::FindDefinition}};
 
-pub enum AbstractSyntaxTree {
-    Symbol(Symbol<ConceptRef>),
-    Expression(Expression<AbstractSyntaxTree>),
+pub enum AbstractSyntaxTree<T> {
+    Symbol(Symbol<T>),
+    Expression(Expression<AbstractSyntaxTree<T>, T>),
 }
 
-impl MaybeConcept<ConceptRef> for AbstractSyntaxTree {
-    fn get_concept(&self) -> Option<ConceptRef> {
+impl<T: Clone> MaybeConcept<T> for AbstractSyntaxTree<T> {
+    fn get_concept(&self) -> Option<T> {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => a.get_concept(),
             AbstractSyntaxTree::Expression(ref e) => e.get_concept(),
@@ -38,14 +37,14 @@ impl MaybeConcept<ConceptRef> for AbstractSyntaxTree {
     }
 }
 
-impl PartialEq for AbstractSyntaxTree {
+impl<T> PartialEq for AbstractSyntaxTree<T> {
     fn eq(&self, other: &Self) -> bool {
         self.to_string() == other.to_string()
     }
 }
 
-impl Clone for AbstractSyntaxTree {
-    fn clone(&self) -> AbstractSyntaxTree {
+impl<T: Clone> Clone for AbstractSyntaxTree<T> {
+    fn clone(&self) -> AbstractSyntaxTree<T> {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => AbstractSyntaxTree::Symbol(a.clone()),
             AbstractSyntaxTree::Expression(ref e) => AbstractSyntaxTree::Expression(e.clone()),
@@ -53,8 +52,8 @@ impl Clone for AbstractSyntaxTree {
     }
 }
 
-impl MightExpand for AbstractSyntaxTree {
-    fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
+impl<T: Clone> MightExpand for AbstractSyntaxTree<T> {
+    fn get_expansion(&self) -> Option<(AbstractSyntaxTree<T>, AbstractSyntaxTree<T>)> {
         match *self {
             AbstractSyntaxTree::Symbol(_) => None,
             AbstractSyntaxTree::Expression(ref e) => Some((e.get_lefthand(), e.get_righthand())),
@@ -62,9 +61,9 @@ impl MightExpand for AbstractSyntaxTree {
     }
 }
 
-impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
-    type Output = AbstractSyntaxTree;
-    fn add(self, other: AbstractSyntaxTree) -> AbstractSyntaxTree {
+impl<T: FindDefinition<T> + PartialEq + Clone> Add<AbstractSyntaxTree<T>> for AbstractSyntaxTree<T> {
+    type Output = AbstractSyntaxTree<T>;
+    fn add(self, other: AbstractSyntaxTree<T>) -> AbstractSyntaxTree<T> {
         let left_string = self.display_joint();
         let right_string = other.display_joint();
       	let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
@@ -72,11 +71,11 @@ impl Add<AbstractSyntaxTree> for AbstractSyntaxTree {
 		} else {
 			None
 		};
-        AbstractSyntaxTree::from_pair(&(left_string + " " + &right_string), definition, &self, &other)
+        AbstractSyntaxTree::<T>::from_pair(&(left_string + " " + &right_string), definition, &self, &other)
     }
 }
 
-impl AbstractSyntaxTree {
+impl<T> AbstractSyntaxTree<T> {
 	fn display_joint(&self) -> String {
 		match *self {
 			AbstractSyntaxTree::Expression(ref e) => "(".to_string() + &e.to_string() + ")",
@@ -85,7 +84,7 @@ impl AbstractSyntaxTree {
 	}
 }
 
-impl fmt::Display for AbstractSyntaxTree {
+impl<T> fmt::Display for AbstractSyntaxTree<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -98,19 +97,19 @@ impl fmt::Display for AbstractSyntaxTree {
     }
 }
 
-impl Pair<ConceptRef, AbstractSyntaxTree> for AbstractSyntaxTree {
+impl<T: Clone> Pair<T, AbstractSyntaxTree<T>> for AbstractSyntaxTree<T> {
     fn from_pair(
         syntax: &str,
-		concept: Option<ConceptRef>,
-        lefthand: &AbstractSyntaxTree,
-        righthand: &AbstractSyntaxTree,
-    ) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree>::from_pair(syntax, concept, lefthand, righthand))
+		concept: Option<T>,
+        lefthand: &AbstractSyntaxTree<T>,
+        righthand: &AbstractSyntaxTree<T>,
+    ) -> AbstractSyntaxTree<T> {
+        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree<T>, T>::from_pair(syntax, concept, lefthand, righthand))
     }
 }
 
-impl SyntaxFactory<ConceptRef> for AbstractSyntaxTree {
-    fn new(s: &str, concept: Option<ConceptRef>) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Symbol(Symbol::<ConceptRef>::new(s, concept))
+impl<T> SyntaxFactory<T> for AbstractSyntaxTree<T> {
+    fn new(s: &str, concept: Option<T>) -> AbstractSyntaxTree<T> {
+        AbstractSyntaxTree::Symbol(Symbol::<T>::new(s, concept))
     }
 }

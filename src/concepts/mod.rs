@@ -53,7 +53,7 @@ impl fmt::Display for ConceptRef {
             match *self {
                 ConceptRef::String(ref s) => "\"".to_string() + &s.borrow().to_string() + "\"",
                 ConceptRef::Abstract(_) => {
-                    let ast: AbstractSyntaxTree = self.to_ast();
+                    let ast: AbstractSyntaxTree<ConceptRef> = self.to_ast();
                     ast.to_string()
                 }
             },

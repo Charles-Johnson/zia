@@ -94,7 +94,7 @@ impl LabelConcept<ConceptRef> for Context {
     }
 }
 
-impl ConceptMaker<ConceptRef, AbstractSyntaxTree> for Context {}
+impl ConceptMaker<ConceptRef, AbstractSyntaxTree<ConceptRef>> for Context {}
 
 #[cfg(test)]
 mod context {
