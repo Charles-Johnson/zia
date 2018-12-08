@@ -25,11 +25,3 @@ mod utils;
 
 pub use context::Context;
 pub use utils::ZiaError;
-
-#[cfg(test)]
-mod other {
-    use utils::ZiaError;
-    use Context;
-
-
-}
