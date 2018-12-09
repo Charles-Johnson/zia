@@ -16,11 +16,11 @@
 */
 use constants::LABEL;
 use traits::call::GetNormalForm;
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId};
 
 pub trait LabelGetter
 where
-    Self: Id + GetNormalForm + GetDefinition<Self> + GetDefinitionOf<Self> + Clone + MaybeString,
+    Self: GetId + GetNormalForm + GetDefinition<Self> + GetDefinitionOf<Self> + Clone + MaybeString,
 {
     fn get_concept_of_label(&self) -> Option<Self> {
         for candidate in self.get_righthand_of() {
@@ -47,7 +47,7 @@ where
 }
 
 impl<T> LabelGetter for T where
-    T: Id + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + MaybeString
+    T: GetId + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + MaybeString
 {
 }
 

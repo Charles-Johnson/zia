@@ -16,30 +16,64 @@
 */
 use ast::AbstractSyntaxTree;
 use concepts::string_concept::StringRef;
-use concepts::{ConceptRef, Display};
+use concepts::{Display, ConvertTo};
 use constants::LABEL;
 use std::collections::HashMap;
-use traits::call::right_hand_call::definer::concept_maker::ConceptMaker;
-use traits::call::right_hand_call::definer::labeller::{ConceptAdder, LabelConcept, Labeller};
-use traits::call::right_hand_call::definer::refactor::refactor_id::ConceptTidyer;
+use traits::call::right_hand_call::definer::{MaybeDisconnected, concept_maker::ConceptMaker, delete_definition::DeleteDefinition};
+use traits::call::right_hand_call::definer::labeller::{ConceptAdder, LabelConcept, Labeller, StringFactory, AbstractFactory, SetDefinition, SetReduction, UpdateNormalForm, InsertDefinition};
+use traits::call::right_hand_call::definer::refactor::{delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer};
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::call::Call;
-use traits::syntax_converter::{SyntaxConverter, SyntaxFinder};
-use traits::Id;
+use traits::call::{Call, GetReduction, label_getter::{GetDefinitionOf, MaybeString}, reduce::SyntaxFromConcept};
+use traits::syntax_converter::{SyntaxConverter, StringConcept, label::Label};
+use traits::{GetId, SetId, GetDefinition};
 
-#[derive(Default)]
-pub struct Context {
-    string_map: HashMap<String, StringRef<ConceptRef>>,
-    concepts: Vec<ConceptRef>,
+pub struct Context<T> {
+    string_map: HashMap<String, StringRef<T>>,
+    concepts: Vec<T>,
 }
 
-impl Context {
-    pub fn new() -> Context {
-        let mut cont = Context::default();
+impl<T> Context<T> 
+where
+	T: InsertDefinition
+		+ UpdateNormalForm
+		+ GetDefinitionOf<T>
+		+ StringFactory
+		+ AbstractFactory
+		+ ConvertTo<StringRef<T>>,
+{
+    pub fn new() -> Context<T> {
+        let mut cont = Context::<T> {
+			string_map: HashMap::new(),
+			concepts: Vec::new(),
+		};
         cont.setup().unwrap();
         cont
     }
-    pub fn execute(&mut self, command: &str) -> String {
+}
+
+pub trait Execute {
+	fn execute(&mut self, command: &str) -> String;
+}
+
+impl<T> Execute for Context<T> 
+where
+	T: Label 
+		+ GetDefinitionOf<T> 
+		+ PartialEq 
+		+ AbstractFactory
+		+ StringFactory
+		+ InsertDefinition
+		+ DeleteDefinition
+		+ DeleteReduction
+		+ UpdateNormalForm
+		+ SyntaxFromConcept<AbstractSyntaxTree<T>>
+		+ MaybeDisconnected
+		+ Display
+		+ From<StringRef<T>>
+		+ ConvertTo<StringRef<T>>
+		+ SetId,
+{
+    fn execute(&mut self, command: &str) -> String {
         let ast = match self.ast_from_expression(command) {
             Ok(a) => a,
             Err(e) => return e.to_string(),
@@ -49,14 +83,21 @@ impl Context {
             Err(e) => e.to_string(),
         }
     }
-    fn add_string(&mut self, string_ref: &StringRef<ConceptRef>) {
+}
+
+pub trait StringAdder<T> {
+	fn add_string(&mut self, string_ref: &StringRef<T>);
+}
+
+impl<T> StringAdder<T> for Context<T> {
+    fn add_string(&mut self, string_ref: &StringRef<T>) {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
     }
 }
 
-impl ConceptTidyer<ConceptRef> for Context {
-    fn remove_concept(&mut self, concept: &ConceptRef) {
+impl<T: SetId + GetId> ConceptTidyer<T> for Context<T> {
+    fn remove_concept(&mut self, concept: &T) {
         self.concepts.remove(concept.get_id());
     }
     fn correct_id(&mut self, id: usize) {
@@ -64,43 +105,55 @@ impl ConceptTidyer<ConceptRef> for Context {
     }
 }
 
-impl ConceptNumber for Context {
+impl<T> ConceptNumber for Context<T> {
     fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
 }
 
-impl ConceptAdder<ConceptRef> for Context {
-    fn add_concept(&mut self, concept: &ConceptRef) {
+impl<T> ConceptAdder<T> for Context<T> 
+where
+	T: ConvertTo<StringRef<T>> + Clone,
+{
+    fn add_concept(&mut self, concept: &T) {
         self.concepts.push(concept.clone());
-        if let ConceptRef::String(ref s) = concept {
-            self.add_string(s);
+        if let Some(ref sr) = concept.convert() {
+            self.add_string(sr);
         }
     }
 }
 
-impl SyntaxFinder<ConceptRef> for Context {
-    fn get_string_concept(&self, s: &str) -> Option<ConceptRef> {
+impl<T> StringConcept<T> for Context<T> 
+where
+	T: From<StringRef<T>>
+		+ Clone,
+{
+    fn get_string_concept(&self, s: &str) -> Option<T> {
         match self.string_map.get(s) {
-            None => None,
-            Some(sc) => Some(ConceptRef::String(sc.clone())),
-        }
+			None => None,
+			Some(sr) => Some(T::from(sr.clone()))
+		}
     }
 }
 
-impl LabelConcept<ConceptRef> for Context {
-    fn get_label_concept(&self) -> ConceptRef {
+impl<T: Clone> LabelConcept<T> for Context<T> {
+    fn get_label_concept(&self) -> T {
         self.concepts[LABEL].clone()
     }
 }
 
-impl ConceptMaker<ConceptRef, AbstractSyntaxTree<ConceptRef>> for Context {}
-
-#[cfg(test)]
-mod context {
-    use Context;
-    #[test]
-    fn new_context() {
-        let _cont = Context::new();
-    }
-}
+impl<T> ConceptMaker<T, AbstractSyntaxTree<T>> for Context<T> 
+where
+	T: GetDefinition<T>
+		+ ConvertTo<StringRef<T>>
+		+ From<StringRef<T>> 
+		+ StringFactory 
+		+ AbstractFactory 
+		+ SetDefinition<T> 
+		+ GetReduction<T> 
+		+ Clone 
+		+ SetReduction<T>
+		+ PartialEq
+		+ GetDefinitionOf<T>
+		+ MaybeString,
+{}

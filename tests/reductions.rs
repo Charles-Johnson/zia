@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, ZiaError};
+use zia::{Context, Display, ZiaError, Execute};
 
 #[test]
 fn symbol_to_symbol() {

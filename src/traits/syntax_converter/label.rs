@@ -17,11 +17,11 @@
 use constants::LABEL;
 use std::marker::Sized;
 use traits::call::FindWhatReducesToIt;
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId};
 
 pub trait Label
 where
-    Self: FindWhatItsANormalFormOf + GetDefinition<Self> + Clone + Id,
+    Self: FindWhatItsANormalFormOf + GetDefinition<Self> + Clone + GetId,
 {
     fn get_labellee(&self) -> Option<Self> {
         let mut candidates: Vec<Self> = Vec::new();
@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<S> Label for S where S: GetDefinition<S> + FindWhatItsANormalFormOf + Clone + Id {}
+impl<S> Label for S where S: GetDefinition<S> + FindWhatItsANormalFormOf + Clone + GetId {}
 
 pub trait FindWhatItsANormalFormOf
 where

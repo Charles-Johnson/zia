@@ -30,7 +30,7 @@ use constants::LABEL;
 use std::marker::Sized;
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
 use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId};
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptNumber {
@@ -164,7 +164,7 @@ where
         + FindWhatReducesToIt<Self>
         + GetDefinition<Self>
         + GetDefinitionOf<Self>
-        + Id
+        + GetId
         + Sized,
 {
     fn is_disconnected(&self) -> bool {
@@ -187,6 +187,6 @@ where
 }
 
 impl<T> MaybeDisconnected for T where
-    T: GetReduction<T> + FindWhatReducesToIt<T> + GetDefinition<T> + GetDefinitionOf<T> + Id
+    T: GetReduction<T> + FindWhatReducesToIt<T> + GetDefinition<T> + GetDefinitionOf<T> + GetId
 {
 }

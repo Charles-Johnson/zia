@@ -26,20 +26,39 @@ use traits::call::right_hand_call::definer::labeller::{
 };
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::{FindWhatReducesToIt, GetReduction};
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId, SetId};
 
 pub enum ConceptRef {
     Abstract(AbstractRef<ConceptRef>),
     String(StringRef<ConceptRef>),
 }
 
-impl ConceptRef {
-    pub fn set_id(&mut self, number: usize) {
+impl SetId for ConceptRef {
+    fn set_id(&mut self, number: usize) {
         match *self {
             ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
             ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
         }
     }
+}
+
+pub trait ConvertTo<T> {
+	fn convert(&self) -> Option<T>;
+}
+
+impl ConvertTo<StringRef<ConceptRef>> for ConceptRef {
+	fn convert(&self) -> Option<StringRef<ConceptRef>> {
+		match *self {
+			ConceptRef::String(ref a) => Some(a.clone()),
+			_ => None
+		}
+	}
+}
+
+impl From<StringRef<ConceptRef>> for ConceptRef {
+	fn from(sr: StringRef<ConceptRef>) -> ConceptRef {
+		ConceptRef::String(sr.clone())
+	}
 }
 
 pub trait Display {
@@ -146,7 +165,7 @@ impl RemoveDefinition<ConceptRef> for ConceptRef {
     }
 }
 
-impl Id for ConceptRef {
+impl GetId for ConceptRef {
     fn get_id(&self) -> usize {
         match *self {
             ConceptRef::Abstract(ref r) => r.borrow().get_id(),

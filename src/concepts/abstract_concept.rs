@@ -21,7 +21,7 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::{FindWhatReducesToIt, GetReduction};
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId, SetId};
 
 pub type AbstractRef<T> = Rc<RefCell<AbstractConcept<T>>>;
 
@@ -48,7 +48,10 @@ impl<T> AbstractConcept<T> {
             reduces_from: Vec::new(),
         }
     }
-    pub fn set_id(&mut self, number: usize) {
+}
+
+impl<T> SetId for AbstractConcept<T> {
+    fn set_id(&mut self, number: usize) {
         self.id = number;
     }
 }
@@ -80,7 +83,7 @@ impl<T: Clone> SetDefinition<T> for AbstractConcept<T> {
     }
 }
 
-impl<T: Id + PartialEq> RemoveDefinition<T> for AbstractConcept<T> {
+impl<T: GetId + PartialEq> RemoveDefinition<T> for AbstractConcept<T> {
     fn remove_definition(&mut self) {
         self.definition = None
     }
@@ -108,7 +111,7 @@ impl<T: Id + PartialEq> RemoveDefinition<T> for AbstractConcept<T> {
     }
 }
 
-impl<T> Id for AbstractConcept<T> {
+impl<T> GetId for AbstractConcept<T> {
     fn get_id(&self) -> usize {
         self.id
     }
@@ -135,7 +138,7 @@ impl<T: Clone> SetReduction<T> for AbstractConcept<T> {
     }
 }
 
-impl<T: Id + PartialEq> RemoveReduction<T> for AbstractConcept<T> {
+impl<T: GetId + PartialEq> RemoveReduction<T> for AbstractConcept<T> {
     fn make_reduce_to_none(&mut self) {
         self.reduces_to = None;
     }

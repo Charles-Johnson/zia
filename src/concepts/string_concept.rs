@@ -23,7 +23,7 @@ use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
 use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
 use traits::call::{FindWhatReducesToIt, GetReduction};
-use traits::{GetDefinition, Id};
+use traits::{GetDefinition, GetId, SetId};
 
 pub type StringRef<T> = Rc<RefCell<StringConcept<T>>>;
 
@@ -39,7 +39,10 @@ impl<T> StringConcept<T> {
             abstract_concept: AbstractConcept::new(id),
         }))
     }
-    pub fn set_id(&mut self, number: usize) {
+}
+
+impl<T> SetId for StringConcept<T> {
+    fn set_id(&mut self, number: usize) {
         self.abstract_concept.set_id(number);
     }
 }
@@ -83,7 +86,7 @@ impl<T: Clone> SetDefinition<T> for StringConcept<T> {
     }
 }
 
-impl<T: Id + PartialEq> RemoveDefinition<T> for StringConcept<T> {
+impl<T: GetId + PartialEq> RemoveDefinition<T> for StringConcept<T> {
     fn remove_definition(&mut self) {
         self.abstract_concept.remove_definition();
     }
@@ -95,7 +98,7 @@ impl<T: Id + PartialEq> RemoveDefinition<T> for StringConcept<T> {
     }
 }
 
-impl<T> Id for StringConcept<T> {
+impl<T> GetId for StringConcept<T> {
     fn get_id(&self) -> usize {
         self.abstract_concept.get_id()
     }
@@ -119,7 +122,7 @@ impl<T: Clone> SetReduction<T> for StringConcept<T> {
     }
 }
 
-impl<T: Id + PartialEq> RemoveReduction<T> for StringConcept<T> {
+impl<T: GetId + PartialEq> RemoveReduction<T> for StringConcept<T> {
     fn make_reduce_to_none(&mut self) {
         panic!(
             "Concept number {} is a string so no need to remove reduction.",

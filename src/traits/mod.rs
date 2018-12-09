@@ -18,8 +18,12 @@
 pub mod call;
 pub mod syntax_converter;
 
-pub trait Id {
+pub trait GetId {
     fn get_id(&self) -> usize;
+}
+
+pub trait SetId {
+	fn set_id(&mut self, id: usize);
 }
 
 pub trait SyntaxFactory<T> {

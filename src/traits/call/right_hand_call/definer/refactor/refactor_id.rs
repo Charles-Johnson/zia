@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::Id;
+use traits::GetId;
 
 pub trait ConceptTidyer<T> {
     fn remove_concept(&mut self, &T);
@@ -25,7 +25,7 @@ pub trait ConceptTidyer<T> {
 pub trait ConceptCleaner<T>
 where
     Self: ConceptTidyer<T> + ConceptNumber,
-    T: Id,
+    T: GetId,
 {
     fn cleanly_remove_concept(&mut self, concept: &T) {
         self.remove_concept(concept);
@@ -38,6 +38,6 @@ where
 impl<S, T> ConceptCleaner<T> for S
 where
     S: ConceptTidyer<T> + ConceptNumber,
-    T: Id,
+    T: GetId,
 {
 }
