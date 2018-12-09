@@ -46,7 +46,7 @@ pub trait Display {
     fn to_string(&self) -> String;
 }
 
-impl Display for ConceptRef {
+impl<T: LabelGetter> Display for T {
     fn to_string(&self) -> String {
         match self.get_string() {
             Some(s) => "\"".to_string() + &s + "\"",

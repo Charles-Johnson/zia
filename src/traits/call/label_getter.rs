@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::Display;
 use constants::LABEL;
 use traits::call::GetNormalForm;
 use traits::{GetDefinition, Id};
@@ -48,7 +47,7 @@ where
 }
 
 impl<T> LabelGetter for T where
-    T: Id + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + Display + MaybeString
+    T: Id + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + MaybeString
 {
 }
 
