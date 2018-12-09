@@ -45,8 +45,8 @@ impl<T> StringConcept<T> {
 }
 
 impl<T> MaybeString for StringConcept<T> {
-    fn get_string(&self) -> String {
-        self.string.clone()
+    fn get_string(&self) -> Option<String> {
+        Some(self.string.clone())
     }
 }
 

@@ -46,7 +46,7 @@ where
             None => None,
             Some(d) => match d.get_normal_form() {
                 None => None,
-                Some(n) => Some(n.get_string()),
+                Some(n) => n.get_string(),
             },
         }
     }
@@ -64,7 +64,7 @@ impl<T> LabelGetter for T where
 }
 
 pub trait MaybeString {
-    fn get_string(&self) -> String;
+    fn get_string(&self) -> Option<String>;
 }
 
 pub trait FindDefinition<T>

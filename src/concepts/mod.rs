@@ -48,9 +48,9 @@ impl fmt::Display for ConceptRef {
         write!(
             f,
             "{}",
-            match *self {
-                ConceptRef::String(ref s) => "\"".to_string() + &s.borrow().to_string() + "\"",
-                ConceptRef::Abstract(_) => match self.get_label() {
+            match self.get_string() {
+                Some(s) => "\"".to_string() + &s + "\"",
+                None => match self.get_label() {
 					Some(l) => l,
 					None => match self.get_definition() {
 						Some((left, right)) => {
@@ -223,10 +223,10 @@ impl AbstractFactory for ConceptRef {
 }
 
 impl MaybeString for ConceptRef {
-    fn get_string(&self) -> String {
+    fn get_string(&self) -> Option<String> {
         match *self {
             ConceptRef::String(ref s) => s.borrow().get_string(),
-            _ => panic!("Wrong type"),
+            _ => None,
         }
     }
 }
