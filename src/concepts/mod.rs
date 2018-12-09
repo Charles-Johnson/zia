@@ -19,10 +19,8 @@ pub mod string_concept;
 
 use self::abstract_concept::{AbstractConcept, AbstractRef};
 use self::string_concept::{StringConcept, StringRef};
-use ast::AbstractSyntaxTree;
 use std::fmt;
-use traits::call::label_getter::{GetDefinitionOf, MaybeString};
-use traits::call::reduce::SyntaxFromConcept;
+use traits::call::label_getter::{GetDefinitionOf, MaybeString, LabelGetter};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetReduction, StringFactory,
@@ -52,9 +50,22 @@ impl fmt::Display for ConceptRef {
             "{}",
             match *self {
                 ConceptRef::String(ref s) => "\"".to_string() + &s.borrow().to_string() + "\"",
-                ConceptRef::Abstract(_) => {
-                    let ast: AbstractSyntaxTree<ConceptRef> = self.to_ast();
-                    ast.to_string()
+                ConceptRef::Abstract(_) => match self.get_label() {
+					Some(l) => l,
+					None => match self.get_definition() {
+						Some((left, right)) => {
+							let mut left_string = left.to_string();
+							if left_string.contains(' ') {
+								left_string = "(".to_string() + &left_string;
+							}
+							let mut right_string = right.to_string();
+							if right_string.contains(' ') {
+								right_string = right_string + ")";
+							}
+							left_string + " " + &right_string
+						},
+						None => panic!("Unlabelled concept with no definition!"),
+					},
                 }
             },
         )
