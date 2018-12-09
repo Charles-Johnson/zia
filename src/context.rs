@@ -29,7 +29,7 @@ use traits::Id;
 
 #[derive(Default)]
 pub struct Context {
-    string_map: HashMap<String, StringRef>,
+    string_map: HashMap<String, StringRef<ConceptRef>>,
     concepts: Vec<ConceptRef>,
 }
 
@@ -49,7 +49,7 @@ impl Context {
             Err(e) => e.to_string(),
         }
     }
-    fn add_string(&mut self, string_ref: &StringRef) {
+    fn add_string(&mut self, string_ref: &StringRef<ConceptRef>) {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
     }

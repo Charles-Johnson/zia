@@ -33,7 +33,7 @@ use traits::{GetDefinition, Id};
 
 pub enum ConceptRef {
     Abstract(AbstractRef<ConceptRef>),
-    String(StringRef),
+    String(StringRef<ConceptRef>),
 }
 
 impl ConceptRef {
