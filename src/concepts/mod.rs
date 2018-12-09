@@ -18,7 +18,8 @@ mod abstract_concept;
 pub mod string_concept;
 
 use self::abstract_concept::{AbstractConcept, AbstractRef};
-use self::string_concept::{StringConcept, StringRef};
+pub use self::string_concept::StringConcept;
+use self::string_concept::StringRef;
 use traits::call::label_getter::{GetDefinitionOf, LabelGetter, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{
@@ -43,22 +44,22 @@ impl SetId for ConceptRef {
 }
 
 pub trait ConvertTo<T> {
-	fn convert(&self) -> Option<T>;
+    fn convert(&self) -> Option<T>;
 }
 
 impl ConvertTo<StringRef<ConceptRef>> for ConceptRef {
-	fn convert(&self) -> Option<StringRef<ConceptRef>> {
-		match *self {
-			ConceptRef::String(ref a) => Some(a.clone()),
-			_ => None
-		}
-	}
+    fn convert(&self) -> Option<StringRef<ConceptRef>> {
+        match *self {
+            ConceptRef::String(ref a) => Some(a.clone()),
+            _ => None,
+        }
+    }
 }
 
 impl From<StringRef<ConceptRef>> for ConceptRef {
-	fn from(sr: StringRef<ConceptRef>) -> ConceptRef {
-		ConceptRef::String(sr.clone())
-	}
+    fn from(sr: StringRef<ConceptRef>) -> ConceptRef {
+        ConceptRef::String(sr.clone())
+    }
 }
 
 pub trait Display {

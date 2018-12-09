@@ -55,17 +55,18 @@ where
     }
 }
 
-impl<S, T, U> SyntaxConverter<T, U> for S 
+impl<S, T, U> SyntaxConverter<T, U> for S
 where
-	S: SyntaxFinder<T>,
-	T: Label + GetDefinitionOf<T> + PartialEq,
-	U: SyntaxFactory<T> + Combine<T>,
-{}
+    S: SyntaxFinder<T>,
+    T: Label + GetDefinitionOf<T> + PartialEq,
+    U: SyntaxFactory<T> + Combine<T>,
+{
+}
 
 pub trait SyntaxFinder<T>
 where
     T: Label,
-	Self: StringConcept<T>,
+    Self: StringConcept<T>,
 {
     fn concept_from_label(&self, s: &str) -> Option<T> {
         match self.get_string_concept(s) {
@@ -77,11 +78,11 @@ where
 
 impl<S, T> SyntaxFinder<T> for S
 where
-	S: StringConcept<T>,
-	T: Label,
-{}
-
-pub trait StringConcept<T>
+    S: StringConcept<T>,
+    T: Label,
 {
+}
+
+pub trait StringConcept<T> {
     fn get_string_concept(&self, &str) -> Option<T>;
 }

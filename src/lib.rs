@@ -23,10 +23,10 @@ mod token;
 mod traits;
 mod utils;
 
-use concepts::ConceptRef;
 pub use concepts::Display;
-pub use context::Execute;
+use concepts::{ConceptRef, StringConcept};
 use context::Context as GenericContext;
+pub use context::Execute;
 pub use utils::ZiaError;
 
-pub type Context = GenericContext<ConceptRef>;
+pub type Context = GenericContext<ConceptRef, StringConcept<ConceptRef>>;

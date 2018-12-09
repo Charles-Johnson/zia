@@ -15,63 +15,77 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::AbstractSyntaxTree;
-use concepts::string_concept::StringRef;
-use concepts::{Display, ConvertTo};
+use concepts::{ConvertTo, Display};
 use constants::LABEL;
+use std::cell::RefCell;
 use std::collections::HashMap;
-use traits::call::right_hand_call::definer::{MaybeDisconnected, concept_maker::ConceptMaker, delete_definition::DeleteDefinition};
-use traits::call::right_hand_call::definer::labeller::{ConceptAdder, LabelConcept, Labeller, StringFactory, AbstractFactory, SetDefinition, SetReduction, UpdateNormalForm, InsertDefinition};
-use traits::call::right_hand_call::definer::refactor::{delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer};
+use std::rc::Rc;
+use traits::call::right_hand_call::definer::labeller::{
+    AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller, SetDefinition,
+    SetReduction, StringFactory, UpdateNormalForm,
+};
+use traits::call::right_hand_call::definer::refactor::{
+    delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer,
+};
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::call::{Call, GetReduction, label_getter::{GetDefinitionOf, MaybeString}, reduce::SyntaxFromConcept};
-use traits::syntax_converter::{SyntaxConverter, StringConcept, label::Label};
-use traits::{GetId, SetId, GetDefinition};
+use traits::call::right_hand_call::definer::{
+    concept_maker::ConceptMaker, delete_definition::DeleteDefinition, MaybeDisconnected,
+};
+use traits::call::{
+    label_getter::{GetDefinitionOf, MaybeString},
+    reduce::SyntaxFromConcept,
+    Call, GetReduction,
+};
+use traits::syntax_converter::{label::Label, StringConcept, SyntaxConverter};
+use traits::{GetDefinition, GetId, SetId};
 
-pub struct Context<T> {
-    string_map: HashMap<String, StringRef<T>>,
+pub struct Context<T, V> {
+    string_map: HashMap<String, Rc<RefCell<V>>>,
     concepts: Vec<T>,
 }
 
-impl<T> Context<T> 
+impl<T, V> Context<T, V>
 where
-	T: InsertDefinition
-		+ UpdateNormalForm
-		+ GetDefinitionOf<T>
-		+ StringFactory
-		+ AbstractFactory
-		+ ConvertTo<StringRef<T>>,
+    T: InsertDefinition
+        + UpdateNormalForm
+        + GetDefinitionOf<T>
+        + StringFactory
+        + AbstractFactory
+        + ConvertTo<Rc<RefCell<V>>>,
+    V: Display,
 {
-    pub fn new() -> Context<T> {
-        let mut cont = Context::<T> {
-			string_map: HashMap::new(),
-			concepts: Vec::new(),
-		};
+    pub fn new() -> Context<T, V> {
+        let mut cont = Context::<T, V> {
+            string_map: HashMap::new(),
+            concepts: Vec::new(),
+        };
         cont.setup().unwrap();
         cont
     }
 }
 
 pub trait Execute {
-	fn execute(&mut self, command: &str) -> String;
+    fn execute(&mut self, command: &str) -> String;
 }
 
-impl<T> Execute for Context<T> 
+impl<T, V> Execute for Context<T, V>
 where
-	T: Label 
-		+ GetDefinitionOf<T> 
-		+ PartialEq 
-		+ AbstractFactory
-		+ StringFactory
-		+ InsertDefinition
-		+ DeleteDefinition
-		+ DeleteReduction
-		+ UpdateNormalForm
-		+ SyntaxFromConcept<AbstractSyntaxTree<T>>
-		+ MaybeDisconnected
-		+ Display
-		+ From<StringRef<T>>
-		+ ConvertTo<StringRef<T>>
-		+ SetId,
+    T: Label
+        + GetDefinitionOf<T>
+        + PartialEq
+        + AbstractFactory
+        + StringFactory
+        + InsertDefinition
+        + DeleteDefinition
+        + DeleteReduction
+        + UpdateNormalForm
+        + SyntaxFromConcept<AbstractSyntaxTree<T>>
+        + MaybeDisconnected
+        + Display
+        + From<Rc<RefCell<V>>>
+        + ConvertTo<Rc<RefCell<V>>>
+        + SetId,
+    V: Display,
 {
     fn execute(&mut self, command: &str) -> String {
         let ast = match self.ast_from_expression(command) {
@@ -85,18 +99,24 @@ where
     }
 }
 
-pub trait StringAdder<T> {
-	fn add_string(&mut self, string_ref: &StringRef<T>);
+pub trait StringAdder<V> {
+    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>);
 }
 
-impl<T> StringAdder<T> for Context<T> {
-    fn add_string(&mut self, string_ref: &StringRef<T>) {
+impl<T, V> StringAdder<V> for Context<T, V>
+where
+    V: Display,
+{
+    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>) {
         self.string_map
             .insert(string_ref.borrow().to_string(), string_ref.clone());
     }
 }
 
-impl<T: SetId + GetId> ConceptTidyer<T> for Context<T> {
+impl<T, V> ConceptTidyer<T> for Context<T, V>
+where
+    T: SetId + GetId,
+{
     fn remove_concept(&mut self, concept: &T) {
         self.concepts.remove(concept.get_id());
     }
@@ -105,15 +125,16 @@ impl<T: SetId + GetId> ConceptTidyer<T> for Context<T> {
     }
 }
 
-impl<T> ConceptNumber for Context<T> {
+impl<T, V> ConceptNumber for Context<T, V> {
     fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
 }
 
-impl<T> ConceptAdder<T> for Context<T> 
+impl<T, V> ConceptAdder<T> for Context<T, V>
 where
-	T: ConvertTo<StringRef<T>> + Clone,
+    T: ConvertTo<Rc<RefCell<V>>> + Clone,
+    V: Display,
 {
     fn add_concept(&mut self, concept: &T) {
         self.concepts.push(concept.clone());
@@ -123,37 +144,41 @@ where
     }
 }
 
-impl<T> StringConcept<T> for Context<T> 
+impl<T, V> StringConcept<T> for Context<T, V>
 where
-	T: From<StringRef<T>>
-		+ Clone,
+    T: From<Rc<RefCell<V>>> + Clone,
 {
     fn get_string_concept(&self, s: &str) -> Option<T> {
         match self.string_map.get(s) {
-			None => None,
-			Some(sr) => Some(T::from(sr.clone()))
-		}
+            None => None,
+            Some(sr) => Some(sr.clone().into()),
+        }
     }
 }
 
-impl<T: Clone> LabelConcept<T> for Context<T> {
+impl<T, V> LabelConcept<T> for Context<T, V>
+where
+    T: Clone,
+{
     fn get_label_concept(&self) -> T {
         self.concepts[LABEL].clone()
     }
 }
 
-impl<T> ConceptMaker<T, AbstractSyntaxTree<T>> for Context<T> 
+impl<T, V> ConceptMaker<T, AbstractSyntaxTree<T>> for Context<T, V>
 where
-	T: GetDefinition<T>
-		+ ConvertTo<StringRef<T>>
-		+ From<StringRef<T>> 
-		+ StringFactory 
-		+ AbstractFactory 
-		+ SetDefinition<T> 
-		+ GetReduction<T> 
-		+ Clone 
-		+ SetReduction<T>
-		+ PartialEq
-		+ GetDefinitionOf<T>
-		+ MaybeString,
-{}
+    T: GetDefinition<T>
+        + ConvertTo<Rc<RefCell<V>>>
+        + From<Rc<RefCell<V>>>
+        + StringFactory
+        + AbstractFactory
+        + SetDefinition<T>
+        + GetReduction<T>
+        + Clone
+        + SetReduction<T>
+        + PartialEq
+        + GetDefinitionOf<T>
+        + MaybeString,
+    V: Display,
+{
+}

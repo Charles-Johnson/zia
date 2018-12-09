@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, ZiaError, Execute};
+use zia::{Context, Display, Execute, ZiaError};
 
 #[test]
 fn fresh_symbol_is_not_a_program() {

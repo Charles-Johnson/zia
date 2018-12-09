@@ -23,7 +23,7 @@ pub trait GetId {
 }
 
 pub trait SetId {
-	fn set_id(&mut self, id: usize);
+    fn set_id(&mut self, id: usize);
 }
 
 pub trait SyntaxFactory<T> {
