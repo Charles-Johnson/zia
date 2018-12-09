@@ -22,10 +22,7 @@ use traits::SyntaxFactory;
 pub trait Reduce<T>
 where
     T: SyntaxFromConcept<Self>,
-    Self: SyntaxFactory<T>
-        + Combine<T>
-        + MightExpand
-        + Clone,
+    Self: SyntaxFactory<T> + Combine<T> + MightExpand + Clone,
 {
     fn recursively_reduce(&self) -> Self {
         match self.reduce() {

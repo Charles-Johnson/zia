@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{ZiaError, Context};
+use zia::{Context, Display, ZiaError};
 #[test]
 fn fresh_symbol() {
     let mut cont = Context::new();
@@ -117,7 +117,7 @@ fn nested_definition_loop() {
 #[test]
 fn chained_definitions_loop() {
     let mut cont = Context::new();
-	assert_eq!(cont.execute("c (:= (a b))"), "");
+    assert_eq!(cont.execute("c (:= (a b))"), "");
     assert_eq!(
         cont.execute("a (:= (c b))"),
         ZiaError::InfiniteDefinition.to_string()

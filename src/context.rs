@@ -16,7 +16,7 @@
 */
 use ast::AbstractSyntaxTree;
 use concepts::string_concept::StringRef;
-use concepts::ConceptRef;
+use concepts::{ConceptRef, Display};
 use constants::LABEL;
 use std::collections::HashMap;
 use traits::call::right_hand_call::definer::concept_maker::ConceptMaker;

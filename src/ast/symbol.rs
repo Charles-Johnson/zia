@@ -15,8 +15,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use std::fmt;
-use traits::{SyntaxFactory, call::MaybeConcept};
+use concepts::Display;
+use traits::{call::MaybeConcept, SyntaxFactory};
 
 pub struct Symbol<T> {
     syntax: String,
@@ -32,9 +32,9 @@ impl<T> SyntaxFactory<T> for Symbol<T> {
     }
 }
 
-impl<T> fmt::Display for Symbol<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.syntax.clone(),)
+impl<T> Display for Symbol<T> {
+    fn to_string(&self) -> String {
+        self.syntax.clone()
     }
 }
 

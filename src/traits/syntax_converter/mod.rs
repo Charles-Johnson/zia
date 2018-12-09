@@ -16,10 +16,10 @@
 */
 pub mod label;
 
-use ast::Combine;
 use self::label::Label;
+use ast::Combine;
 use token::parse_line;
-use traits::{SyntaxFactory, call::label_getter::GetDefinitionOf};
+use traits::{call::label_getter::GetDefinitionOf, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
 
 pub trait SyntaxConverter<T, U>

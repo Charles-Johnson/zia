@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{Context, ZiaError};
+use zia::{Context, Display, ZiaError};
 
 #[test]
 fn empty_parentheses() {

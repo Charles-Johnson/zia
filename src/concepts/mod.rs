@@ -19,8 +19,7 @@ pub mod string_concept;
 
 use self::abstract_concept::{AbstractConcept, AbstractRef};
 use self::string_concept::{StringConcept, StringRef};
-use std::fmt;
-use traits::call::label_getter::{GetDefinitionOf, MaybeString, LabelGetter};
+use traits::call::label_getter::{GetDefinitionOf, LabelGetter, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, SetDefinition, SetReduction, StringFactory,
@@ -43,32 +42,32 @@ impl ConceptRef {
     }
 }
 
-impl fmt::Display for ConceptRef {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self.get_string() {
-                Some(s) => "\"".to_string() + &s + "\"",
-                None => match self.get_label() {
-					Some(l) => l,
-					None => match self.get_definition() {
-						Some((left, right)) => {
-							let mut left_string = left.to_string();
-							if left_string.contains(' ') {
-								left_string = "(".to_string() + &left_string;
-							}
-							let mut right_string = right.to_string();
-							if right_string.contains(' ') {
-								right_string = right_string + ")";
-							}
-							left_string + " " + &right_string
-						},
-						None => panic!("Unlabelled concept with no definition!"),
-					},
-                }
+pub trait Display {
+    fn to_string(&self) -> String;
+}
+
+impl Display for ConceptRef {
+    fn to_string(&self) -> String {
+        match self.get_string() {
+            Some(s) => "\"".to_string() + &s + "\"",
+            None => match self.get_label() {
+                Some(l) => l,
+                None => match self.get_definition() {
+                    Some((left, right)) => {
+                        let mut left_string = left.to_string();
+                        if left_string.contains(' ') {
+                            left_string = "(".to_string() + &left_string;
+                        }
+                        let mut right_string = right.to_string();
+                        if right_string.contains(' ') {
+                            right_string += ")";
+                        }
+                        left_string + " " + &right_string
+                    }
+                    None => panic!("Unlabelled concept with no definition!"),
+                },
             },
-        )
+        }
     }
 }
 

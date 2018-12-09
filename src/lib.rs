@@ -23,5 +23,6 @@ mod token;
 mod traits;
 mod utils;
 
+pub use concepts::Display;
 pub use context::Context;
 pub use utils::ZiaError;

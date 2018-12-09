@@ -16,10 +16,10 @@
 */
 use std::marker;
 use traits::call::label_getter::FindDefinition;
+use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, GetReduction};
-use traits::call::label_getter::GetDefinitionOf;
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptAdder<T> {
@@ -68,28 +68,31 @@ where
         if lefthand.contains(self) || righthand.contains(self) {
             Err(ZiaError::InfiniteDefinition)
         } else {
-			try!(self.check_reductions(lefthand));
-			try!(self.check_reductions(righthand));
+            try!(self.check_reductions(lefthand));
+            try!(self.check_reductions(righthand));
             self.set_definition(lefthand, righthand);
             lefthand.add_as_lefthand_of(self);
             righthand.add_as_righthand_of(self);
             Ok(())
         }
     }
-	fn check_reductions(&self, concept: &Self) -> ZiaResult<()> {
-		if let Some(ref r) = concept.get_reduction() {
-			if r == self || r.contains(self) {
-				Err(ZiaError::ExpandingReduction)
-			} else {
-				self.check_reductions(r)
-			}
-		} else {
-			Ok(())
-		}
-	}
+    fn check_reductions(&self, concept: &Self) -> ZiaResult<()> {
+        if let Some(ref r) = concept.get_reduction() {
+            if r == self || r.contains(self) {
+                Err(ZiaError::ExpandingReduction)
+            } else {
+                self.check_reductions(r)
+            }
+        } else {
+            Ok(())
+        }
+    }
 }
 
-impl<T> InsertDefinition for T where T: SetDefinition<T> + marker::Sized + Container + GetReduction<Self> {}
+impl<T> InsertDefinition for T where
+    T: SetDefinition<T> + marker::Sized + Container + GetReduction<Self>
+{
+}
 
 pub trait Labeller<T>
 where

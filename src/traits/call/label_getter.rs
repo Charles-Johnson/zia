@@ -14,19 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use concepts::Display;
 use constants::LABEL;
-use std::fmt::Display;
 use traits::call::GetNormalForm;
 use traits::{GetDefinition, Id};
 
 pub trait LabelGetter
 where
-    Self: Id
-        + GetNormalForm
-        + GetDefinition<Self>
-        + GetDefinitionOf<Self>
-        + Clone
-        + MaybeString,
+    Self: Id + GetNormalForm + GetDefinition<Self> + GetDefinitionOf<Self> + Clone + MaybeString,
 {
     fn get_concept_of_label(&self) -> Option<Self> {
         for candidate in self.get_righthand_of() {
@@ -53,13 +48,7 @@ where
 }
 
 impl<T> LabelGetter for T where
-    T: Id
-        + GetNormalForm
-        + GetDefinition<T>
-        + GetDefinitionOf<T>
-        + Clone
-        + Display
-        + MaybeString
+    T: Id + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + Display + MaybeString
 {
 }
 

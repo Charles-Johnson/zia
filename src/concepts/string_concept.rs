@@ -14,9 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use super::Display;
 use concepts::abstract_concept::AbstractConcept;
 use std::cell::RefCell;
-use std::fmt;
 use std::rc::Rc;
 use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
@@ -131,8 +131,8 @@ impl<T: Id + PartialEq> RemoveReduction<T> for StringConcept<T> {
     }
 }
 
-impl<T> fmt::Display for StringConcept<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.string)
+impl<T> Display for StringConcept<T> {
+    fn to_string(&self) -> String {
+        self.string.clone()
     }
 }

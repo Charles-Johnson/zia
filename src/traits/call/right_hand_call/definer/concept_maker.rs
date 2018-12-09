@@ -14,12 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::fmt::Display;
+use concepts::Display;
+use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
 use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
-use traits::call::label_getter::GetDefinitionOf;
 use utils::ZiaResult;
 
 pub trait ConceptMaker<T, U>
@@ -29,7 +29,7 @@ where
         + InsertDefinition
         + GetNormalForm
         + UpdateNormalForm
-		+ GetDefinitionOf<T>,
+        + GetDefinitionOf<T>,
     U: MaybeConcept<T> + MightExpand + Display,
     Self: Labeller<T>,
 {

@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::Combine;
-use std::fmt::Display;
+use concepts::Display;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::{MaybeConcept, MightExpand};
@@ -35,7 +35,9 @@ where
     fn expand(&self) -> Self {
         if let Some(ref con) = self.get_concept() {
             if let Some((ref left, ref right)) = con.get_definition() {
-                left.to_ast().expand().combine_with(&right.to_ast().expand())
+                left.to_ast()
+                    .expand()
+                    .combine_with(&right.to_ast().expand())
             } else {
                 con.to_ast()
             }
@@ -50,12 +52,6 @@ where
 impl<S, T> Expander<T> for S
 where
     T: Display + SyntaxFromConcept<S>,
-    S: MaybeConcept<T>
-        + MightExpand
-        + Display
-        + Clone
-        + Pair<T, S>
-        + Combine<T>
-        + SyntaxFactory<T>,
+    S: MaybeConcept<T> + MightExpand + Display + Clone + Pair<T, S> + Combine<T> + SyntaxFactory<T>,
 {
 }

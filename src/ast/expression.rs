@@ -15,8 +15,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::symbol::Symbol;
+use concepts::Display;
 use std::borrow::Borrow;
-use std::fmt;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::MaybeConcept;
 use traits::SyntaxFactory;
@@ -41,7 +41,7 @@ impl<T: Clone, U> Expression<T, U> {
 impl<T: Clone, U> Pair<U, T> for Expression<T, U> {
     fn from_pair(
         syntax: &str,
-		concept: Option<U>,
+        concept: Option<U>,
         lefthand: &T,
         righthand: &T,
     ) -> Expression<T, U> {
@@ -53,9 +53,9 @@ impl<T: Clone, U> Pair<U, T> for Expression<T, U> {
     }
 }
 
-impl<T, U> fmt::Display for Expression<T, U> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.symbol.to_string(),)
+impl<T, U> Display for Expression<T, U> {
+    fn to_string(&self) -> String {
+        self.symbol.to_string()
     }
 }
 

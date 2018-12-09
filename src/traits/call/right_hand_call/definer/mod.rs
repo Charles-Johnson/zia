@@ -23,13 +23,13 @@ use self::concept_maker::ConceptMaker;
 use self::delete_definition::DeleteDefinition;
 use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::refactor::delete_normal_form::DeleteReduction;
-use self::refactor::Unlabeller;
 use self::refactor::refactor_id::ConceptCleaner;
+use self::refactor::Unlabeller;
+use concepts::Display;
 use constants::LABEL;
-use std::fmt::Display;
 use std::marker::Sized;
-use traits::call::label_getter::{GetDefinitionOf, FindDefinition};
-use traits::call::{GetReduction, MaybeConcept, MightExpand, FindWhatReducesToIt};
+use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
 use traits::{GetDefinition, Id};
 use utils::{ZiaError, ZiaResult};
 
@@ -47,7 +47,7 @@ where
         + AbstractFactory
         + Unlabeller
         + MaybeDisconnected
-		+ FindDefinition<T>,
+        + FindDefinition<T>,
     U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
     Self: ConceptMaker<T, U> + ConceptCleaner<T>,
 {
@@ -128,10 +128,10 @@ where
         self.label(concept, new_label)
     }
     fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
-		let mut definition_concept: Option<T> = None;
-		if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
-			definition_concept = l.find_definition(r);
-		} 
+        let mut definition_concept: Option<T> = None;
+        if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
+            definition_concept = l.find_definition(r);
+        }
         let new_syntax_tree = U::from_pair(syntax, definition_concept, left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
@@ -147,8 +147,8 @@ where
         + StringFactory
         + AbstractFactory
         + MaybeDisconnected
-		+ Unlabeller
-		+ FindDefinition<T>,
+        + Unlabeller
+        + FindDefinition<T>,
     U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
     S: ConceptMaker<T, U> + ConceptCleaner<T>,
 {

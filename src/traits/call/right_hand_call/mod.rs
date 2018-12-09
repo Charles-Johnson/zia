@@ -16,13 +16,13 @@
 */
 pub mod definer;
 
-use ast::Combine;
 use self::definer::delete_definition::DeleteDefinition;
 use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNormalForm};
 use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::{Definer, MaybeDisconnected, Pair};
+use ast::Combine;
+use concepts::Display;
 use constants::{DEFINE, REDUCTION};
-use std::fmt::Display;
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
@@ -37,33 +37,40 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-		+ SyntaxFromConcept<U>,
+        + SyntaxFromConcept<U>,
     U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
     fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
         match right.get_expansion() {
-            Some((ref rightleft, ref mut rightright)) => self.match_righthand_pair(left, rightleft, rightright),
+            Some((ref rightleft, ref mut rightright)) => {
+                self.match_righthand_pair(left, rightleft, rightright)
+            }
             None => Err(ZiaError::NotAProgram),
         }
     }
-	fn match_righthand_pair(&mut self, left: &mut U, rightleft: &U, rightright: &mut U) -> ZiaResult<String> {
-		match rightleft.get_concept() {
+    fn match_righthand_pair(
+        &mut self,
+        left: &mut U,
+        rightleft: &U,
+        rightright: &mut U,
+    ) -> ZiaResult<String> {
+        match rightleft.get_concept() {
             Some(c) => match c.get_id() {
                 REDUCTION => self.try_reduction(left, rightright),
                 DEFINE => self.try_definition(left, rightright),
-                _ => { 
-					let rightleft_reduction = c.get_reduction();
-					if let Some(r) = rightleft_reduction  {
-						self.match_righthand_pair(left, &r.to_ast(), rightright)
-					} else {
-						Err(ZiaError::NotAProgram)
-					}
-				},
+                _ => {
+                    let rightleft_reduction = c.get_reduction();
+                    if let Some(r) = rightleft_reduction {
+                        self.match_righthand_pair(left, &r.to_ast(), rightright)
+                    } else {
+                        Err(ZiaError::NotAProgram)
+                    }
+                }
             },
             None => Err(ZiaError::NotAProgram),
-		}
-	}
+        }
+    }
     fn try_reduction(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
@@ -100,7 +107,7 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-		+ SyntaxFromConcept<U>,
+        + SyntaxFromConcept<U>,
     U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     Self: Definer<T, U>,
 {
