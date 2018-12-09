@@ -32,7 +32,7 @@ use traits::call::{FindWhatReducesToIt, GetReduction};
 use traits::{GetDefinition, Id};
 
 pub enum ConceptRef {
-    Abstract(AbstractRef),
+    Abstract(AbstractRef<ConceptRef>),
     String(StringRef),
 }
 

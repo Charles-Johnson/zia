@@ -29,7 +29,7 @@ use traits::{GetDefinition, Id};
 pub type StringRef = Rc<RefCell<StringConcept>>;
 
 pub struct StringConcept {
-    abstract_concept: AbstractConcept,
+    abstract_concept: AbstractConcept<ConceptRef>,
     string: String,
 }
 
