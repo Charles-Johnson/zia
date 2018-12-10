@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::ConvertTo;
-pub use context::{BlindConceptAdder, ConceptAdder};
+pub use context::traits::{BlindConceptAdder, ConceptAdder};
 use std::{marker, rc::Rc, cell::RefCell};
 use traits::call::label_getter::FindDefinition;
 use traits::call::label_getter::GetDefinitionOf;
