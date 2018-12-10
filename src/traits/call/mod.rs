@@ -28,9 +28,9 @@ use self::right_hand_call::definer::labeller::{
 use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReduction;
 use self::right_hand_call::definer::MaybeDisconnected;
 use self::right_hand_call::{Container, RightHandCall};
-use concepts::Display;
+use concepts::{ConvertTo, Display};
 use constants::{DEFINE, REDUCTION};
-use std::marker::Sized;
+use std::{marker::Sized, rc::Rc, cell::RefCell};
 use traits::{GetDefinition, SetId};
 use utils::{ZiaError, ZiaResult};
 
@@ -79,9 +79,9 @@ pub trait GetReduction<T> {
     fn get_reduction(&self) -> Option<T>;
 }
 
-pub trait Call<T>
+pub trait Call<T, V>
 where
-    Self: RightHandCall<T>,
+    Self: RightHandCall<T, V>,
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
@@ -91,7 +91,8 @@ where
         + SyntaxFromConcept
         + MaybeDisconnected
         + Display
-		+ SetId,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
 {
     fn call<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -158,9 +159,9 @@ where
     }
 }
 
-impl<S, T> Call<T> for S
+impl<S, T, V> Call<T, V> for S
 where
-    S: RightHandCall<T>,
+    S: RightHandCall<T, V>,
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
@@ -170,6 +171,7 @@ where
         + SyntaxFromConcept
         + MaybeDisconnected
         + Display
-		+ SetId,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
 {
 }

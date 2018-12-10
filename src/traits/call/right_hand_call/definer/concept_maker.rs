@@ -14,7 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::Display;
+use concepts::{ConvertTo, Display};
+use std::{rc::Rc, cell::RefCell};
 use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
@@ -22,15 +23,16 @@ use traits::call::right_hand_call::definer::labeller::{
 use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
 use utils::ZiaResult;
 
-pub trait ConceptMaker<T>
+pub trait ConceptMaker<T, V>
 where
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + GetNormalForm
         + UpdateNormalForm
-        + GetDefinitionOf<T>,
-    Self: Labeller<T>,
+        + GetDefinitionOf<T>
+		+ ConvertTo<Rc<RefCell<V>>>,
+    Self: Labeller<T, V>,
 {
     fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(
         &mut self,

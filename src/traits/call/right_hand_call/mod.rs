@@ -21,14 +21,15 @@ use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, 
 use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use ast::Combine;
-use concepts::Display;
+use concepts::{ConvertTo, Display};
 use constants::{DEFINE, REDUCTION};
+use std::{rc::Rc, cell::RefCell};
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
 use traits::{SyntaxFactory, SetId};
 use utils::{ZiaError, ZiaResult};
 
-pub trait RightHandCall<T>
+pub trait RightHandCall<T, V>
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -38,8 +39,9 @@ where
         + StringFactory
         + MaybeDisconnected
         + SyntaxFromConcept
-		+ SetId,
-    Self: Definer<T>,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
+    Self: Definer<T, V>,
 {
     fn call_as_righthand<
         U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
@@ -118,7 +120,7 @@ where
     }
 }
 
-impl<S, T> RightHandCall<T> for S
+impl<S, T, V> RightHandCall<T, V> for S
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -128,8 +130,9 @@ where
         + StringFactory
         + MaybeDisconnected
         + SyntaxFromConcept
-		+ SetId,
-    Self: Definer<T>,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
+    Self: Definer<T, V>,
 {
 }
 

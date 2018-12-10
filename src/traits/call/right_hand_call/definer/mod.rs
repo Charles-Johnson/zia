@@ -25,9 +25,9 @@ use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNor
 use self::refactor::delete_normal_form::DeleteReduction;
 use self::refactor::refactor_id::ConceptCleaner;
 use self::refactor::Unlabeller;
-use concepts::Display;
+use concepts::{ConvertTo, Display};
 use constants::LABEL;
-use std::marker::Sized;
+use std::{marker::Sized, rc::Rc, cell::RefCell};
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
 use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
 use traits::{GetDefinition, GetId, SetId};
@@ -37,7 +37,7 @@ pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Definer<T>
+pub trait Definer<T, V>
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -48,8 +48,9 @@ where
         + Unlabeller
         + MaybeDisconnected
         + FindDefinition<T>
-		+ SetId,
-    Self: ConceptMaker<T> + ConceptCleaner<T>,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
+    Self: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
     fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
         &mut self,
@@ -152,7 +153,7 @@ where
     }
 }
 
-impl<S, T> Definer<T> for S
+impl<S, T, V> Definer<T, V> for S
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -163,8 +164,9 @@ where
         + MaybeDisconnected
         + Unlabeller
         + FindDefinition<T>
-		+ SetId,
-    S: ConceptMaker<T> + ConceptCleaner<T>,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
+    S: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
 }
 

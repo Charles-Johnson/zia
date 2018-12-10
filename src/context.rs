@@ -27,7 +27,7 @@ use traits::{
                 concept_maker::ConceptMaker,
                 delete_definition::DeleteDefinition,
                 labeller::{
-                    AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller,
+                    AbstractFactory, InsertDefinition, LabelConcept, Labeller,
                     SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
                 },
                 refactor::{delete_normal_form::DeleteReduction},
@@ -66,9 +66,9 @@ where
     }
 }
 
-pub trait Execute<T>
+pub trait Execute<T, V>
 where
-    Self: Call<T> + SyntaxConverter<T>,
+    Self: Call<T, V> + SyntaxConverter<T>,
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
@@ -78,7 +78,8 @@ where
         + SyntaxFromConcept
         + MaybeDisconnected
         + Display
-		+ SetId,
+		+ SetId
+		+ ConvertTo<Rc<RefCell<V>>>,
 {
     fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -95,7 +96,7 @@ where
     }
 }
 
-impl<T, V> Execute<T> for Context<T, V>
+impl<T, V> Execute<T, V> for Context<T, V>
 where
     T: AbstractFactory
         + StringFactory
@@ -183,18 +184,24 @@ where
 	}
 }
 
-impl<T, V> ConceptAdder<T> for Context<T, V>
+pub trait ConceptAdder<T, V> 
 where
-    T: ConvertTo<Rc<RefCell<V>>> + Clone,
-    V: Display,
+	Self: BlindConceptAdder<T> + StringAdder<V>,
+	T: ConvertTo<Rc<RefCell<V>>>, 
 {
     fn add_concept(&mut self, concept: &T) {
         self.blindly_add_concept(concept);
         if let Some(ref sr) = concept.convert() {
             self.add_string(sr);
         }
-    }
+	}
 }
+
+impl<T, V> ConceptAdder<T, V> for Context<T, V>
+where
+    T: ConvertTo<Rc<RefCell<V>>> + Clone,
+    V: Display,
+{}
 
 impl<T, V> StringConcept<T> for Context<T, V>
 where
@@ -217,7 +224,7 @@ where
     }
 }
 
-impl<T, V> ConceptMaker<T> for Context<T, V>
+impl<T, V> ConceptMaker<T, V> for Context<T, V>
 where
     T: GetDefinition<T>
         + ConvertTo<Rc<RefCell<V>>>

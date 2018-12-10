@@ -14,7 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::marker;
+use concepts::ConvertTo;
+pub use context::{BlindConceptAdder, ConceptAdder};
+use std::{marker, rc::Rc, cell::RefCell};
 use traits::call::label_getter::FindDefinition;
 use traits::call::label_getter::GetDefinitionOf;
 use traits::call::right_hand_call::definer::ConceptNumber;
@@ -22,9 +24,7 @@ use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, GetReduction};
 use utils::{ZiaError, ZiaResult};
 
-pub trait ConceptAdder<T> {
-    fn add_concept(&mut self, &T);
-}
+
 
 pub trait UpdateNormalForm
 where
@@ -94,10 +94,10 @@ impl<T> InsertDefinition for T where
 {
 }
 
-pub trait Labeller<T>
+pub trait Labeller<T, V>
 where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T>,
-    Self: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
+    Self: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
@@ -123,17 +123,17 @@ pub trait LabelConcept<T> {
     fn get_label_concept(&self) -> T;
 }
 
-impl<S, T> Labeller<T> for S
+impl<S, T, V> Labeller<T, V> for S
 where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T>,
-    S: StringMaker<T> + FindOrInsertDefinition<T> + LabelConcept<T>,
+    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
+    S: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
 {
 }
 
-pub trait StringMaker<T>
+pub trait StringMaker<T, V>
 where
-    T: StringFactory,
-    Self: ConceptAdder<T> + ConceptNumber,
+    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
+    Self: ConceptAdder<T, V> + ConceptNumber,
 {
     fn new_string(&mut self, string: &str) -> T {
         let new_id = self.number_of_concepts();
@@ -143,10 +143,10 @@ where
     }
 }
 
-impl<S, T> StringMaker<T> for S
+impl<S, T, V> StringMaker<T, V> for S
 where
-    T: StringFactory,
-    S: ConceptAdder<T> + ConceptNumber,
+    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
+    S: ConceptAdder<T, V> + ConceptNumber,
 {
 }
 
@@ -178,12 +178,12 @@ where
 pub trait AbstractMaker<T>
 where
     T: AbstractFactory,
-    Self: ConceptAdder<T> + ConceptNumber,
+    Self: BlindConceptAdder<T> + ConceptNumber,
 {
     fn new_abstract(&mut self) -> T {
         let new_id = self.number_of_concepts();
         let concept_ref = T::new_abstract(new_id);
-        self.add_concept(&concept_ref);
+        self.blindly_add_concept(&concept_ref);
         concept_ref
     }
 }
@@ -191,7 +191,7 @@ where
 impl<S, T> AbstractMaker<T> for S
 where
     T: AbstractFactory,
-    S: ConceptAdder<T> + ConceptNumber,
+    S: BlindConceptAdder<T> + ConceptNumber,
 {
 }
 
