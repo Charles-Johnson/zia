@@ -28,7 +28,7 @@ use traits::call::{MaybeConcept, MightExpand};
 use traits::SyntaxFactory;
 use utils::{ZiaError, ZiaResult};
 
-pub trait RightHandCall<T, U>
+pub trait RightHandCall<T>
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -37,19 +37,18 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-        + SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
-    Self: Definer<T, U>,
+        + SyntaxFromConcept,
+    Self: Definer<T>,
 {
-    fn call_as_righthand(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
+    fn call_as_righthand<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
         match right.get_expansion() {
             Some((ref rightleft, ref mut rightright)) => {
-                self.match_righthand_pair(left, rightleft, rightright)
+                self.match_righthand_pair::<U>(left, rightleft, rightright)
             }
             None => Err(ZiaError::NotAProgram),
         }
     }
-    fn match_righthand_pair(
+    fn match_righthand_pair<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(
         &mut self,
         left: &mut U,
         rightleft: &U,
@@ -57,12 +56,12 @@ where
     ) -> ZiaResult<String> {
         match rightleft.get_concept() {
             Some(c) => match c.get_id() {
-                REDUCTION => self.try_reduction(left, rightright),
-                DEFINE => self.try_definition(left, rightright),
+                REDUCTION => self.try_reduction::<U>(left, rightright),
+                DEFINE => self.try_definition::<U>(left, rightright),
                 _ => {
                     let rightleft_reduction = c.get_reduction();
                     if let Some(r) = rightleft_reduction {
-                        self.match_righthand_pair(left, &r.to_ast(), rightright)
+                        self.match_righthand_pair::<U>(left, &r.to_ast(), rightright)
                     } else {
                         Err(ZiaError::NotAProgram)
                     }
@@ -71,7 +70,7 @@ where
             None => Err(ZiaError::NotAProgram),
         }
     }
-    fn try_reduction(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
+    fn try_reduction<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
@@ -82,23 +81,23 @@ where
                 Err(ZiaError::RedundantReduction)
             }
         } else {
-            let mut syntax_concept = try!(self.concept_from_ast(syntax));
-            let mut normal_form_concept = try!(self.concept_from_ast(normal_form));
+            let mut syntax_concept = try!(self.concept_from_ast::<U>(syntax));
+            let mut normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
             try!(syntax_concept.update_normal_form(&mut normal_form_concept));
             Ok("".to_string())
         }
     }
-    fn try_definition(&mut self, new: &U, old: &mut U) -> ZiaResult<String> {
+    fn try_definition<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, new: &U, old: &mut U) -> ZiaResult<String> {
         if old.contains(new) {
             Err(ZiaError::InfiniteDefinition)
         } else {
-            try!(self.define(old, new));
+            try!(self.define::<U>(old, new));
             Ok("".to_string())
         }
     }
 }
 
-impl<S, T, U> RightHandCall<T, U> for S
+impl<S, T> RightHandCall<T> for S
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -107,9 +106,8 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-        + SyntaxFromConcept<U>,
-    U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
-    Self: Definer<T, U>,
+        + SyntaxFromConcept,
+    Self: Definer<T>,
 {
 }
 

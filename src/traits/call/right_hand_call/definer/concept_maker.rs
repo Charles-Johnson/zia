@@ -22,7 +22,7 @@ use traits::call::right_hand_call::definer::labeller::{
 use traits::call::{GetNormalForm, MaybeConcept, MightExpand};
 use utils::ZiaResult;
 
-pub trait ConceptMaker<T, U>
+pub trait ConceptMaker<T>
 where
     T: StringFactory
         + AbstractFactory
@@ -30,10 +30,9 @@ where
         + GetNormalForm
         + UpdateNormalForm
         + GetDefinitionOf<T>,
-    U: MaybeConcept<T> + MightExpand + Display,
     Self: Labeller<T>,
 {
-    fn concept_from_ast(&mut self, ast: &U) -> ZiaResult<T> {
+    fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(&mut self, ast: &U) -> ZiaResult<T> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {

@@ -22,44 +22,42 @@ use token::parse_line;
 use traits::{call::label_getter::GetDefinitionOf, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
 
-pub trait SyntaxConverter<T, U>
+pub trait SyntaxConverter<T>
 where
     Self: SyntaxFinder<T>,
     T: Label + GetDefinitionOf<T> + PartialEq,
-    U: SyntaxFactory<T> + Combine<T>,
 {
-    fn ast_from_expression(&mut self, s: &str) -> ZiaResult<U> {
+    fn ast_from_expression<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::EmptyParentheses),
-            1 => self.ast_from_token(&tokens[0]),
-            2 => self.ast_from_pair(&tokens[0], &tokens[1]),
+            1 => self.ast_from_token::<U>(&tokens[0]),
+            2 => self.ast_from_pair::<U>(&tokens[0], &tokens[1]),
             _ => Err(ZiaError::AmbiguousExpression),
         }
     }
-    fn ast_from_atom(&mut self, s: &str) -> U {
+    fn ast_from_atom<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> U {
         let concept_if_exists = self.concept_from_label(s);
         U::new(s, concept_if_exists)
     }
-    fn ast_from_pair(&mut self, left: &str, right: &str) -> ZiaResult<U> {
-        let lefthand = try!(self.ast_from_token(left));
-        let righthand = try!(self.ast_from_token(right));
+    fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(&mut self, left: &str, right: &str) -> ZiaResult<U> {
+        let lefthand = try!(self.ast_from_token::<U>(left));
+        let righthand = try!(self.ast_from_token::<U>(right));
         Ok(lefthand.combine_with(&righthand))
     }
-    fn ast_from_token(&mut self, t: &str) -> ZiaResult<U> {
+    fn ast_from_token<U: SyntaxFactory<T> + Combine<T>>(&mut self, t: &str) -> ZiaResult<U> {
         if t.contains(' ') {
-            self.ast_from_expression(t)
+            self.ast_from_expression::<U>(t)
         } else {
-            Ok(self.ast_from_atom(t))
+            Ok(self.ast_from_atom::<U>(t))
         }
     }
 }
 
-impl<S, T, U> SyntaxConverter<T, U> for S
+impl<S, T> SyntaxConverter<T> for S
 where
     S: SyntaxFinder<T>,
     T: Label + GetDefinitionOf<T> + PartialEq,
-    U: SyntaxFactory<T> + Combine<T>,
 {
 }
 

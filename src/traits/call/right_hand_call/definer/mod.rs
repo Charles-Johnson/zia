@@ -37,7 +37,7 @@ pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
 
-pub trait Definer<T, U>
+pub trait Definer<T>
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -48,10 +48,9 @@ where
         + Unlabeller
         + MaybeDisconnected
         + FindDefinition<T>,
-    U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
-    Self: ConceptMaker<T, U> + ConceptCleaner<T>,
+    Self: ConceptMaker<T> + ConceptCleaner<T>,
 {
-    fn define(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
+    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
         if after.get_expansion().is_some() {
             Err(ZiaError::BadDefinition)
         } else {
@@ -112,7 +111,7 @@ where
             self.cleanly_remove_concept(concept);
         }
     }
-    fn redefine(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
+    fn redefine<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
         if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
             self.relabel(right_concept, &right.to_string())
@@ -127,7 +126,7 @@ where
         concept.unlabel();
         self.label(concept, new_label)
     }
-    fn define_new_syntax(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
+    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
         let mut definition_concept: Option<T> = None;
         if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
             definition_concept = l.find_definition(r);
@@ -138,7 +137,7 @@ where
     }
 }
 
-impl<S, T, U> Definer<T, U> for S
+impl<S, T> Definer<T> for S
 where
     T: DeleteReduction
         + UpdateNormalForm
@@ -149,8 +148,7 @@ where
         + MaybeDisconnected
         + Unlabeller
         + FindDefinition<T>,
-    U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display,
-    S: ConceptMaker<T, U> + ConceptCleaner<T>,
+    S: ConceptMaker<T> + ConceptCleaner<T>,
 {
 }
 

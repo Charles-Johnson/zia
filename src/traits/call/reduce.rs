@@ -21,7 +21,7 @@ use traits::SyntaxFactory;
 
 pub trait Reduce<T>
 where
-    T: SyntaxFromConcept<Self>,
+    T: SyntaxFromConcept,
     Self: SyntaxFactory<T> + Combine<T> + MightExpand + Clone,
 {
     fn recursively_reduce(&self) -> Self {
@@ -45,23 +45,22 @@ where
 
 impl<S, T> Reduce<T> for S
 where
-    T: SyntaxFromConcept<S>,
+    T: SyntaxFromConcept,
     S: SyntaxFactory<T> + Combine<T> + MightExpand + Clone,
 {
 }
 
-pub trait SyntaxFromConcept<T>
+pub trait SyntaxFromConcept
 where
     Self: LabelGetter + FindDefinition<Self> + PartialEq,
-    T: SyntaxFactory<Self> + Combine<Self> + Clone,
 {
-    fn reduce(&self) -> Option<T> {
+    fn reduce<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> Option<U> {
         match self.get_normal_form() {
             None => match self.get_definition() {
                 Some((ref left, ref right)) => {
                     let left_result = left.reduce();
                     let right_result = right.reduce();
-                    match_left_right::<Self, T>(
+                    match_left_right::<Self, U>(
                         left_result,
                         right_result,
                         &left.to_ast(),
@@ -73,21 +72,20 @@ where
             Some(ref n) => Some(n.to_ast()),
         }
     }
-    fn to_ast(&self) -> T {
+    fn to_ast<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> U {
         match self.get_label() {
-            Some(ref s) => T::new(s, Some(self.clone())),
+            Some(ref s) => U::new(s, Some(self.clone())),
             None => match self.get_definition() {
-                Some((ref left, ref right)) => left.to_ast().combine_with(&right.to_ast()),
+                Some((ref left, ref right)) => left.to_ast::<U>().combine_with(&right.to_ast::<U>()),
                 None => panic!("Unlabelled concept with no definition"),
             },
         }
     }
 }
 
-impl<S, T> SyntaxFromConcept<T> for S
+impl<S> SyntaxFromConcept for S
 where
     S: LabelGetter + FindDefinition<S> + PartialEq,
-    T: SyntaxFactory<S> + Combine<S> + Clone,
 {
 }
 

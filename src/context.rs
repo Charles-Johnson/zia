@@ -14,30 +14,43 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use ast::AbstractSyntaxTree;
 use concepts::{ConvertTo, Display};
 use constants::LABEL;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use traits::call::right_hand_call::definer::labeller::{
-    AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller, SetDefinition,
-    SetReduction, StringFactory, UpdateNormalForm,
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use traits::{
+	call::{
+		right_hand_call::{
+			definer::{
+				labeller::{
+					AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller,
+					SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
+				}, 
+				refactor::{
+					delete_normal_form::DeleteReduction, 
+					refactor_id::ConceptTidyer,
+				}, 
+				ConceptNumber,
+				concept_maker::ConceptMaker, 
+				delete_definition::DeleteDefinition, 
+				MaybeDisconnected,
+			},
+			Container,
+			RightHandCall,
+		},
+    	label_getter::{
+			GetDefinitionOf, 
+			MaybeString
+		},
+	    reduce::{Reduce, SyntaxFromConcept},
+		expander::Expander, 
+		Call, 
+		GetReduction,
+	}, 
+	syntax_converter::{
+		label::Label, StringConcept, SyntaxConverter
+	}, 
+	GetDefinition, GetId, SetId,
 };
-use traits::call::right_hand_call::definer::refactor::{
-    delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer,
-};
-use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::call::right_hand_call::definer::{
-    concept_maker::ConceptMaker, delete_definition::DeleteDefinition, MaybeDisconnected,
-};
-use traits::call::{
-    label_getter::{GetDefinitionOf, MaybeString},
-    reduce::SyntaxFromConcept,
-    Call, GetReduction,
-};
-use traits::syntax_converter::{label::Label, StringConcept, SyntaxConverter};
-use traits::{GetDefinition, GetId, SetId};
 
 pub struct Context<T, V> {
     string_map: HashMap<String, Rc<RefCell<V>>>,
@@ -64,11 +77,23 @@ where
     }
 }
 
-pub trait Execute {
-    fn execute(&mut self, command: &str) -> String;
+pub trait Execute<T> 
+where
+	Self: RightHandCall<T>,
+	T: StringFactory
+        + AbstractFactory
+        + InsertDefinition
+        + DeleteDefinition
+        + DeleteReduction
+        + UpdateNormalForm
+        + SyntaxFromConcept
+        + MaybeDisconnected
+        + Display,
+{
+    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, command: &str) -> String;
 }
 
-impl<T, V> Execute for Context<T, V>
+impl<T, V> Execute<T> for Context<T, V>
 where
     T: Label
         + GetDefinitionOf<T>
@@ -79,7 +104,7 @@ where
         + DeleteDefinition
         + DeleteReduction
         + UpdateNormalForm
-        + SyntaxFromConcept<AbstractSyntaxTree<T>>
+        + SyntaxFromConcept
         + MaybeDisconnected
         + Display
         + From<Rc<RefCell<V>>>
@@ -87,8 +112,8 @@ where
         + SetId,
     V: Display,
 {
-    fn execute(&mut self, command: &str) -> String {
-        let ast = match self.ast_from_expression(command) {
+    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, command: &str) -> String {
+        let ast = match self.ast_from_expression::<U>(command) {
             Ok(a) => a,
             Err(e) => return e.to_string(),
         };
@@ -165,7 +190,7 @@ where
     }
 }
 
-impl<T, V> ConceptMaker<T, AbstractSyntaxTree<T>> for Context<T, V>
+impl<T, V> ConceptMaker<T> for Context<T, V>
 where
     T: GetDefinition<T>
         + ConvertTo<Rc<RefCell<V>>>

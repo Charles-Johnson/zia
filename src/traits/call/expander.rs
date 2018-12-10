@@ -23,7 +23,7 @@ use traits::SyntaxFactory;
 
 pub trait Expander<T>
 where
-    T: Display + SyntaxFromConcept<Self>,
+    T: Display + SyntaxFromConcept,
     Self: MaybeConcept<T>
         + MightExpand
         + Display
@@ -35,11 +35,11 @@ where
     fn expand(&self) -> Self {
         if let Some(ref con) = self.get_concept() {
             if let Some((ref left, ref right)) = con.get_definition() {
-                left.to_ast()
+                left.to_ast::<Self>()
                     .expand()
-                    .combine_with(&right.to_ast().expand())
+                    .combine_with(&right.to_ast::<Self>().expand())
             } else {
-                con.to_ast()
+                con.to_ast::<Self>()
             }
         } else if let Some((ref left, ref right)) = self.get_expansion() {
             left.expand().combine_with(&right.expand())
@@ -51,7 +51,7 @@ where
 
 impl<S, T> Expander<T> for S
 where
-    T: Display + SyntaxFromConcept<S>,
+    T: Display + SyntaxFromConcept,
     S: MaybeConcept<T> + MightExpand + Display + Clone + Pair<T, S> + Combine<T> + SyntaxFactory<T>,
 {
 }

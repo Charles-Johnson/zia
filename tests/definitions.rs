@@ -16,51 +16,51 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, Execute, ZiaError};
+use zia::{Context, Display, Execute, ZiaError, AbstractSyntaxTree};
 #[test]
 fn fresh_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a :="), "a");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a :="), "a");
 }
 #[test]
 fn fresh_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("a :="), "b c");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a :="), "b c");
 }
 #[test]
 fn fresh_nested_pairs() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b (c d)))"), "");
-    assert_eq!(cont.execute("a :="), "b (c d)");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b (c d)))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a :="), "b (c d)");
 }
 #[test]
 fn defining_used_symbol_as_fresh_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("b (:= (d e))"), "");
-    assert_eq!(cont.execute("b :="), "d e");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("b (:= (d e))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("b :="), "d e");
 }
 #[test]
 fn defining_fresh_symbol_as_used_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= (b c))"), "");
-    assert_eq!(cont.execute("d :="), "b c");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("d (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("d :="), "b c");
 }
 #[test]
 fn old_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= (e f))"), "",);
-    assert_eq!(cont.execute("b (:= (e c))"), "");
-    assert_eq!(cont.execute("b :="), "e c");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("d (:= (e f))"), "",);
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("b (:= (e c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("b :="), "e c");
 }
 #[test]
 fn pair_on_the_left() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("(a b) (:= c)"),
+        cont.execute::<AbstractSyntaxTree>("(a b) (:= c)"),
         ZiaError::BadDefinition.to_string()
     );
 }
@@ -68,33 +68,33 @@ fn pair_on_the_left() {
 fn fresh_refactor() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= b)"),
+        cont.execute::<AbstractSyntaxTree>("a (:= b)"),
         ZiaError::RedundantRefactor.to_string()
     );
 }
 #[test]
 fn refactor() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= b)"), "");
-    assert_eq!(cont.execute("a :="), "d c");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("d (:= b)"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a :="), "d c");
 }
 #[test]
 fn bad_refactor() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
     assert_eq!(
-        cont.execute("b (:= a)"),
+        cont.execute::<AbstractSyntaxTree>("b (:= a)"),
         ZiaError::DefinitionCollision.to_string()
     );
 }
 #[test]
 fn defining_used_symbol_as_used_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("f (:= (d e))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("f (:= (d e))"), "");
     assert_eq!(
-        cont.execute("d (:= (b c))"),
+        cont.execute::<AbstractSyntaxTree>("d (:= (b c))"),
         ZiaError::DefinitionCollision.to_string()
     );
 }
@@ -102,7 +102,7 @@ fn defining_used_symbol_as_used_pair() {
 fn definition_loop() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= (a b))"),
+        cont.execute::<AbstractSyntaxTree>("a (:= (a b))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
@@ -110,36 +110,36 @@ fn definition_loop() {
 fn nested_definition_loop() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= ((a b) b))"),
+        cont.execute::<AbstractSyntaxTree>("a (:= ((a b) b))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
 #[test]
 fn chained_definitions_loop() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("c (:= (a b))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("c (:= (a b))"), "");
     assert_eq!(
-        cont.execute("a (:= (c b))"),
+        cont.execute::<AbstractSyntaxTree>("a (:= (c b))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
 #[test]
 fn remove_definition() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("a (:= a)"), "");
-    assert_eq!(cont.execute("a :="), "a");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= a)"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a :="), "a");
     assert_eq!(
-        cont.execute("a (:= b)"),
+        cont.execute::<AbstractSyntaxTree>("a (:= b)"),
         ZiaError::RedundantRefactor.to_string()
     );
 }
 #[test]
 fn redundancy() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
+    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (:= (b c))"), "");
     assert_eq!(
-        cont.execute("a (:= (b c))"),
+        cont.execute::<AbstractSyntaxTree>("a (:= (b c))"),
         ZiaError::RedundantDefinition.to_string()
     );
 }

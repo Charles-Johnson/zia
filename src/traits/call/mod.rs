@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-mod expander;
+pub mod expander;
 pub mod label_getter;
 pub mod reduce;
 pub mod right_hand_call;
@@ -79,21 +79,20 @@ pub trait GetReduction<T> {
     fn get_reduction(&self) -> Option<T>;
 }
 
-pub trait Call<T, U>
+pub trait Call<T>
 where
-    Self: RightHandCall<T, U>,
+    Self: RightHandCall<T>,
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
         + DeleteReduction
         + UpdateNormalForm
-        + SyntaxFromConcept<U>
+        + SyntaxFromConcept
         + MaybeDisconnected
         + Display,
-    U: Reduce<T> + Expander<T> + Container + Display,
 {
-    fn call(&mut self, ast: &U) -> ZiaResult<String> {
+    fn call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
         match ast.get_expansion() {
             Some((ref mut left, ref right)) => self.call_pair(left, right),
             None => {
@@ -110,7 +109,7 @@ where
             }
         }
     }
-    fn call_pair(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
+    fn call_pair<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
         match right.get_concept() {
             Some(c) => match c.get_id() {
                 REDUCTION => Ok(left.recursively_reduce().to_string()),
@@ -127,7 +126,7 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
-    fn try_expanding_then_call(&mut self, ast: &U) -> ZiaResult<String> {
+    fn try_expanding_then_call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
         let expansion = &ast.expand();
         if expansion != ast {
             self.call(expansion)
@@ -135,7 +134,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-    fn try_reducing_then_call(&mut self, ast: &U) -> ZiaResult<String> {
+    fn try_reducing_then_call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
         let normal_form = &ast.recursively_reduce();
         if normal_form != ast {
             self.call(normal_form)
@@ -145,18 +144,17 @@ where
     }
 }
 
-impl<S, T, U> Call<T, U> for S
+impl<S, T> Call<T> for S
 where
-    S: RightHandCall<T, U>,
+    S: RightHandCall<T>,
     T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
         + DeleteReduction
         + UpdateNormalForm
-        + SyntaxFromConcept<U>
+        + SyntaxFromConcept
         + MaybeDisconnected
         + Display,
-    U: Expander<T> + Reduce<T> + Container + Display,
 {
 }
