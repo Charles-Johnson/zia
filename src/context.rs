@@ -30,7 +30,7 @@ use traits::{
                     AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller,
                     SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
                 },
-                refactor::{delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer},
+                refactor::{delete_normal_form::DeleteReduction},
                 ConceptNumber, MaybeDisconnected,
             },
             Container,
@@ -77,7 +77,8 @@ where
         + UpdateNormalForm
         + SyntaxFromConcept
         + MaybeDisconnected
-        + Display,
+        + Display
+		+ SetId,
 {
     fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -126,30 +127,40 @@ where
     }
 }
 
-trait GetConcept<T>
-{
+pub trait ConceptHandler<T> {
 	fn get_concept(&self, usize) -> T;
+	fn remove_concept_by_id(&mut self, usize);
 }
 
-impl<T, V> GetConcept<T> for Context<T, V> 
+impl<T, V> ConceptHandler<T> for Context<T, V> 
 where
 	T: Clone,
 {
 	fn get_concept(&self, id: usize) -> T {
 		self.concepts[id].clone()
 	}
+	fn remove_concept_by_id(&mut self, id: usize) {
+		self.concepts.remove(id);		
+	}
 }
 
-impl<T, V> ConceptTidyer<T> for Context<T, V>
+pub trait ConceptTidyer<T>
 where
     T: SetId + GetId,
+	Self: ConceptHandler<T>,
 {
     fn remove_concept(&mut self, concept: &T) {
-        self.concepts.remove(concept.get_id());
+        self.remove_concept_by_id(concept.get_id());
     }
     fn correct_id(&mut self, id: usize) {
-        self.concepts[id].set_id(id);
+        self.get_concept(id).set_id(id);
     }
+}
+
+impl<T, V> ConceptTidyer<T> for Context<T, V> 
+where
+	T: Clone + SetId + GetId,
+{
 }
 
 impl<T, V> ConceptNumber for Context<T, V> {

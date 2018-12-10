@@ -14,18 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use context::ConceptTidyer;
 use traits::call::right_hand_call::definer::ConceptNumber;
-use traits::GetId;
-
-pub trait ConceptTidyer<T> {
-    fn remove_concept(&mut self, &T);
-    fn correct_id(&mut self, usize);
-}
+use traits::{GetId, SetId};
 
 pub trait ConceptCleaner<T>
 where
     Self: ConceptTidyer<T> + ConceptNumber,
-    T: GetId,
+    T: GetId + SetId,
 {
     fn cleanly_remove_concept(&mut self, concept: &T) {
         self.remove_concept(concept);
@@ -38,6 +34,6 @@ where
 impl<S, T> ConceptCleaner<T> for S
 where
     S: ConceptTidyer<T> + ConceptNumber,
-    T: GetId,
+    T: GetId + SetId,
 {
 }

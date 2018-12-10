@@ -30,7 +30,7 @@ use constants::LABEL;
 use std::marker::Sized;
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
 use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
-use traits::{GetDefinition, GetId};
+use traits::{GetDefinition, GetId, SetId};
 use utils::{ZiaError, ZiaResult};
 
 pub trait ConceptNumber {
@@ -47,7 +47,8 @@ where
         + AbstractFactory
         + Unlabeller
         + MaybeDisconnected
-        + FindDefinition<T>,
+        + FindDefinition<T>
+		+ SetId,
     Self: ConceptMaker<T> + ConceptCleaner<T>,
 {
     fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
@@ -161,7 +162,8 @@ where
         + AbstractFactory
         + MaybeDisconnected
         + Unlabeller
-        + FindDefinition<T>,
+        + FindDefinition<T>
+		+ SetId,
     S: ConceptMaker<T> + ConceptCleaner<T>,
 {
 }

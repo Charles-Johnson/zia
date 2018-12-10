@@ -25,7 +25,7 @@ use concepts::Display;
 use constants::{DEFINE, REDUCTION};
 use traits::call::reduce::SyntaxFromConcept;
 use traits::call::{MaybeConcept, MightExpand};
-use traits::SyntaxFactory;
+use traits::{SyntaxFactory, SetId};
 use utils::{ZiaError, ZiaResult};
 
 pub trait RightHandCall<T>
@@ -37,7 +37,8 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-        + SyntaxFromConcept,
+        + SyntaxFromConcept
+		+ SetId,
     Self: Definer<T>,
 {
     fn call_as_righthand<
@@ -126,7 +127,8 @@ where
         + AbstractFactory
         + StringFactory
         + MaybeDisconnected
-        + SyntaxFromConcept,
+        + SyntaxFromConcept
+		+ SetId,
     Self: Definer<T>,
 {
 }

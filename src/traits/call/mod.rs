@@ -31,7 +31,7 @@ use self::right_hand_call::{Container, RightHandCall};
 use concepts::Display;
 use constants::{DEFINE, REDUCTION};
 use std::marker::Sized;
-use traits::GetDefinition;
+use traits::{GetDefinition, SetId};
 use utils::{ZiaError, ZiaResult};
 
 pub trait FindWhatReducesToIt<T> {
@@ -90,7 +90,8 @@ where
         + UpdateNormalForm
         + SyntaxFromConcept
         + MaybeDisconnected
-        + Display,
+        + Display
+		+ SetId,
 {
     fn call<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -168,6 +169,7 @@ where
         + UpdateNormalForm
         + SyntaxFromConcept
         + MaybeDisconnected
-        + Display,
+        + Display
+		+ SetId,
 {
 }
