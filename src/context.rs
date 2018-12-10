@@ -20,7 +20,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use traits::{
     call::{
         expander::Expander,
-        label_getter::{GetDefinitionOf, MaybeString},
+        label_getter::GetDefinitionOf,
         reduce::{Reduce, SyntaxFromConcept},
         right_hand_call::{
             definer::{
@@ -28,17 +28,17 @@ use traits::{
                 delete_definition::DeleteDefinition,
                 labeller::{
                     AbstractFactory, InsertDefinition, LabelConcept, Labeller,
-                    SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
+                    StringFactory, UpdateNormalForm,
                 },
                 refactor::{delete_normal_form::DeleteReduction},
                 ConceptNumber, MaybeDisconnected,
             },
             Container,
         },
-        Call, GetReduction,
+        Call, GetNormalForm,
     },
     syntax_converter::{StringConcept, SyntaxConverter},
-    GetDefinition, GetId, SetId,
+    GetId, SetId,
 };
 
 pub struct Context<T, V> {
@@ -224,20 +224,15 @@ where
     }
 }
 
-impl<T, V> ConceptMaker<T, V> for Context<T, V>
+impl<S, T, V> ConceptMaker<T, V> for S
 where
-    T: GetDefinition<T>
-        + ConvertTo<Rc<RefCell<V>>>
-        + From<Rc<RefCell<V>>>
-        + StringFactory
+    T: StringFactory
         + AbstractFactory
-        + SetDefinition<T>
-        + GetReduction<T>
-        + Clone
-        + SetReduction<T>
-        + PartialEq
+        + InsertDefinition
+        + GetNormalForm
+        + UpdateNormalForm
         + GetDefinitionOf<T>
-        + MaybeString,
-    V: Display,
+		+ ConvertTo<Rc<RefCell<V>>>,
+    S: Labeller<T, V>,
 {
 }
