@@ -126,6 +126,20 @@ where
     }
 }
 
+trait GetConcept<T>
+{
+	fn get_concept(&self, usize) -> T;
+}
+
+impl<T, V> GetConcept<T> for Context<T, V> 
+where
+	T: Clone,
+{
+	fn get_concept(&self, id: usize) -> T {
+		self.concepts[id].clone()
+	}
+}
+
 impl<T, V> ConceptTidyer<T> for Context<T, V>
 where
     T: SetId + GetId,
