@@ -16,40 +16,58 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, Execute, ZiaError, AbstractSyntaxTree};
+use zia::{AbstractSyntaxTree, Context, Display, Execute, ZiaError};
 
 #[test]
 fn fresh_symbol_is_not_a_program() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn fresh_pair_is_not_a_program() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a a"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn fresh_nested_pair_is_not_a_program() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (a a)"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a (a a)"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn used_symbol_is_not_a_program() {
     let mut cont = Context::new();
     assert_eq!(cont.execute::<AbstractSyntaxTree>("a (-> b)"), "");
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn used_symbol_in_a_pair_is_not_a_program() {
     let mut cont = Context::new();
     assert_eq!(cont.execute::<AbstractSyntaxTree>("a (-> b)"), "");
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a a"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn used_symbol_in_a_nested_pair_is_not_a_program() {
     let mut cont = Context::new();
     assert_eq!(cont.execute::<AbstractSyntaxTree>("a (-> b)"), "");
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("a (a a)"), ZiaError::NotAProgram.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("a (a a)"),
+        ZiaError::NotAProgram.to_string()
+    );
 }
 #[test]
 fn symbol_whose_normal_form_is_a_program_is_a_program() {

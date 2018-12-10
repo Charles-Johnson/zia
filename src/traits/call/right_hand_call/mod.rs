@@ -40,7 +40,13 @@ where
         + SyntaxFromConcept,
     Self: Definer<T>,
 {
-    fn call_as_righthand<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
+    fn call_as_righthand<
+        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+    >(
+        &mut self,
+        left: &mut U,
+        right: &U,
+    ) -> ZiaResult<String> {
         match right.get_expansion() {
             Some((ref rightleft, ref mut rightright)) => {
                 self.match_righthand_pair::<U>(left, rightleft, rightright)
@@ -48,7 +54,9 @@ where
             None => Err(ZiaError::NotAProgram),
         }
     }
-    fn match_righthand_pair<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(
+    fn match_righthand_pair<
+        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+    >(
         &mut self,
         left: &mut U,
         rightleft: &U,
@@ -70,7 +78,13 @@ where
             None => Err(ZiaError::NotAProgram),
         }
     }
-    fn try_reduction<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, syntax: &mut U, normal_form: &U) -> ZiaResult<String> {
+    fn try_reduction<
+        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+    >(
+        &mut self,
+        syntax: &mut U,
+        normal_form: &U,
+    ) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
@@ -87,7 +101,13 @@ where
             Ok("".to_string())
         }
     }
-    fn try_definition<U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>>(&mut self, new: &U, old: &mut U) -> ZiaResult<String> {
+    fn try_definition<
+        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+    >(
+        &mut self,
+        new: &U,
+        old: &mut U,
+    ) -> ZiaResult<String> {
         if old.contains(new) {
             Err(ZiaError::InfiniteDefinition)
         } else {

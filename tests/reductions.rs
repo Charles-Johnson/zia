@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, Execute, ZiaError, AbstractSyntaxTree};
+use zia::{AbstractSyntaxTree, Context, Display, Execute, ZiaError};
 
 #[test]
 fn symbol_to_symbol() {
@@ -27,15 +27,27 @@ fn symbol_to_symbol() {
 #[test]
 fn pair_to_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("(not true) (-> false)"), "");
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("(not true) (-> false)"),
+        ""
+    );
     assert_eq!(cont.execute::<AbstractSyntaxTree>("(not true) ->"), "false");
 }
 #[test]
 fn nested_pairs_to_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("(not true) (-> false)"), "");
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("(not false) (-> true)"), "");
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("(not(not true))->"), "true");
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("(not true) (-> false)"),
+        ""
+    );
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("(not false) (-> true)"),
+        ""
+    );
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("(not(not true))->"),
+        "true"
+    );
 }
 #[test]
 fn chain() {

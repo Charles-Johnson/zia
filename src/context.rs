@@ -18,38 +18,27 @@ use concepts::{ConvertTo, Display};
 use constants::LABEL;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use traits::{
-	call::{
-		right_hand_call::{
-			definer::{
-				labeller::{
-					AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller,
-					SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
-				}, 
-				refactor::{
-					delete_normal_form::DeleteReduction, 
-					refactor_id::ConceptTidyer,
-				}, 
-				ConceptNumber,
-				concept_maker::ConceptMaker, 
-				delete_definition::DeleteDefinition, 
-				MaybeDisconnected,
-			},
-			Container,
-			RightHandCall,
-		},
-    	label_getter::{
-			GetDefinitionOf, 
-			MaybeString
-		},
-	    reduce::{Reduce, SyntaxFromConcept},
-		expander::Expander, 
-		Call, 
-		GetReduction,
-	}, 
-	syntax_converter::{
-		label::Label, StringConcept, SyntaxConverter
-	}, 
-	GetDefinition, GetId, SetId,
+    call::{
+        expander::Expander,
+        label_getter::{GetDefinitionOf, MaybeString},
+        reduce::{Reduce, SyntaxFromConcept},
+        right_hand_call::{
+            definer::{
+                concept_maker::ConceptMaker,
+                delete_definition::DeleteDefinition,
+                labeller::{
+                    AbstractFactory, ConceptAdder, InsertDefinition, LabelConcept, Labeller,
+                    SetDefinition, SetReduction, StringFactory, UpdateNormalForm,
+                },
+                refactor::{delete_normal_form::DeleteReduction, refactor_id::ConceptTidyer},
+                ConceptNumber, MaybeDisconnected,
+            },
+            Container,
+        },
+        Call, GetReduction,
+    },
+    syntax_converter::{StringConcept, SyntaxConverter},
+    GetDefinition, GetId, SetId,
 };
 
 pub struct Context<T, V> {
@@ -77,10 +66,10 @@ where
     }
 }
 
-pub trait Execute<T> 
+pub trait Execute<T>
 where
-	Self: RightHandCall<T>,
-	T: StringFactory
+    Self: Call<T> + SyntaxConverter<T>,
+    T: StringFactory
         + AbstractFactory
         + InsertDefinition
         + DeleteDefinition
@@ -90,15 +79,24 @@ where
         + MaybeDisconnected
         + Display,
 {
-    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, command: &str) -> String;
+    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
+        &mut self,
+        command: &str,
+    ) -> String {
+        let ast = match self.ast_from_expression::<U>(command) {
+            Ok(a) => a,
+            Err(e) => return e.to_string(),
+        };
+        match self.call(&ast) {
+            Ok(s) => s,
+            Err(e) => e.to_string(),
+        }
+    }
 }
 
 impl<T, V> Execute<T> for Context<T, V>
 where
-    T: Label
-        + GetDefinitionOf<T>
-        + PartialEq
-        + AbstractFactory
+    T: AbstractFactory
         + StringFactory
         + InsertDefinition
         + DeleteDefinition
@@ -112,16 +110,6 @@ where
         + SetId,
     V: Display,
 {
-    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, command: &str) -> String {
-        let ast = match self.ast_from_expression::<U>(command) {
-            Ok(a) => a,
-            Err(e) => return e.to_string(),
-        };
-        match self.call(&ast) {
-            Ok(s) => s,
-            Err(e) => e.to_string(),
-        }
-    }
 }
 
 pub trait StringAdder<V> {

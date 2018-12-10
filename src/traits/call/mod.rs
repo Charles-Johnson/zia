@@ -92,7 +92,10 @@ where
         + MaybeDisconnected
         + Display,
 {
-    fn call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
+    fn call<U: Reduce<T> + Expander<T> + Container + Display>(
+        &mut self,
+        ast: &U,
+    ) -> ZiaResult<String> {
         match ast.get_expansion() {
             Some((ref mut left, ref right)) => self.call_pair(left, right),
             None => {
@@ -109,7 +112,11 @@ where
             }
         }
     }
-    fn call_pair<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, left: &mut U, right: &U) -> ZiaResult<String> {
+    fn call_pair<U: Reduce<T> + Expander<T> + Container + Display>(
+        &mut self,
+        left: &mut U,
+        right: &U,
+    ) -> ZiaResult<String> {
         match right.get_concept() {
             Some(c) => match c.get_id() {
                 REDUCTION => Ok(left.recursively_reduce().to_string()),
@@ -126,7 +133,10 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
-    fn try_expanding_then_call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
+    fn try_expanding_then_call<U: Reduce<T> + Expander<T> + Container + Display>(
+        &mut self,
+        ast: &U,
+    ) -> ZiaResult<String> {
         let expansion = &ast.expand();
         if expansion != ast {
             self.call(expansion)
@@ -134,7 +144,10 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-    fn try_reducing_then_call<U: Reduce<T> + Expander<T> + Container + Display>(&mut self, ast: &U) -> ZiaResult<String> {
+    fn try_reducing_then_call<U: Reduce<T> + Expander<T> + Container + Display>(
+        &mut self,
+        ast: &U,
+    ) -> ZiaResult<String> {
         let normal_form = &ast.recursively_reduce();
         if normal_form != ast {
             self.call(normal_form)

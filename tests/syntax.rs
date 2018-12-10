@@ -16,12 +16,15 @@
 */
 extern crate zia;
 
-use zia::{Context, Display, Execute, ZiaError, AbstractSyntaxTree};
+use zia::{AbstractSyntaxTree, Context, Display, Execute, ZiaError};
 
 #[test]
 fn empty_parentheses() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute::<AbstractSyntaxTree>("()"), ZiaError::EmptyParentheses.to_string());
+    assert_eq!(
+        cont.execute::<AbstractSyntaxTree>("()"),
+        ZiaError::EmptyParentheses.to_string()
+    );
 }
 #[test]
 fn ambiguous_expression() {

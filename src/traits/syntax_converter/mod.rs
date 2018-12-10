@@ -40,7 +40,11 @@ where
         let concept_if_exists = self.concept_from_label(s);
         U::new(s, concept_if_exists)
     }
-    fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(&mut self, left: &str, right: &str) -> ZiaResult<U> {
+    fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(
+        &mut self,
+        left: &str,
+        right: &str,
+    ) -> ZiaResult<U> {
         let lefthand = try!(self.ast_from_token::<U>(left));
         let righthand = try!(self.ast_from_token::<U>(right));
         Ok(lefthand.combine_with(&righthand))

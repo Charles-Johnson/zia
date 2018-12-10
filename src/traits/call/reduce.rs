@@ -76,18 +76,16 @@ where
         match self.get_label() {
             Some(ref s) => U::new(s, Some(self.clone())),
             None => match self.get_definition() {
-                Some((ref left, ref right)) => left.to_ast::<U>().combine_with(&right.to_ast::<U>()),
+                Some((ref left, ref right)) => {
+                    left.to_ast::<U>().combine_with(&right.to_ast::<U>())
+                }
                 None => panic!("Unlabelled concept with no definition"),
             },
         }
     }
 }
 
-impl<S> SyntaxFromConcept for S
-where
-    S: LabelGetter + FindDefinition<S> + PartialEq,
-{
-}
+impl<S> SyntaxFromConcept for S where S: LabelGetter + FindDefinition<S> + PartialEq {}
 
 fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
     left: Option<U>,

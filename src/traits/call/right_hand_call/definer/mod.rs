@@ -50,7 +50,11 @@ where
         + FindDefinition<T>,
     Self: ConceptMaker<T> + ConceptCleaner<T>,
 {
-    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, before: &mut U, after: &U) -> ZiaResult<()> {
+    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+        &mut self,
+        before: &mut U,
+        after: &U,
+    ) -> ZiaResult<()> {
         if after.get_expansion().is_some() {
             Err(ZiaError::BadDefinition)
         } else {
@@ -111,7 +115,12 @@ where
             self.cleanly_remove_concept(concept);
         }
     }
-    fn redefine<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, concept: &mut T, left: &U, right: &U) -> ZiaResult<()> {
+    fn redefine<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+        &mut self,
+        concept: &mut T,
+        left: &U,
+        right: &U,
+    ) -> ZiaResult<()> {
         if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
             self.relabel(right_concept, &right.to_string())
@@ -126,7 +135,12 @@ where
         concept.unlabel();
         self.label(concept, new_label)
     }
-    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(&mut self, syntax: &str, left: &U, right: &U) -> ZiaResult<()> {
+    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+        &mut self,
+        syntax: &str,
+        left: &U,
+        right: &U,
+    ) -> ZiaResult<()> {
         let mut definition_concept: Option<T> = None;
         if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
             definition_concept = l.find_definition(r);

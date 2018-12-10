@@ -32,7 +32,10 @@ where
         + GetDefinitionOf<T>,
     Self: Labeller<T>,
 {
-    fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(&mut self, ast: &U) -> ZiaResult<T> {
+    fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(
+        &mut self,
+        ast: &U,
+    ) -> ZiaResult<T> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
