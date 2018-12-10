@@ -21,13 +21,14 @@ mod constants;
 mod context;
 mod token;
 mod traits;
+mod combined_traits;
 mod utils;
 
 use ast::AbstractSyntaxTree as GenericAbstractSyntaxTree;
 pub use ast::traits::Display;
 use concepts::{ConceptRef, StringConcept};
 use context::Context as GenericContext;
-pub use context::traits::{ContextMaker, Execute};
+pub use combined_traits::{ContextMaker, Execute};
 pub use utils::ZiaError;
 
 pub type AbstractSyntaxTree = GenericAbstractSyntaxTree<ConceptRef>;

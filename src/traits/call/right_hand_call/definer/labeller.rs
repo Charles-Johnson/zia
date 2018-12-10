@@ -14,11 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::ConvertTo;
-pub use context::traits::{BlindConceptAdder, ConceptAdder, LabelConcept};
-use std::{marker, rc::Rc, cell::RefCell};
-use traits::call::label_getter::{FindDefinition, GetDefinitionOf, MaybeString};
-use traits::call::right_hand_call::definer::ConceptNumber;
+pub use context::traits::{BlindConceptAdder, LabelConcept};
+use std::marker;
 use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, GetReduction};
 use utils::{ZiaError, ZiaResult};
@@ -80,106 +77,5 @@ where
 
 impl<T> InsertDefinition for T where
     T: SetDefinition<T> + marker::Sized + Container + GetReduction<Self>
-{
-}
-
-pub trait Labeller<T, V>
-where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
-    Self: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
-	V: MaybeString,
-{
-    fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
-        let mut label_concept = self.get_label_concept();
-        let mut definition = try!(self.find_or_insert_definition(&mut label_concept, concept));
-        let mut string_ref = self.new_string(string);
-        definition.update_normal_form(&mut string_ref)
-    }
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
-        let mut new_abstract = self.new_abstract();
-        try!(self.label(&mut new_abstract, string));
-        Ok(new_abstract)
-    }
-    fn setup(&mut self) -> ZiaResult<()> {
-        self.new_abstract(); // for LABEL
-        let mut define_concept = self.new_abstract(); // for DEFINE;
-        let mut reduction_concept = self.new_abstract(); // for REDUCTION
-        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
-        self.label(&mut reduction_concept, "->") //two more ids occupied
-    }
-}
-
-impl<S, T, V> Labeller<T, V> for S
-where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
-    S: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
-	V: MaybeString,
-{
-}
-
-pub trait StringMaker<T, V>
-where
-    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
-    Self: ConceptAdder<T, V> + ConceptNumber,
-	V: MaybeString,
-{
-    fn new_string(&mut self, string: &str) -> T {
-        let new_id = self.number_of_concepts();
-        let string_ref = T::new_string(new_id, string);
-        self.add_concept(&string_ref);
-        string_ref
-    }
-}
-
-impl<S, T, V> StringMaker<T, V> for S
-where
-    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
-    S: ConceptAdder<T, V> + ConceptNumber,
-	V: MaybeString,
-{
-}
-
-pub trait FindOrInsertDefinition<T>
-where
-    T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
-    Self: AbstractMaker<T>,
-{
-    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
-        let application = lefthand.find_definition(righthand);
-        match application {
-            None => {
-                let mut definition = self.new_abstract();
-                try!(definition.insert_definition(lefthand, righthand));
-                Ok(definition.clone())
-            }
-            Some(def) => Ok(def),
-        }
-    }
-}
-
-impl<S, T> FindOrInsertDefinition<T> for S
-where
-    T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
-    S: AbstractMaker<T>,
-{
-}
-
-pub trait AbstractMaker<T>
-where
-    T: AbstractFactory,
-    Self: BlindConceptAdder<T> + ConceptNumber,
-{
-    fn new_abstract(&mut self) -> T {
-        let new_id = self.number_of_concepts();
-        let concept_ref = T::new_abstract(new_id);
-        self.blindly_add_concept(&concept_ref);
-        concept_ref
-    }
-}
-
-impl<S, T> AbstractMaker<T> for S
-where
-    T: AbstractFactory,
-    S: BlindConceptAdder<T> + ConceptNumber,
 {
 }
