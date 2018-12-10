@@ -170,13 +170,26 @@ impl<T, V> ConceptNumber for Context<T, V> {
     }
 }
 
+pub trait BlindConceptAdder<T> {
+	fn blindly_add_concept(&mut self, &T);
+}
+
+impl<T, V> BlindConceptAdder<T> for Context<T, V> 
+where
+	T: Clone,
+{
+	fn blindly_add_concept(&mut self, concept: &T) {
+		self.concepts.push(concept.clone())
+	}
+}
+
 impl<T, V> ConceptAdder<T> for Context<T, V>
 where
     T: ConvertTo<Rc<RefCell<V>>> + Clone,
     V: Display,
 {
     fn add_concept(&mut self, concept: &T) {
-        self.concepts.push(concept.clone());
+        self.blindly_add_concept(concept);
         if let Some(ref sr) = concept.convert() {
             self.add_string(sr);
         }
