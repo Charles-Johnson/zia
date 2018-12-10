@@ -197,10 +197,10 @@ where
 	}
 }
 
-impl<T, V> ConceptAdder<T, V> for Context<T, V>
+impl<S, T, V> ConceptAdder<T, V> for S
 where
-    T: ConvertTo<Rc<RefCell<V>>> + Clone,
-    V: Display,
+	S: BlindConceptAdder<T> + StringAdder<V>,
+	T: ConvertTo<Rc<RefCell<V>>>, 
 {}
 
 impl<T, V> StringConcept<T> for Context<T, V>
