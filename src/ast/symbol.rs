@@ -15,8 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use concepts::traits::Display;
-use traits::{call::MaybeConcept, SyntaxFactory};
+use super::traits::{MaybeConcept, SyntaxFactory, Display};
 
 pub struct Symbol<T> {
     syntax: String,

@@ -1,29 +1,19 @@
-use traits::call::label_getter::LabelGetter;
+/*  Library for the Zia programming language.
+    Copyright (C) 2018  Charles Johnson
 
-impl<T: LabelGetter> Display for T {
-    fn to_string(&self) -> String {
-        match self.get_string() {
-            Some(s) => "\"".to_string() + &s + "\"",
-            None => match self.get_label() {
-                Some(l) => l,
-                None => match self.get_definition() {
-                    Some((left, right)) => {
-                        let mut left_string = left.to_string();
-                        if left_string.contains(' ') {
-                            left_string = "(".to_string() + &left_string;
-                        }
-                        let mut right_string = right.to_string();
-                        if right_string.contains(' ') {
-                            right_string += ")";
-                        }
-                        left_string + " " + &right_string
-                    }
-                    None => panic!("Unlabelled concept with no definition!"),
-                },
-            },
-        }
-    }
-}
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 pub trait GetId {
     fn get_id(&self) -> usize;
@@ -86,8 +76,4 @@ pub trait StringFactory {
 
 pub trait ConvertTo<T> {
     fn convert(&self) -> Option<T>;
-}
-
-pub trait Display {
-    fn to_string(&self) -> String;
 }

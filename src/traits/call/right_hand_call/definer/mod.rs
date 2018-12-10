@@ -25,7 +25,8 @@ use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNor
 use self::refactor::delete_normal_form::DeleteReduction;
 use self::refactor::refactor_id::ConceptCleaner;
 use self::refactor::Unlabeller;
-use concepts::traits::{ConvertTo, Display};
+use concepts::traits::ConvertTo;
+use ast::traits::Display;
 pub use context::traits::ConceptNumber;
 use constants::LABEL;
 use std::{marker::Sized, rc::Rc, cell::RefCell};
@@ -33,6 +34,7 @@ use traits::call::label_getter::{FindDefinition, GetDefinitionOf, MaybeString};
 use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
 use traits::{GetDefinition, GetId, SetId};
 use utils::{ZiaError, ZiaResult};
+pub use ast::traits::Pair;
 
 pub trait Definer<T, V>
 where
@@ -167,10 +169,6 @@ where
 	V: MaybeString,
     S: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
-}
-
-pub trait Pair<T, U> {
-    fn from_pair(&str, Option<T>, &U, &U) -> Self;
 }
 
 pub trait MaybeDisconnected

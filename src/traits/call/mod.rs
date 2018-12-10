@@ -29,19 +29,14 @@ use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReductio
 use self::right_hand_call::definer::MaybeDisconnected;
 use self::right_hand_call::{Container, RightHandCall};
 use self::label_getter::MaybeString;
-use concepts::traits::{ConvertTo, Display};
+use concepts::traits::ConvertTo;
+use ast::traits::Display;
 pub use concepts::traits::{GetReduction, FindWhatReducesToIt};
 use constants::{DEFINE, REDUCTION};
 use std::{marker::Sized, rc::Rc, cell::RefCell};
 use traits::{GetDefinition, SetId};
 use utils::{ZiaError, ZiaResult};
-
-pub trait MightExpand
-where
-    Self: Sized,
-{
-    fn get_expansion(&self) -> Option<(Self, Self)>;
-}
+pub use ast::traits::{MightExpand, MaybeConcept};
 
 impl<T> MightExpand for T
 where
@@ -50,10 +45,6 @@ where
     fn get_expansion(&self) -> Option<(T, T)> {
         self.get_definition()
     }
-}
-
-pub trait MaybeConcept<T> {
-    fn get_concept(&self) -> Option<T>;
 }
 
 pub trait GetNormalForm

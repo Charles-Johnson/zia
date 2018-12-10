@@ -18,7 +18,4 @@
 pub mod call;
 pub mod syntax_converter;
 pub use concepts::traits::{GetId, SetId, GetDefinition};
-
-pub trait SyntaxFactory<T> {
-    fn new(&str, Option<T>) -> Self;
-}
+pub use ast::traits::SyntaxFactory;
