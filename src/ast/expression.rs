@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::symbol::Symbol;
-use concepts::Display;
+use concepts::traits::Display;
 use std::borrow::Borrow;
 use traits::call::right_hand_call::definer::Pair;
 use traits::call::MaybeConcept;

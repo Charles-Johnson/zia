@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::ConvertTo;
+use concepts::traits::ConvertTo;
 pub use context::traits::{BlindConceptAdder, ConceptAdder, LabelConcept};
 use std::{marker, rc::Rc, cell::RefCell};
 use traits::call::label_getter::{FindDefinition, GetDefinitionOf, MaybeString};
@@ -22,6 +22,7 @@ use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, GetReduction};
 use utils::{ZiaError, ZiaResult};
+pub use concepts::traits::{SetDefinition, SetReduction, AbstractFactory, StringFactory};
 
 
 
@@ -47,17 +48,6 @@ where
 }
 
 impl<T> UpdateNormalForm for T where T: GetNormalForm + SetReduction<Self> + PartialEq {}
-
-pub trait SetReduction<T> {
-    fn make_reduce_to(&mut self, &T);
-    fn make_reduce_from(&mut self, &T);
-}
-
-pub trait SetDefinition<T> {
-    fn set_definition(&mut self, &T, &T);
-    fn add_as_lefthand_of(&mut self, &T);
-    fn add_as_righthand_of(&mut self, &T);
-}
 
 pub trait InsertDefinition
 where
@@ -192,12 +182,4 @@ where
     T: AbstractFactory,
     S: BlindConceptAdder<T> + ConceptNumber,
 {
-}
-
-pub trait AbstractFactory {
-    fn new_abstract(usize) -> Self;
-}
-
-pub trait StringFactory {
-    fn new_string(usize, &str) -> Self;
 }

@@ -17,6 +17,7 @@
 use constants::LABEL;
 use traits::call::GetNormalForm;
 use traits::{GetDefinition, GetId};
+pub use concepts::traits::{GetDefinitionOf, MaybeString};
 
 pub trait LabelGetter
 where
@@ -51,10 +52,6 @@ impl<T> LabelGetter for T where
 {
 }
 
-pub trait MaybeString {
-    fn get_string(&self) -> Option<String>;
-}
-
 pub trait FindDefinition<T>
 where
     T: GetDefinitionOf<T> + Clone + PartialEq,
@@ -82,9 +79,4 @@ where
     T: GetDefinitionOf<T> + Clone + PartialEq,
     S: GetDefinitionOf<T>,
 {
-}
-
-pub trait GetDefinitionOf<T> {
-    fn get_lefthand_of(&self) -> Vec<T>;
-    fn get_righthand_of(&self) -> Vec<T>;
 }

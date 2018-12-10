@@ -16,6 +16,7 @@
 */
 use std::marker::Sized;
 use traits::call::GetReduction;
+pub use concepts::traits::RemoveReduction;
 
 pub trait DeleteReduction
 where
@@ -33,8 +34,3 @@ where
 }
 
 impl<T> DeleteReduction for T where T: GetReduction<T> + RemoveReduction<T> {}
-
-pub trait RemoveReduction<T> {
-    fn make_reduce_to_none(&mut self);
-    fn no_longer_reduces_from(&mut self, &T);
-}

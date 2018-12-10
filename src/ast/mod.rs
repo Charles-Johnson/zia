@@ -19,7 +19,7 @@ mod symbol;
 
 use self::expression::Expression;
 use self::symbol::Symbol;
-use concepts::Display;
+use concepts::traits::Display;
 use traits::{
     call::{
         label_getter::FindDefinition, right_hand_call::definer::Pair, MaybeConcept, MightExpand,

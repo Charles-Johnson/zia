@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::{ConvertTo, Display};
+use concepts::traits::{ConvertTo, Display};
 use std::{rc::Rc, cell::RefCell};
 use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::labeller::{

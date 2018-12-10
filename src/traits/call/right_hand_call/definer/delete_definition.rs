@@ -16,6 +16,7 @@
 */
 use std::marker::Sized;
 use traits::GetDefinition;
+pub use concepts::traits::RemoveDefinition;
 
 pub trait DeleteDefinition
 where
@@ -34,9 +35,3 @@ where
 }
 
 impl<T> DeleteDefinition for T where T: GetDefinition<T> + RemoveDefinition<T> + Sized {}
-
-pub trait RemoveDefinition<T> {
-    fn remove_definition(&mut self);
-    fn remove_as_lefthand_of(&mut self, &T);
-    fn remove_as_righthand_of(&mut self, &T);
-}

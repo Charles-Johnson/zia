@@ -21,7 +21,7 @@ use self::definer::labeller::{AbstractFactory, InsertDefinition, StringFactory, 
 use self::definer::refactor::delete_normal_form::DeleteReduction;
 use self::definer::{Definer, MaybeDisconnected, Pair};
 use ast::Combine;
-use concepts::{ConvertTo, Display};
+use concepts::traits::{ConvertTo, Display};
 use constants::{DEFINE, REDUCTION};
 use std::{rc::Rc, cell::RefCell};
 use traits::call::reduce::SyntaxFromConcept;

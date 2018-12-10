@@ -16,18 +16,12 @@
 */
 mod abstract_concept;
 pub mod string_concept;
+pub mod traits;
 
 use self::abstract_concept::{AbstractConcept, AbstractRef};
 pub use self::string_concept::StringConcept;
 use self::string_concept::StringRef;
-use traits::call::label_getter::{GetDefinitionOf, LabelGetter, MaybeString};
-use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
-use traits::call::right_hand_call::definer::labeller::{
-    AbstractFactory, SetDefinition, SetReduction, StringFactory,
-};
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::{FindWhatReducesToIt, GetReduction};
-use traits::{GetDefinition, GetId, SetId};
+use self::traits::{GetDefinition, GetId, SetId, FindWhatReducesToIt, GetReduction, RemoveReduction, SetDefinition, SetReduction, RemoveDefinition, GetDefinitionOf, MaybeString, AbstractFactory, StringFactory, ConvertTo};
 
 pub enum ConceptRef {
     Abstract(AbstractRef<ConceptRef>),
@@ -43,10 +37,6 @@ impl SetId for ConceptRef {
     }
 }
 
-pub trait ConvertTo<T> {
-    fn convert(&self) -> Option<T>;
-}
-
 impl ConvertTo<StringRef<ConceptRef>> for ConceptRef {
     fn convert(&self) -> Option<StringRef<ConceptRef>> {
         match *self {
@@ -59,35 +49,6 @@ impl ConvertTo<StringRef<ConceptRef>> for ConceptRef {
 impl From<StringRef<ConceptRef>> for ConceptRef {
     fn from(sr: StringRef<ConceptRef>) -> ConceptRef {
         ConceptRef::String(sr.clone())
-    }
-}
-
-pub trait Display {
-    fn to_string(&self) -> String;
-}
-
-impl<T: LabelGetter> Display for T {
-    fn to_string(&self) -> String {
-        match self.get_string() {
-            Some(s) => "\"".to_string() + &s + "\"",
-            None => match self.get_label() {
-                Some(l) => l,
-                None => match self.get_definition() {
-                    Some((left, right)) => {
-                        let mut left_string = left.to_string();
-                        if left_string.contains(' ') {
-                            left_string = "(".to_string() + &left_string;
-                        }
-                        let mut right_string = right.to_string();
-                        if right_string.contains(' ') {
-                            right_string += ")";
-                        }
-                        left_string + " " + &right_string
-                    }
-                    None => panic!("Unlabelled concept with no definition!"),
-                },
-            },
-        }
     }
 }
 

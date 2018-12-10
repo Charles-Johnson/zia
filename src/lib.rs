@@ -24,7 +24,7 @@ mod traits;
 mod utils;
 
 use ast::AbstractSyntaxTree as GenericAbstractSyntaxTree;
-pub use concepts::Display;
+pub use concepts::traits::Display;
 use concepts::{ConceptRef, StringConcept};
 use context::Context as GenericContext;
 pub use context::traits::{ContextMaker, Execute};

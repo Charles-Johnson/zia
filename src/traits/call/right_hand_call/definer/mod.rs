@@ -25,7 +25,7 @@ use self::labeller::{AbstractFactory, InsertDefinition, StringFactory, UpdateNor
 use self::refactor::delete_normal_form::DeleteReduction;
 use self::refactor::refactor_id::ConceptCleaner;
 use self::refactor::Unlabeller;
-use concepts::{ConvertTo, Display};
+use concepts::traits::{ConvertTo, Display};
 pub use context::traits::ConceptNumber;
 use constants::LABEL;
 use std::{marker::Sized, rc::Rc, cell::RefCell};

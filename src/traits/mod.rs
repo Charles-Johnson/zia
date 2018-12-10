@@ -17,19 +17,8 @@
 
 pub mod call;
 pub mod syntax_converter;
-
-pub trait GetId {
-    fn get_id(&self) -> usize;
-}
-
-pub trait SetId {
-    fn set_id(&mut self, id: usize);
-}
+pub use concepts::traits::{GetId, SetId, GetDefinition};
 
 pub trait SyntaxFactory<T> {
     fn new(&str, Option<T>) -> Self;
-}
-
-pub trait GetDefinition<T> {
-    fn get_definition(&self) -> Option<(T, T)>;
 }

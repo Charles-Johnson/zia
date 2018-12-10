@@ -29,15 +29,12 @@ use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReductio
 use self::right_hand_call::definer::MaybeDisconnected;
 use self::right_hand_call::{Container, RightHandCall};
 use self::label_getter::MaybeString;
-use concepts::{ConvertTo, Display};
+use concepts::traits::{ConvertTo, Display};
+pub use concepts::traits::{GetReduction, FindWhatReducesToIt};
 use constants::{DEFINE, REDUCTION};
 use std::{marker::Sized, rc::Rc, cell::RefCell};
 use traits::{GetDefinition, SetId};
 use utils::{ZiaError, ZiaResult};
-
-pub trait FindWhatReducesToIt<T> {
-    fn find_what_reduces_to_it(&self) -> Vec<T>;
-}
 
 pub trait MightExpand
 where
@@ -75,10 +72,6 @@ where
 }
 
 impl<S> GetNormalForm for S where S: GetReduction<S> + Sized + Clone {}
-
-pub trait GetReduction<T> {
-    fn get_reduction(&self) -> Option<T>;
-}
 
 pub trait Call<T, V>
 where

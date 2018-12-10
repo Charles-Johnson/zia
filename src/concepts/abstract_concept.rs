@@ -14,14 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
 use std::cell::RefCell;
 use std::rc::Rc;
-use traits::call::label_getter::GetDefinitionOf;
-use traits::call::right_hand_call::definer::delete_definition::RemoveDefinition;
-use traits::call::right_hand_call::definer::labeller::{SetDefinition, SetReduction};
-use traits::call::right_hand_call::definer::refactor::delete_normal_form::RemoveReduction;
-use traits::call::{FindWhatReducesToIt, GetReduction};
-use traits::{GetDefinition, GetId, SetId};
+use super::traits::{GetDefinition, GetId, SetId, FindWhatReducesToIt, GetReduction, RemoveReduction, SetDefinition, SetReduction, RemoveDefinition, GetDefinitionOf};
 
 pub type AbstractRef<T> = Rc<RefCell<AbstractConcept<T>>>;
 
