@@ -96,7 +96,7 @@ where
     }
 }
 
-impl<T, V> Execute<T, V> for Context<T, V>
+impl<S, T, V> Execute<T, V> for S
 where
     T: AbstractFactory
         + StringFactory
@@ -110,7 +110,7 @@ where
         + From<Rc<RefCell<V>>>
         + ConvertTo<Rc<RefCell<V>>>
         + SetId,
-    V: Display,
+    S: Call<T, V> + SyntaxConverter<T>,
 {
 }
 
