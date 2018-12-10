@@ -19,7 +19,7 @@ use std::{cell::RefCell, rc::Rc};
 use traits::{
     call::{
         expander::Expander,
-        label_getter::GetDefinitionOf,
+        label_getter::{GetDefinitionOf, MaybeString},
         reduce::{Reduce, SyntaxFromConcept},
         right_hand_call::{
             definer::{
@@ -54,6 +54,7 @@ where
         + Display
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
 {
     fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -85,9 +86,39 @@ where
         + ConvertTo<Rc<RefCell<V>>>
         + SetId,
     S: Call<T, V> + SyntaxConverter<T>,
+	V: MaybeString,
 {
 }
 
+pub trait ContextMaker<T, V>
+where
+	Self: Labeller<T, V> + Sized + Default,
+    T: InsertDefinition
+        + UpdateNormalForm
+        + GetDefinitionOf<T>
+        + StringFactory
+        + AbstractFactory
+        + ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
+{
+	fn new() -> Self {
+        let mut cont = Self::default();
+        cont.setup().unwrap();
+        cont
+    }
+}
+
+impl<S, T, V> ContextMaker<T, V> for S
+where
+	S: Labeller<T, V> + Sized + Default,
+    T: InsertDefinition
+        + UpdateNormalForm
+        + GetDefinitionOf<T>
+        + StringFactory
+        + AbstractFactory
+        + ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
+{}
 
 impl<S, T, V> ConceptMaker<T, V> for S
 where
@@ -99,11 +130,8 @@ where
         + GetDefinitionOf<T>
 		+ ConvertTo<Rc<RefCell<V>>>,
     S: Labeller<T, V>,
+	V: MaybeString,
 {
-}
-
-pub trait StringAdder<V> {
-    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>);
 }
 
 pub trait ConceptTidyer<T>
@@ -129,12 +157,16 @@ where
 pub trait ConceptAdder<T, V> 
 where
 	Self: BlindConceptAdder<T> + StringAdder<V>,
-	T: ConvertTo<Rc<RefCell<V>>>, 
+	T: ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString, 
 {
     fn add_concept(&mut self, concept: &T) {
         self.blindly_add_concept(concept);
         if let Some(ref sr) = concept.convert() {
-            self.add_string(sr);
+            self.add_string(sr, &match sr.borrow().get_string() {
+				Some(s) => s.clone(), 
+				None => panic!("Concept can be converted into a string but has no string!"),
+			});
         }
 	}
 }
@@ -142,8 +174,17 @@ where
 impl<S, T, V> ConceptAdder<T, V> for S
 where
 	S: BlindConceptAdder<T> + StringAdder<V>,
-	T: ConvertTo<Rc<RefCell<V>>>, 
+	T: ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString, 
 {}
+
+pub trait LabelConcept<T> {
+    fn get_label_concept(&self) -> T;
+}
+
+pub trait StringAdder<V> {
+    fn add_string(&mut self, &Rc<RefCell<V>>, &str);
+}
 
 pub trait BlindConceptAdder<T> {
 	fn blindly_add_concept(&mut self, &T);
@@ -152,4 +193,12 @@ pub trait BlindConceptAdder<T> {
 pub trait ConceptHandler<T> {
 	fn get_concept(&self, usize) -> T;
 	fn remove_concept_by_id(&mut self, usize);
+}
+
+pub trait StringConcept<T> {
+    fn get_string_concept(&self, &str) -> Option<T>;
+}
+
+pub trait ConceptNumber {
+    fn number_of_concepts(&self) -> usize;
 }

@@ -28,6 +28,7 @@ use self::right_hand_call::definer::labeller::{
 use self::right_hand_call::definer::refactor::delete_normal_form::DeleteReduction;
 use self::right_hand_call::definer::MaybeDisconnected;
 use self::right_hand_call::{Container, RightHandCall};
+use self::label_getter::MaybeString;
 use concepts::{ConvertTo, Display};
 use constants::{DEFINE, REDUCTION};
 use std::{marker::Sized, rc::Rc, cell::RefCell};
@@ -93,6 +94,7 @@ where
         + Display
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
 {
     fn call<U: Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
@@ -173,5 +175,6 @@ where
         + Display
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
 {
 }

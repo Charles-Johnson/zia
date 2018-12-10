@@ -17,59 +17,29 @@
 
 pub mod traits;
 
-use concepts::{ConvertTo, Display};
 use constants::LABEL;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use traits::{
-    call::{
-        label_getter::GetDefinitionOf,
-        right_hand_call::{
-            definer::{
-                labeller::{
-                    AbstractFactory, InsertDefinition, LabelConcept, Labeller,
-                    StringFactory, UpdateNormalForm,
-                },
-                ConceptNumber,
-            },
-        },
-    },
-    syntax_converter::StringConcept,
-};
-
-use self::traits::{StringAdder, ConceptHandler, BlindConceptAdder};
+use self::traits::{StringAdder, StringConcept, ConceptHandler, BlindConceptAdder, LabelConcept, ConceptNumber};
 
 pub struct Context<T, V> {
     string_map: HashMap<String, Rc<RefCell<V>>>,
     concepts: Vec<T>,
 }
 
-impl<T, V> Context<T, V>
-where
-    T: InsertDefinition
-        + UpdateNormalForm
-        + GetDefinitionOf<T>
-        + StringFactory
-        + AbstractFactory
-        + ConvertTo<Rc<RefCell<V>>>,
-    V: Display,
-{
-    pub fn new() -> Context<T, V> {
-        let mut cont = Context::<T, V> {
-            string_map: HashMap::new(),
-            concepts: Vec::new(),
-        };
-        cont.setup().unwrap();
-        cont
-    }
+impl<T, V> Default for Context<T, V> {
+	fn default() -> Context<T, V> {
+		Context::<T,V> {
+			string_map: HashMap::new(),
+			concepts: Vec::new(),
+		}
+	}
 }
 
 impl<T, V> StringAdder<V> for Context<T, V>
-where
-    V: Display,
 {
-    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>) {
+    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>, string: &str) {
         self.string_map
-            .insert(string_ref.borrow().to_string(), string_ref.clone());
+            .insert(string.to_string(), string_ref.clone());
     }
 }
 

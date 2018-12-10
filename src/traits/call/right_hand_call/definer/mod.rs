@@ -26,16 +26,13 @@ use self::refactor::delete_normal_form::DeleteReduction;
 use self::refactor::refactor_id::ConceptCleaner;
 use self::refactor::Unlabeller;
 use concepts::{ConvertTo, Display};
+pub use context::traits::ConceptNumber;
 use constants::LABEL;
 use std::{marker::Sized, rc::Rc, cell::RefCell};
-use traits::call::label_getter::{FindDefinition, GetDefinitionOf};
+use traits::call::label_getter::{FindDefinition, GetDefinitionOf, MaybeString};
 use traits::call::{FindWhatReducesToIt, GetReduction, MaybeConcept, MightExpand};
 use traits::{GetDefinition, GetId, SetId};
 use utils::{ZiaError, ZiaResult};
-
-pub trait ConceptNumber {
-    fn number_of_concepts(&self) -> usize;
-}
 
 pub trait Definer<T, V>
 where
@@ -50,6 +47,7 @@ where
         + FindDefinition<T>
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
     Self: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
     fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
@@ -166,6 +164,7 @@ where
         + FindDefinition<T>
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
     S: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
 }

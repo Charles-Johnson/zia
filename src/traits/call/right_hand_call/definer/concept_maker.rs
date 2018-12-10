@@ -16,7 +16,7 @@
 */
 use concepts::{ConvertTo, Display};
 use std::{rc::Rc, cell::RefCell};
-use traits::call::label_getter::GetDefinitionOf;
+use traits::call::label_getter::{GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::labeller::{
     AbstractFactory, InsertDefinition, Labeller, StringFactory, UpdateNormalForm,
 };
@@ -32,6 +32,7 @@ where
         + UpdateNormalForm
         + GetDefinitionOf<T>
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
     Self: Labeller<T, V>,
 {
     fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(

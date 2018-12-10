@@ -18,6 +18,7 @@ pub mod label;
 
 use self::label::Label;
 use ast::Combine;
+pub use context::traits::StringConcept;
 use token::parse_line;
 use traits::{call::label_getter::GetDefinitionOf, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
@@ -83,8 +84,4 @@ where
     S: StringConcept<T>,
     T: Label,
 {
-}
-
-pub trait StringConcept<T> {
-    fn get_string_concept(&self, &str) -> Option<T>;
 }

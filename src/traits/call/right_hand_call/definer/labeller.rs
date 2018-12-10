@@ -15,10 +15,9 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::ConvertTo;
-pub use context::traits::{BlindConceptAdder, ConceptAdder};
+pub use context::traits::{BlindConceptAdder, ConceptAdder, LabelConcept};
 use std::{marker, rc::Rc, cell::RefCell};
-use traits::call::label_getter::FindDefinition;
-use traits::call::label_getter::GetDefinitionOf;
+use traits::call::label_getter::{FindDefinition, GetDefinitionOf, MaybeString};
 use traits::call::right_hand_call::definer::ConceptNumber;
 use traits::call::right_hand_call::Container;
 use traits::call::{GetNormalForm, GetReduction};
@@ -98,6 +97,7 @@ pub trait Labeller<T, V>
 where
     T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
     Self: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
+	V: MaybeString,
 {
     fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
         let mut label_concept = self.get_label_concept();
@@ -119,14 +119,11 @@ where
     }
 }
 
-pub trait LabelConcept<T> {
-    fn get_label_concept(&self) -> T;
-}
-
 impl<S, T, V> Labeller<T, V> for S
 where
     T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
     S: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
+	V: MaybeString,
 {
 }
 
@@ -134,6 +131,7 @@ pub trait StringMaker<T, V>
 where
     T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
     Self: ConceptAdder<T, V> + ConceptNumber,
+	V: MaybeString,
 {
     fn new_string(&mut self, string: &str) -> T {
         let new_id = self.number_of_concepts();
@@ -147,6 +145,7 @@ impl<S, T, V> StringMaker<T, V> for S
 where
     T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
     S: ConceptAdder<T, V> + ConceptNumber,
+	V: MaybeString,
 {
 }
 

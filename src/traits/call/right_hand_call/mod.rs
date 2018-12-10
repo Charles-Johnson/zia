@@ -25,7 +25,7 @@ use concepts::{ConvertTo, Display};
 use constants::{DEFINE, REDUCTION};
 use std::{rc::Rc, cell::RefCell};
 use traits::call::reduce::SyntaxFromConcept;
-use traits::call::{MaybeConcept, MightExpand};
+use traits::call::{MaybeConcept, MightExpand, label_getter::MaybeString};
 use traits::{SyntaxFactory, SetId};
 use utils::{ZiaError, ZiaResult};
 
@@ -41,6 +41,7 @@ where
         + SyntaxFromConcept
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
     Self: Definer<T, V>,
 {
     fn call_as_righthand<
@@ -132,6 +133,7 @@ where
         + SyntaxFromConcept
 		+ SetId
 		+ ConvertTo<Rc<RefCell<V>>>,
+	V: MaybeString,
     Self: Definer<T, V>,
 {
 }
