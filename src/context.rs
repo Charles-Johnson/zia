@@ -157,9 +157,10 @@ where
     }
 }
 
-impl<T, V> ConceptTidyer<T> for Context<T, V> 
+impl<S, T> ConceptTidyer<T> for S 
 where
-	T: Clone + SetId + GetId,
+	T: SetId + GetId,
+	S: ConceptHandler<T>,
 {
 }
 
