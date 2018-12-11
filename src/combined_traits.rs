@@ -318,7 +318,7 @@ where
         match rightleft.get_concept() {
             Some(c) => match c.get_id() {
                 REDUCTION => self.execute_reduction::<U>(left, rightright),
-                DEFINE => self.try_definition::<U>(left, rightright),
+                DEFINE => self.execute_definition::<U>(left, rightright),
                 _ => {
                     let rightleft_reduction = c.get_reduction();
                     if let Some(r) = rightleft_reduction {
@@ -329,20 +329,6 @@ where
                 }
             },
             None => Err(ZiaError::NotAProgram),
-        }
-    }
-    fn try_definition<
-        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
-    >(
-        &mut self,
-        new: &U,
-        old: &mut U,
-    ) -> ZiaResult<String> {
-        if old.contains(new) {
-            Err(ZiaError::InfiniteDefinition)
-        } else {
-            try!(self.define::<U>(old, new));
-            Ok("".to_string())
         }
     }
 }
@@ -414,7 +400,21 @@ where
 	V: MaybeString,
     Self: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
-    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+    fn execute_definition<
+        U: Container + MaybeConcept<T> + Pair<T, U> + Display
+    >(
+        &mut self,
+        new: &U,
+        old: &mut U,
+    ) -> ZiaResult<String> {
+        if old.contains(new) {
+            Err(ZiaError::InfiniteDefinition)
+        } else {
+            try!(self.define::<U>(old, new));
+            Ok("".to_string())
+        }
+    }
+    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + Display>(
         &mut self,
         before: &mut U,
         after: &U,
@@ -479,7 +479,7 @@ where
             self.cleanly_remove_concept(concept);
         }
     }
-    fn redefine<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+    fn redefine<U: MightExpand + MaybeConcept<T> + Display>(
         &mut self,
         concept: &mut T,
         left: &U,
@@ -499,7 +499,7 @@ where
         concept.unlabel();
         self.label(concept, new_label)
     }
-    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + PartialEq + Display>(
+    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + Display>(
         &mut self,
         syntax: &str,
         left: &U,
