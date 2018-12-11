@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetLabel};
-use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
+use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand};
 use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
 use context::traits::{BlindConceptAdder, StringAdder, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
@@ -23,7 +23,7 @@ use token::parse_line;
 use utils::{ZiaError, ZiaResult};
 use constants::{DEFINE, REDUCTION};
 use self::concept_tidyer::{ConceptTidyer, GetId, SetId};
-use self::syntax_finder::{Label, SyntaxFinder};
+use self::syntax_finder::{Label, SyntaxFinder, SyntaxFactory};
 
 pub trait ContextMaker<T, V>
 where
@@ -121,10 +121,6 @@ where
             _ => Err(ZiaError::AmbiguousExpression),
         }
     }
-    fn ast_from_atom<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> U {
-        let concept_if_exists = self.concept_from_label(s);
-        U::new(s, concept_if_exists)
-    }
     fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(
         &mut self,
         left: &str,
@@ -138,7 +134,7 @@ where
         if t.contains(' ') {
             self.ast_from_expression::<U>(t)
         } else {
-            Ok(self.ast_from_atom::<U>(t))
+            Ok(self.ast_from_symbol::<U>(t))
         }
     }
 }
@@ -152,7 +148,9 @@ where
 
 mod syntax_finder {
 	pub use concepts::traits::Label;
+	pub use ast::traits::SyntaxFactory;
 	use context::traits::StringConcept;
+
 	pub trait SyntaxFinder<T>
 	where
 		T: Label,
@@ -164,6 +162,10 @@ mod syntax_finder {
 		        Some(c) => c.get_labellee(),
 		    }
 		}
+		fn ast_from_symbol<U: SyntaxFactory<T>>(&mut self, s: &str) -> U {
+        	let concept_if_exists = self.concept_from_label(s);
+        	U::new(s, concept_if_exists)
+    	}
 	}
 
 	impl<S, T> SyntaxFinder<T> for S
