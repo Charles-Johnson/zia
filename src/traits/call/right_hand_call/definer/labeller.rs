@@ -17,34 +17,9 @@
 pub use context::traits::{BlindConceptAdder, LabelConcept};
 use std::marker;
 use traits::call::right_hand_call::Container;
-use traits::call::{GetNormalForm, GetReduction};
+use traits::call::GetReduction;
 use utils::{ZiaError, ZiaResult};
-pub use concepts::traits::{SetDefinition, SetReduction, AbstractFactory, StringFactory};
-
-
-
-pub trait UpdateNormalForm
-where
-    Self: GetNormalForm + SetReduction<Self> + PartialEq,
-{
-    fn update_normal_form(&mut self, normal_form: &mut Self) -> ZiaResult<()> {
-        if let Some(n) = normal_form.get_normal_form() {
-            if *self == n {
-                return Err(ZiaError::CyclicReduction);
-            }
-        }
-        if let Some(ref n) = self.get_reduction() {
-            if n == normal_form {
-                return Err(ZiaError::RedundantReduction);
-            }
-        }
-        self.make_reduce_to(normal_form);
-        normal_form.make_reduce_from(self);
-        Ok(())
-    }
-}
-
-impl<T> UpdateNormalForm for T where T: GetNormalForm + SetReduction<Self> + PartialEq {}
+pub use concepts::traits::{SetDefinition, SetReduction, AbstractFactory, StringFactory, UpdateNormalForm};
 
 pub trait InsertDefinition
 where

@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::Combine;
-use traits::call::label_getter::{FindDefinition, LabelGetter};
+use concepts::traits::{FindDefinition, LabelGetter};
 use traits::call::MightExpand;
 use traits::SyntaxFactory;
 

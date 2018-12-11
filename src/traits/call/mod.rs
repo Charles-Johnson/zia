@@ -15,15 +15,14 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 pub mod expander;
-pub mod label_getter;
 pub mod reduce;
 pub mod right_hand_call;
 
 pub use self::reduce::{Reduce, SyntaxFromConcept};
-pub use concepts::traits::{GetReduction, FindWhatReducesToIt};
-use std::marker::Sized;
+pub use concepts::traits::{GetReduction, FindWhatReducesToIt, GetNormalForm};
 use traits::GetDefinition;
 pub use ast::traits::{MightExpand, MaybeConcept};
+pub use concepts::traits::{GetDefinitionOf, MaybeString, LabelGetter, FindDefinition};
 
 impl<T> MightExpand for T
 where
@@ -33,20 +32,3 @@ where
         self.get_definition()
     }
 }
-
-pub trait GetNormalForm
-where
-    Self: GetReduction<Self> + Sized + Clone,
-{
-    fn get_normal_form(&self) -> Option<Self> {
-        match self.get_reduction() {
-            None => None,
-            Some(ref n) => match n.get_normal_form() {
-                None => Some(n.clone()),
-                Some(ref m) => Some(m.clone()),
-            },
-        }
-    }
-}
-
-impl<S> GetNormalForm for S where S: GetReduction<S> + Sized + Clone {}

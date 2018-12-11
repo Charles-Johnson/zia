@@ -14,31 +14,25 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::ConvertTo;
+use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetId, SetId};
 use ast::traits::{Combine, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
-use context::traits::{BlindConceptAdder, StringAdder, ConceptHandler, ConceptNumber, LabelConcept};
+use context::traits::{BlindConceptAdder, StringAdder, StringConcept, ConceptHandler, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
+use token::parse_line;
 use traits::{
     call::{
         expander::Expander,
-        label_getter::{GetDefinitionOf, MaybeString, FindDefinition},
         reduce::{Reduce, SyntaxFromConcept},
         right_hand_call::{
             definer::{
-                delete_definition::DeleteDefinition,
                 labeller::{
-                    AbstractFactory, InsertDefinition,
-                    StringFactory, UpdateNormalForm,
+					InsertDefinition,
                 },
-                refactor::{delete_normal_form::DeleteReduction, Unlabeller},
-                MaybeDisconnected,
             },
             Container,
         },
-        GetNormalForm,
     },
-    syntax_converter::SyntaxConverter,
-    GetId, SetId,
+	syntax_converter::label::Label,
 };
 use utils::{ZiaError, ZiaResult};
 use constants::{DEFINE, REDUCTION};
@@ -121,6 +115,69 @@ where
         + SetId,
     S: Call<T, V> + SyntaxConverter<T>,
 	V: MaybeString,
+{
+}
+
+pub trait SyntaxConverter<T>
+where
+    Self: SyntaxFinder<T>,
+    T: Label + GetDefinitionOf<T> + PartialEq,
+{
+    fn ast_from_expression<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> ZiaResult<U> {
+        let tokens: Vec<String> = parse_line(s);
+        match tokens.len() {
+            0 => Err(ZiaError::EmptyParentheses),
+            1 => self.ast_from_token::<U>(&tokens[0]),
+            2 => self.ast_from_pair::<U>(&tokens[0], &tokens[1]),
+            _ => Err(ZiaError::AmbiguousExpression),
+        }
+    }
+    fn ast_from_atom<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> U {
+        let concept_if_exists = self.concept_from_label(s);
+        U::new(s, concept_if_exists)
+    }
+    fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(
+        &mut self,
+        left: &str,
+        right: &str,
+    ) -> ZiaResult<U> {
+        let lefthand = try!(self.ast_from_token::<U>(left));
+        let righthand = try!(self.ast_from_token::<U>(right));
+        Ok(lefthand.combine_with(&righthand))
+    }
+    fn ast_from_token<U: SyntaxFactory<T> + Combine<T>>(&mut self, t: &str) -> ZiaResult<U> {
+        if t.contains(' ') {
+            self.ast_from_expression::<U>(t)
+        } else {
+            Ok(self.ast_from_atom::<U>(t))
+        }
+    }
+}
+
+impl<S, T> SyntaxConverter<T> for S
+where
+    S: SyntaxFinder<T>,
+    T: Label + GetDefinitionOf<T> + PartialEq,
+{
+}
+
+pub trait SyntaxFinder<T>
+where
+    T: Label,
+    Self: StringConcept<T>,
+{
+    fn concept_from_label(&self, s: &str) -> Option<T> {
+        match self.get_string_concept(s) {
+            None => None,
+            Some(c) => c.get_labellee(),
+        }
+    }
+}
+
+impl<S, T> SyntaxFinder<T> for S
+where
+    S: StringConcept<T>,
+    T: Label,
 {
 }
 

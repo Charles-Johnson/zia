@@ -15,21 +15,5 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 pub mod delete_normal_form;
-pub mod refactor_id;
 
-use self::delete_normal_form::DeleteReduction;
-use traits::call::label_getter::LabelGetter;
-
-pub trait Unlabeller
-where
-    Self: LabelGetter + DeleteReduction,
-{
-    fn unlabel(&mut self) {
-        match self.get_concept_of_label() {
-            None => panic!("No label to remove"),
-            Some(mut d) => d.delete_reduction(),
-        }
-    }
-}
-
-impl<S> Unlabeller for S where S: LabelGetter + DeleteReduction {}
+pub use concepts::traits::Unlabeller;

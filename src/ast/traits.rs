@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use traits::call::label_getter::{FindDefinition, LabelGetter};
+use concepts::traits::{FindDefinition, LabelGetter};
 
 impl<T: LabelGetter> Display for T {
     fn to_string(&self) -> String {

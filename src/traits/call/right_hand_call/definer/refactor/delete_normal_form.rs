@@ -14,23 +14,4 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::marker::Sized;
-use traits::call::GetReduction;
-pub use concepts::traits::RemoveReduction;
-
-pub trait DeleteReduction
-where
-    Self: GetReduction<Self> + RemoveReduction<Self> + Sized,
-{
-    fn delete_reduction(&mut self) {
-        match self.get_reduction() {
-            None => panic!("No normal form to delete"),
-            Some(mut n) => {
-                n.no_longer_reduces_from(self);
-                self.make_reduce_to_none();
-            }
-        };
-    }
-}
-
-impl<T> DeleteReduction for T where T: GetReduction<T> + RemoveReduction<T> {}
+pub use concepts::traits::{RemoveReduction, DeleteReduction};
