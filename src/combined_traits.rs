@@ -14,15 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetId, SetId, Label};
+use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, Label};
 use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
 use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
-use context::traits::{BlindConceptAdder, StringAdder, StringConcept, ConceptHandler, ConceptNumber, LabelConcept};
+use context::traits::{BlindConceptAdder, StringAdder, StringConcept, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
 use token::parse_line;
 use utils::{ZiaError, ZiaResult};
 use constants::{DEFINE, REDUCTION};
-
+use self::concept_tidyer::{ConceptTidyer, GetId, SetId};
 
 pub trait ContextMaker<T, V>
 where
@@ -580,24 +580,28 @@ where
 {
 }
 
-pub trait ConceptTidyer<T>
-where
-    T: SetId + GetId,
-	Self: ConceptHandler<T>,
-{
-    fn remove_concept(&mut self, concept: &T) {
-        self.remove_concept_by_id(concept.get_id());
-    }
-    fn correct_id(&mut self, id: usize) {
-        self.get_concept(id).set_id(id);
-    }
-}
+mod concept_tidyer {
+	pub use concepts::traits::{GetId, SetId};
+	use context::traits::ConceptHandler;	
+	pub trait ConceptTidyer<T>
+	where
+		T: SetId + GetId,
+		Self: ConceptHandler<T>,
+	{
+		fn remove_concept(&mut self, concept: &T) {
+		    self.remove_concept_by_id(concept.get_id());
+		}
+		fn correct_id(&mut self, id: usize) {
+		    self.get_concept(id).set_id(id);
+		}
+	}
 
 impl<S, T> ConceptTidyer<T> for S 
 where
 	T: SetId + GetId,
 	S: ConceptHandler<T>,
 {
+}
 }
 
 pub trait Labeller<T, V>
