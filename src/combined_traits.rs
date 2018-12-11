@@ -398,7 +398,7 @@ where
 		+ ConvertTo<Rc<RefCell<V>>>
 		+ GetLabel,
 	V: MaybeString,
-    Self: ConceptMaker<T, V> + ConceptCleaner<T>,
+    Self: ConceptMaker<T, V> + DefinitionDeleter<T>,
 {
     fn execute_definition<
         U: Container + MaybeConcept<T> + Pair<T, U> + Display
@@ -429,54 +429,29 @@ where
             ) {
                 (_, None, None) => Err(ZiaError::RedundantRefactor),
                 (None, Some(ref mut b), None) => self.relabel(b, &after.to_string()),
-                (None, Some(ref mut b), Some(_)) => {
-                    if b.get_label().is_none() {
-                        self.label(b, &after.to_string())
-                    } else {
-                        self.relabel(b, &after.to_string())
-                    }
-                }
+                (None, Some(ref mut b), Some(_)) => if b.get_label().is_none() {
+                    self.label(b, &after.to_string())
+                } else {
+                    self.relabel(b, &after.to_string())
+                },
                 (None, None, Some((ref left, ref right))) => {
                     self.define_new_syntax(&after.to_string(), left, right)
                 }
-                (Some(ref mut a), Some(ref mut b), None) => self.check_to_delete_definition(b, a),
-                (Some(ref mut a), Some(ref mut b), Some(_)) => {
-                    self.check_for_redundant_definition(b, a)
-                }
+                (Some(ref mut a), Some(ref b), None) => if a == b {
+            		self.delete_definition(a);
+            		Ok(())
+        		} else {
+            		Err(ZiaError::DefinitionCollision)
+        		},
+                (Some(ref a), Some(ref b), Some(_)) => if a == b {
+            		Err(ZiaError::RedundantDefinition)
+        		} else {
+            		Err(ZiaError::DefinitionCollision)
+        		},
                 (Some(ref mut a), None, Some((ref left, ref right))) => {
                     self.redefine(a, left, right)
                 }
             }
-        }
-    }
-    fn check_to_delete_definition(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-        if before == after {
-            self.delete_definition(before);
-            Ok(())
-        } else {
-            Err(ZiaError::DefinitionCollision)
-        }
-    }
-    fn check_for_redundant_definition(&mut self, before: &mut T, after: &mut T) -> ZiaResult<()> {
-        if before == after {
-            Err(ZiaError::RedundantDefinition)
-        } else {
-            Err(ZiaError::DefinitionCollision)
-        }
-    }
-    fn delete_definition(&mut self, concept: &mut T) {
-        let mut definition = concept.get_definition();
-        concept.delete_definition();
-        self.try_delete_concept(concept);
-        if let Some((ref mut left, ref mut right)) = definition {
-            self.try_delete_concept(left);
-            self.try_delete_concept(right);
-        }
-    }
-    fn try_delete_concept(&mut self, concept: &mut T) {
-        if concept.is_disconnected() {
-            concept.unlabel();
-            self.cleanly_remove_concept(concept);
         }
     }
     fn redefine<U: MightExpand + MaybeConcept<T> + Display>(
@@ -530,9 +505,37 @@ where
 		+ ConvertTo<Rc<RefCell<V>>>
 		+ GetLabel,
 	V: MaybeString,
-    S: ConceptMaker<T, V> + ConceptCleaner<T>,
+    S: ConceptMaker<T, V> + DefinitionDeleter<T>,
 {
 }
+
+pub trait DefinitionDeleter<T>
+where
+	Self: ConceptCleaner<T>,
+	T: DeleteDefinition + Unlabeller + MaybeDisconnected + SetId,
+{
+	fn delete_definition(&mut self, concept: &mut T) {
+        let mut definition = concept.get_definition();
+        concept.delete_definition();
+        self.try_delete_concept(concept);
+        if let Some((ref mut left, ref mut right)) = definition {
+            self.try_delete_concept(left);
+            self.try_delete_concept(right);
+        }
+    }
+    fn try_delete_concept(&mut self, concept: &mut T) {
+        if concept.is_disconnected() {
+            concept.unlabel();
+            self.cleanly_remove_concept(concept);
+        }
+    }
+}
+
+impl<S, T> DefinitionDeleter<T> for S
+where
+	S: ConceptCleaner<T>,
+	T: DeleteDefinition + Unlabeller + MaybeDisconnected + SetId,
+{}
 
 pub trait ConceptMaker<T, V>
 where

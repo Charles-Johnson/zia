@@ -252,6 +252,7 @@ mod insert_definition {
 	use concepts::traits::{SetDefinition, GetReduction};
 	use ast::traits::Container;
 	use utils::{ZiaError, ZiaResult};
+
 	pub trait InsertDefinition
 	where
 		Self: SetDefinition<Self> + Sized + Container + GetReduction<Self>,
