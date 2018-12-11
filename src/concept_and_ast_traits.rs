@@ -14,10 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{LabelGetter, SetDefinition, GetReduction, GetDefinition};
-use ast::traits::{Container, Display, MightExpand, SyntaxFactory};
-use utils::{ZiaError, ZiaResult};
+use concepts::traits::{LabelGetter, GetDefinition};
+use ast::traits::{Display, MightExpand, SyntaxFactory};
 use self::combine::{MaybeConcept, Pair, FindDefinition};
+pub use self::insert_definition::InsertDefinition;
 pub use self::combine::Combine;
 
 impl<T> MightExpand for T
@@ -27,40 +27,6 @@ where
     fn get_expansion(&self) -> Option<(T, T)> {
         self.get_definition()
     }
-}
-
-pub trait InsertDefinition
-where
-    Self: SetDefinition<Self> + Sized + Container + GetReduction<Self>,
-{
-    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) -> ZiaResult<()> {
-        if lefthand.contains(self) || righthand.contains(self) {
-            Err(ZiaError::InfiniteDefinition)
-        } else {
-            try!(self.check_reductions(lefthand));
-            try!(self.check_reductions(righthand));
-            self.set_definition(lefthand, righthand);
-            lefthand.add_as_lefthand_of(self);
-            righthand.add_as_righthand_of(self);
-            Ok(())
-        }
-    }
-    fn check_reductions(&self, concept: &Self) -> ZiaResult<()> {
-        if let Some(ref r) = concept.get_reduction() {
-            if r == self || r.contains(self) {
-                Err(ZiaError::ExpandingReduction)
-            } else {
-                self.check_reductions(r)
-            }
-        } else {
-            Ok(())
-        }
-    }
-}
-
-impl<T> InsertDefinition for T where
-    T: SetDefinition<T> + Sized + Container + GetReduction<Self>
-{
 }
 
 pub trait Expander<T>
@@ -217,6 +183,45 @@ impl<T: LabelGetter> Display for T {
             },
         }
     }
+}
+
+mod insert_definition {
+	use concepts::traits::{SetDefinition, GetReduction};
+	use ast::traits::Container;
+	use utils::{ZiaError, ZiaResult};
+	pub trait InsertDefinition
+	where
+		Self: SetDefinition<Self> + Sized + Container + GetReduction<Self>,
+	{
+		fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) -> ZiaResult<()> {
+		    if lefthand.contains(self) || righthand.contains(self) {
+		        Err(ZiaError::InfiniteDefinition)
+		    } else {
+		        try!(self.check_reductions(lefthand));
+		        try!(self.check_reductions(righthand));
+		        self.set_definition(lefthand, righthand);
+		        lefthand.add_as_lefthand_of(self);
+		        righthand.add_as_righthand_of(self);
+		        Ok(())
+		    }
+		}
+		fn check_reductions(&self, concept: &Self) -> ZiaResult<()> {
+		    if let Some(ref r) = concept.get_reduction() {
+		        if r == self || r.contains(self) {
+		            Err(ZiaError::ExpandingReduction)
+		        } else {
+		            self.check_reductions(r)
+		        }
+		    } else {
+		        Ok(())
+		    }
+		}
+	}
+
+	impl<T> InsertDefinition for T where
+		T: SetDefinition<T> + Sized + Container + GetReduction<Self>
+	{
+	}
 }
 
 mod combine {
