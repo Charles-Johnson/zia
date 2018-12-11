@@ -14,11 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{LabelGetter, GetDefinition};
-use ast::traits::{Display, MightExpand, SyntaxFactory};
-use self::combine::{MaybeConcept, Pair, FindDefinition};
+use concepts::traits::GetDefinition;
+use ast::traits::{Display, MightExpand};
 pub use self::insert_definition::InsertDefinition;
-pub use self::combine::Combine;
+use self::syntax_from_concept::{LabelGetter, SyntaxFactory, match_left_right, Pair};
+pub use self::syntax_from_concept::{Combine, SyntaxFromConcept, MaybeConcept};
 
 impl<T> MightExpand for T
 where
@@ -95,94 +95,135 @@ where
 {
 }
 
-pub trait SyntaxFromConcept
-where
-    Self: LabelGetter + FindDefinition<Self> + PartialEq,
-{
-    fn reduce<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> Option<U> {
-        match self.get_normal_form() {
-            None => match self.get_definition() {
-                Some((ref left, ref right)) => {
-                    let left_result = left.reduce();
-                    let right_result = right.reduce();
-                    match_left_right::<Self, U>(
-                        left_result,
-                        right_result,
-                        &left.to_ast(),
-                        &right.to_ast(),
-                    )
-                }
-                None => None,
-            },
-            Some(ref n) => Some(n.to_ast()),
-        }
-    }
-    fn to_ast<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> U {
-        match self.get_label() {
-            Some(ref s) => U::new(s, Some(self.clone())),
-            None => match self.get_definition() {
-                Some((ref left, ref right)) => {
-                    left.to_ast::<U>().combine_with(&right.to_ast::<U>())
-                }
-                None => panic!("Unlabelled concept with no definition"),
-            },
-        }
-    }
-}
-
-impl<S> SyntaxFromConcept for S where S: LabelGetter + FindDefinition<S> + PartialEq {}
-
-fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
-    left: Option<U>,
-    right: Option<U>,
-    original_left: &U,
-    original_right: &U,
-) -> Option<U> {
-    match (left, right) {
-        (None, None) => None,
-        (Some(new_left), None) => Some(contract_pair::<T, U>(&new_left, original_right)),
-        (None, Some(new_right)) => Some(contract_pair::<T, U>(original_left, &new_right)),
-        (Some(new_left), Some(new_right)) => Some(contract_pair::<T, U>(&new_left, &new_right)),
-    }
-}
-
-fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
-    lefthand: &U,
-    righthand: &U,
-) -> U {
-    if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
-        if let Some(def) = lc.find_definition(&rc) {
-            if let Some(ref a) = def.get_label() {
-                return U::from_pair(a, Some(def), &lefthand, &righthand);
-            }
-        }
-    }
-    lefthand.combine_with(righthand)
-}
-
 impl<T: LabelGetter> Display for T {
-    fn to_string(&self) -> String {
-        match self.get_string() {
-            Some(s) => "\"".to_string() + &s + "\"",
-            None => match self.get_label() {
-                Some(l) => l,
-                None => match self.get_definition() {
-                    Some((left, right)) => {
-                        let mut left_string = left.to_string();
-                        if left_string.contains(' ') {
-                            left_string = "(".to_string() + &left_string;
-                        }
-                        let mut right_string = right.to_string();
-                        if right_string.contains(' ') {
-                            right_string += ")";
-                        }
-                        left_string + " " + &right_string
-                    }
-                    None => panic!("Unlabelled concept with no definition!"),
-                },
-            },
-        }
-    }
+	fn to_string(&self) -> String {
+	    match self.get_string() {
+	        Some(s) => "\"".to_string() + &s + "\"",
+	        None => match self.get_label() {
+	            Some(l) => l,
+	            None => match self.get_definition() {
+	                Some((left, right)) => {
+	                    let mut left_string = left.to_string();
+	                    if left_string.contains(' ') {
+	                        left_string = "(".to_string() + &left_string;
+	                    }
+	                    let mut right_string = right.to_string();
+	                    if right_string.contains(' ') {
+	                        right_string += ")";
+	                    }
+	                    left_string + " " + &right_string
+	                }
+	                None => panic!("Unlabelled concept with no definition!"),
+	            },
+	        },
+	    }
+	}
+}
+
+mod syntax_from_concept {
+	pub use concepts::traits::LabelGetter;
+	use self::combine::FindDefinition;
+	pub use self::combine::{Combine, Pair, MaybeConcept};
+	pub use ast::traits::SyntaxFactory;
+	pub trait SyntaxFromConcept
+	where
+		Self: LabelGetter + FindDefinition<Self> + PartialEq,
+	{
+		fn reduce<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> Option<U> {
+		    match self.get_normal_form() {
+		        None => match self.get_definition() {
+		            Some((ref left, ref right)) => {
+		                let left_result = left.reduce();
+		                let right_result = right.reduce();
+		                match_left_right::<Self, U>(
+		                    left_result,
+		                    right_result,
+		                    &left.to_ast(),
+		                    &right.to_ast(),
+		                )
+		            }
+		            None => None,
+		        },
+		        Some(ref n) => Some(n.to_ast()),
+		    }
+		}
+		fn to_ast<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> U {
+		    match self.get_label() {
+		        Some(ref s) => U::new(s, Some(self.clone())),
+		        None => match self.get_definition() {
+		            Some((ref left, ref right)) => {
+		                left.to_ast::<U>().combine_with(&right.to_ast::<U>())
+		            }
+		            None => panic!("Unlabelled concept with no definition"),
+		        },
+		    }
+		}
+	}
+
+	impl<S> SyntaxFromConcept for S where S: LabelGetter + FindDefinition<S> + PartialEq {}
+
+	pub fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
+		left: Option<U>,
+		right: Option<U>,
+		original_left: &U,
+		original_right: &U,
+	) -> Option<U> {
+		match (left, right) {
+		    (None, None) => None,
+		    (Some(new_left), None) => Some(contract_pair::<T, U>(&new_left, original_right)),
+		    (None, Some(new_right)) => Some(contract_pair::<T, U>(original_left, &new_right)),
+		    (Some(new_left), Some(new_right)) => Some(contract_pair::<T, U>(&new_left, &new_right)),
+		}
+	}
+
+	fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
+		lefthand: &U,
+		righthand: &U,
+	) -> U {
+		if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
+		    if let Some(def) = lc.find_definition(&rc) {
+		        if let Some(ref a) = def.get_label() {
+		            return U::from_pair(a, Some(def), &lefthand, &righthand);
+		        }
+		    }
+		}
+		lefthand.combine_with(righthand)
+	}
+
+	mod combine {
+		pub use concepts::traits::FindDefinition;
+		pub use ast::traits::{MaybeConcept, Pair};
+		use ast::traits::DisplayJoint;
+
+		pub trait Combine<T>
+		where
+			Self: DisplayJoint + MaybeConcept<T> + Pair<T, Self> + Sized,
+			T: FindDefinition<T> + Clone + PartialEq,
+		{
+			fn combine_with(&self, other: &Self) -> Self {
+				let left_string = self.display_joint();
+				let right_string = other.display_joint();
+				let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
+				    l.find_definition(&r)
+				} else {
+				    None
+				};
+				Self::from_pair(
+				    &(left_string + " " + &right_string),
+				    definition,
+				    self,
+				    other,
+				)
+			}
+		}
+
+		impl<T, U> Combine<T> for U
+		where
+			U: DisplayJoint + MaybeConcept<T> + Pair<T, U> + Sized,
+			T: FindDefinition<T> + Clone + PartialEq,
+		{
+		}
+	}
 }
 
 mod insert_definition {
@@ -220,41 +261,6 @@ mod insert_definition {
 
 	impl<T> InsertDefinition for T where
 		T: SetDefinition<T> + Sized + Container + GetReduction<Self>
-	{
-	}
-}
-
-mod combine {
-	pub use concepts::traits::FindDefinition;
-	pub use ast::traits::{MaybeConcept, Pair};
-	use ast::traits::DisplayJoint;
-
-	pub trait Combine<T>
-	where
-		Self: DisplayJoint + MaybeConcept<T> + Pair<T, Self> + Sized,
-		T: FindDefinition<T> + Clone + PartialEq,
-	{
-		fn combine_with(&self, other: &Self) -> Self {
-		    let left_string = self.display_joint();
-		    let right_string = other.display_joint();
-		    let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
-		        l.find_definition(&r)
-		    } else {
-		        None
-		    };
-		    Self::from_pair(
-		        &(left_string + " " + &right_string),
-		        definition,
-		        self,
-		        other,
-		    )
-		}
-	}
-
-	impl<T, U> Combine<T> for U
-	where
-		U: DisplayJoint + MaybeConcept<T> + Pair<T, U> + Sized,
-		T: FindDefinition<T> + Clone + PartialEq,
 	{
 	}
 }
