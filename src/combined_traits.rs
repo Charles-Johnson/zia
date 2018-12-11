@@ -16,7 +16,7 @@
 */
 use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetLabel};
 use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand};
-use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
+use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept, TryRemovingReduction};
 use context::traits::{BlindConceptAdder, StringAdder, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
 use token::parse_line;
@@ -72,7 +72,7 @@ where
 		+ GetLabel,
 	V: MaybeString,
 {
-    fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
+    fn execute<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
         command: &str,
     ) -> String {
@@ -193,7 +193,7 @@ where
 		+ GetLabel,
 	V: MaybeString,
 {
-    fn call<U: Reduce<T> + Expander<T> + Container + Display>(
+    fn call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
@@ -213,7 +213,7 @@ where
             }
         }
     }
-    fn call_pair<U: Reduce<T> + Expander<T> + Container + Display>(
+    fn call_pair<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
         left: &mut U,
         right: &U,
@@ -234,7 +234,7 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
-    fn try_expanding_then_call<U: Reduce<T> + Expander<T> + Container + Display>(
+    fn try_expanding_then_call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
@@ -245,7 +245,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-    fn try_reducing_then_call<U: Reduce<T> + Expander<T> + Container + Display>(
+    fn try_reducing_then_call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
@@ -294,7 +294,7 @@ where
     Self: Definer<T, V> + ExecuteReduction<T, V>,
 {
     fn call_as_righthand<
-        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+        U: TryRemovingReduction<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     >(
         &mut self,
         left: &mut U,
@@ -308,7 +308,7 @@ where
         }
     }
     fn match_righthand_pair<
-        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+        U: TryRemovingReduction<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
     >(
         &mut self,
         left: &mut U,
@@ -353,7 +353,7 @@ where
 	T: DeleteReduction + UpdateNormalForm + InsertDefinition + ConvertTo<Rc<RefCell<V>>> + GetDefinitionOf<T> + AbstractFactory + StringFactory,
 	V: MaybeString,
 {
-	fn execute_reduction<U: Container + MaybeConcept<T> + Display>(
+	fn execute_reduction<U: Container + TryRemovingReduction<T> + Display>(
 		&mut self,
         syntax: &mut U,
         normal_form: &U,
@@ -361,12 +361,8 @@ where
 		if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
-            if let Some(mut c) = syntax.get_concept() {
-                c.delete_reduction();
-                Ok("".to_string())
-            } else {
-                Err(ZiaError::RedundantReduction)
-            }
+            try!(syntax.try_removing_reduction());
+			Ok("".to_string())
         } else {
             let mut syntax_concept = try!(self.concept_from_ast::<U>(syntax));
             let mut normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));

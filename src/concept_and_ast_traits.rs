@@ -14,11 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::GetDefinition;
+use concepts::traits::{GetDefinition, DeleteReduction};
 use ast::traits::{Display, MightExpand};
 pub use self::insert_definition::InsertDefinition;
 use self::syntax_from_concept::{GetLabel, SyntaxFactory, match_left_right, Pair};
 pub use self::syntax_from_concept::{Combine, SyntaxFromConcept, MaybeConcept};
+use utils::{ZiaError, ZiaResult};
 
 impl<T> MightExpand for T
 where
@@ -28,6 +29,27 @@ where
         self.get_definition()
     }
 }
+
+pub trait TryRemovingReduction<T> 
+where
+	Self: MaybeConcept<T>,
+	T: DeleteReduction,
+{
+	fn try_removing_reduction(&mut self) -> ZiaResult<()> {
+		if let Some(mut c) = self.get_concept() {
+            c.delete_reduction();
+            Ok(())
+        } else {
+            Err(ZiaError::RedundantReduction)
+        }
+	}
+}
+
+impl<S, T> TryRemovingReduction<T> for S
+where
+	S: MaybeConcept<T>,
+	T: DeleteReduction,
+{}
 
 pub trait Expander<T>
 where
