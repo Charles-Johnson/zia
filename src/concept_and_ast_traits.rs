@@ -14,9 +14,18 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{FindDefinition, LabelGetter, SetDefinition, GetReduction};
+use concepts::traits::{FindDefinition, LabelGetter, SetDefinition, GetReduction, GetDefinition};
 use ast::traits::{Container, Display, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
+
+impl<T> MightExpand for T
+where
+    T: GetDefinition<T>,
+{
+    fn get_expansion(&self) -> Option<(T, T)> {
+        self.get_definition()
+    }
+}
 
 pub trait InsertDefinition
 where

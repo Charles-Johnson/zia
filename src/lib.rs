@@ -22,7 +22,6 @@ mod concepts;
 mod constants;
 mod context;
 mod token;
-mod traits;
 mod utils;
 
 use ast::AbstractSyntaxTree as GenericAbstractSyntaxTree;
