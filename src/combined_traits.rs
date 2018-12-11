@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected};
+use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetLabel};
 use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
 use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
 use context::traits::{BlindConceptAdder, StringAdder, ConceptNumber, LabelConcept};
@@ -68,7 +68,8 @@ where
         + MaybeDisconnected
         + Display
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
 {
     fn execute<U: Reduce<T> + Expander<T> + Container + Display>(
@@ -99,7 +100,8 @@ where
         + Display
         + From<Rc<RefCell<V>>>
         + ConvertTo<Rc<RefCell<V>>>
-        + SetId,
+        + SetId
+		+ GetLabel,
     S: Call<T, V> + SyntaxConverter<T>,
 	V: MaybeString,
 {
@@ -185,7 +187,8 @@ where
         + MaybeDisconnected
         + Display
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
 {
     fn call<U: Reduce<T> + Expander<T> + Container + Display>(
@@ -266,7 +269,8 @@ where
         + MaybeDisconnected
         + Display
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
 {
 }
@@ -282,7 +286,8 @@ where
         + MaybeDisconnected
         + SyntaxFromConcept
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
     Self: Definer<T, V>,
 {
@@ -374,7 +379,8 @@ where
         + MaybeDisconnected
         + SyntaxFromConcept
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
     Self: Definer<T, V>,
 {
@@ -392,7 +398,8 @@ where
         + MaybeDisconnected
         + FindDefinition<T>
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
     Self: ConceptMaker<T, V> + ConceptCleaner<T>,
 {
@@ -509,7 +516,8 @@ where
         + Unlabeller
         + FindDefinition<T>
 		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>,
+		+ ConvertTo<Rc<RefCell<V>>>
+		+ GetLabel,
 	V: MaybeString,
     S: ConceptMaker<T, V> + ConceptCleaner<T>,
 {

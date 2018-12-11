@@ -17,7 +17,7 @@
 use concepts::traits::GetDefinition;
 use ast::traits::{Display, MightExpand};
 pub use self::insert_definition::InsertDefinition;
-use self::syntax_from_concept::{LabelGetter, SyntaxFactory, match_left_right, Pair};
+use self::syntax_from_concept::{GetLabel, SyntaxFactory, match_left_right, Pair};
 pub use self::syntax_from_concept::{Combine, SyntaxFromConcept, MaybeConcept};
 
 impl<T> MightExpand for T
@@ -95,7 +95,7 @@ where
 {
 }
 
-impl<T: LabelGetter> Display for T {
+impl<T: GetLabel> Display for T {
 	fn to_string(&self) -> String {
 	    match self.get_string() {
 	        Some(s) => "\"".to_string() + &s + "\"",
@@ -121,13 +121,13 @@ impl<T: LabelGetter> Display for T {
 }
 
 mod syntax_from_concept {
-	pub use concepts::traits::LabelGetter;
+	pub use concepts::traits::GetLabel;
 	use self::combine::FindDefinition;
 	pub use self::combine::{Combine, Pair, MaybeConcept};
 	pub use ast::traits::SyntaxFactory;
 	pub trait SyntaxFromConcept
 	where
-		Self: LabelGetter + FindDefinition<Self> + PartialEq,
+		Self: GetLabel + FindDefinition<Self> + PartialEq,
 	{
 		fn reduce<U: SyntaxFactory<Self> + Combine<Self> + Clone>(&self) -> Option<U> {
 		    match self.get_normal_form() {
@@ -160,9 +160,9 @@ mod syntax_from_concept {
 		}
 	}
 
-	impl<S> SyntaxFromConcept for S where S: LabelGetter + FindDefinition<S> + PartialEq {}
+	impl<S> SyntaxFromConcept for S where S: GetLabel + FindDefinition<S> + PartialEq {}
 
-	pub fn match_left_right<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
+	pub fn match_left_right<T: GetLabel + FindDefinition<T> + PartialEq, U: Combine<T>>(
 		left: Option<U>,
 		right: Option<U>,
 		original_left: &U,
@@ -176,7 +176,7 @@ mod syntax_from_concept {
 		}
 	}
 
-	fn contract_pair<T: LabelGetter + FindDefinition<T> + PartialEq, U: Combine<T>>(
+	fn contract_pair<T: GetLabel + FindDefinition<T> + PartialEq, U: Combine<T>>(
 		lefthand: &U,
 		righthand: &U,
 	) -> U {

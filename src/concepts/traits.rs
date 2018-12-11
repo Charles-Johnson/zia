@@ -66,7 +66,7 @@ impl<T> FindWhatItsANormalFormOf for T where T: FindWhatReducesToIt<T> + Sized +
 
 pub trait Unlabeller
 where
-    Self: LabelGetter + DeleteReduction,
+    Self: GetConceptOfLabel + DeleteReduction,
 {
     fn unlabel(&mut self) {
         match self.get_concept_of_label() {
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<S> Unlabeller for S where S: LabelGetter + DeleteReduction {}
+impl<S> Unlabeller for S where S: GetConceptOfLabel + DeleteReduction {}
 
 pub trait FindDefinition<T>
 where
@@ -107,9 +107,29 @@ where
 {
 }
 
-pub trait LabelGetter
+pub trait GetLabel
 where
-    Self: GetId + GetNormalForm + GetDefinition<Self> + GetDefinitionOf<Self> + Clone + MaybeString,
+    Self: GetConceptOfLabel + GetNormalForm + MaybeString,
+{
+    fn get_label(&self) -> Option<String> {
+        match self.get_concept_of_label() {
+            None => None,
+            Some(d) => match d.get_normal_form() {
+                None => None,
+                Some(n) => n.get_string(),
+            },
+        }
+    }
+}
+
+impl<T> GetLabel for T where
+    T: GetConceptOfLabel + GetNormalForm + MaybeString,
+{
+}
+
+pub trait GetConceptOfLabel
+where
+    Self: GetId + GetDefinition<Self> + GetDefinitionOf<Self> + Clone,
 {
     fn get_concept_of_label(&self) -> Option<Self> {
         for candidate in self.get_righthand_of() {
@@ -124,21 +144,12 @@ where
         }
         None
     }
-    fn get_label(&self) -> Option<String> {
-        match self.get_concept_of_label() {
-            None => None,
-            Some(d) => match d.get_normal_form() {
-                None => None,
-                Some(n) => n.get_string(),
-            },
-        }
-    }
 }
 
-impl<T> LabelGetter for T where
-    T: GetId + GetNormalForm + GetDefinition<T> + GetDefinitionOf<T> + Clone + MaybeString
-{
-}
+impl<T> GetConceptOfLabel for T
+where
+	T: GetId + GetDefinition<T> + GetDefinitionOf<T> + Clone,
+{}
 
 pub trait DeleteReduction
 where
