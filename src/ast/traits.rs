@@ -14,20 +14,31 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub trait Container
-where
-    Self: PartialEq + MightExpand,
-{
-    fn contains(&self, other: &Self) -> bool {
-        if let Some((ref left, ref right)) = self.get_expansion() {
-            left == other || right == other || left.contains(other) || right.contains(other)
-        } else {
-            false
-        }
-    }
-}
+pub use self::container::{Container, MightExpand};
 
-impl<T> Container for T where T: PartialEq + MightExpand {}
+mod container {
+	pub trait Container
+	where
+		Self: PartialEq + MightExpand,
+	{
+		fn contains(&self, other: &Self) -> bool {
+		    if let Some((ref left, ref right)) = self.get_expansion() {
+		        left == other || right == other || left.contains(other) || right.contains(other)
+		    } else {
+		        false
+		    }
+		}
+	}
+
+	impl<T> Container for T where T: PartialEq + MightExpand {}
+
+	pub trait MightExpand
+	where
+		Self: Sized,
+	{
+		fn get_expansion(&self) -> Option<(Self, Self)>;
+	}
+}
 
 pub trait Display {
     fn to_string(&self) -> String;
@@ -35,13 +46,6 @@ pub trait Display {
 
 pub trait DisplayJoint {
     fn display_joint(&self) -> String;
-}
-
-pub trait MightExpand
-where
-    Self: Sized,
-{
-    fn get_expansion(&self) -> Option<(Self, Self)>;
 }
 
 pub trait MaybeConcept<T> {
