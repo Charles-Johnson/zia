@@ -14,9 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{FindDefinition, LabelGetter, SetDefinition, GetReduction, GetDefinition};
-use ast::traits::{Container, Display, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
+use concepts::traits::{LabelGetter, SetDefinition, GetReduction, GetDefinition};
+use ast::traits::{Container, Display, MightExpand, SyntaxFactory};
 use utils::{ZiaError, ZiaResult};
+use self::combine::{MaybeConcept, Pair, FindDefinition};
+pub use self::combine::Combine;
 
 impl<T> MightExpand for T
 where
@@ -217,31 +219,37 @@ impl<T: LabelGetter> Display for T {
     }
 }
 
-pub trait Combine<T>
-where
-    Self: DisplayJoint + MaybeConcept<T> + Pair<T, Self> + Sized,
-    T: FindDefinition<T> + Clone + PartialEq,
-{
-    fn combine_with(&self, other: &Self) -> Self {
-        let left_string = self.display_joint();
-        let right_string = other.display_joint();
-        let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
-            l.find_definition(&r)
-        } else {
-            None
-        };
-        Self::from_pair(
-            &(left_string + " " + &right_string),
-            definition,
-            self,
-            other,
-        )
-    }
-}
+mod combine {
+	pub use concepts::traits::FindDefinition;
+	pub use ast::traits::{MaybeConcept, Pair};
+	use ast::traits::DisplayJoint;
 
-impl<T, U> Combine<T> for U
-where
-    U: DisplayJoint + MaybeConcept<T> + Pair<T, U> + Sized,
-    T: FindDefinition<T> + Clone + PartialEq,
-{
+	pub trait Combine<T>
+	where
+		Self: DisplayJoint + MaybeConcept<T> + Pair<T, Self> + Sized,
+		T: FindDefinition<T> + Clone + PartialEq,
+	{
+		fn combine_with(&self, other: &Self) -> Self {
+		    let left_string = self.display_joint();
+		    let right_string = other.display_joint();
+		    let definition = if let (Some(l), Some(r)) = (self.get_concept(), other.get_concept()) {
+		        l.find_definition(&r)
+		    } else {
+		        None
+		    };
+		    Self::from_pair(
+		        &(left_string + " " + &right_string),
+		        definition,
+		        self,
+		        other,
+		    )
+		}
+	}
+
+	impl<T, U> Combine<T> for U
+	where
+		U: DisplayJoint + MaybeConcept<T> + Pair<T, U> + Sized,
+		T: FindDefinition<T> + Clone + PartialEq,
+	{
+	}
 }
