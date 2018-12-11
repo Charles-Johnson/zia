@@ -291,7 +291,7 @@ where
 		+ ConvertTo<Rc<RefCell<V>>>
 		+ GetLabel,
 	V: MaybeString,
-    Self: Definer<T, V>,
+    Self: Definer<T, V> + ExecuteReduction<T, V>,
 {
     fn call_as_righthand<
         U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
@@ -317,7 +317,7 @@ where
     ) -> ZiaResult<String> {
         match rightleft.get_concept() {
             Some(c) => match c.get_id() {
-                REDUCTION => self.try_reduction::<U>(left, rightright),
+                REDUCTION => self.execute_reduction::<U>(left, rightright),
                 DEFINE => self.try_definition::<U>(left, rightright),
                 _ => {
                     let rightleft_reduction = c.get_reduction();
@@ -329,29 +329,6 @@ where
                 }
             },
             None => Err(ZiaError::NotAProgram),
-        }
-    }
-    fn try_reduction<
-        U: MaybeConcept<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
-    >(
-        &mut self,
-        syntax: &mut U,
-        normal_form: &U,
-    ) -> ZiaResult<String> {
-        if normal_form.contains(syntax) {
-            Err(ZiaError::ExpandingReduction)
-        } else if syntax == normal_form {
-            if let Some(mut c) = syntax.get_concept() {
-                c.delete_reduction();
-                Ok("".to_string())
-            } else {
-                Err(ZiaError::RedundantReduction)
-            }
-        } else {
-            let mut syntax_concept = try!(self.concept_from_ast::<U>(syntax));
-            let mut normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
-            try!(syntax_concept.update_normal_form(&mut normal_form_concept));
-            Ok("".to_string())
         }
     }
     fn try_definition<
@@ -370,6 +347,42 @@ where
     }
 }
 
+pub trait ExecuteReduction<T, V>
+where
+	Self: ConceptMaker<T, V>,
+	T: DeleteReduction + UpdateNormalForm + InsertDefinition + ConvertTo<Rc<RefCell<V>>> + GetDefinitionOf<T> + AbstractFactory + StringFactory,
+	V: MaybeString,
+{
+	fn execute_reduction<U: Container + MaybeConcept<T> + Display>(
+		&mut self,
+        syntax: &mut U,
+        normal_form: &U,
+	) -> ZiaResult<String> {
+		if normal_form.contains(syntax) {
+            Err(ZiaError::ExpandingReduction)
+        } else if syntax == normal_form {
+            if let Some(mut c) = syntax.get_concept() {
+                c.delete_reduction();
+                Ok("".to_string())
+            } else {
+                Err(ZiaError::RedundantReduction)
+            }
+        } else {
+            let mut syntax_concept = try!(self.concept_from_ast::<U>(syntax));
+            let mut normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
+            try!(syntax_concept.update_normal_form(&mut normal_form_concept));
+            Ok("".to_string())
+        }
+	}
+}
+
+impl<S, T, V> ExecuteReduction<T, V> for S
+where
+	S: ConceptMaker<T, V>,
+	T: DeleteReduction + UpdateNormalForm + InsertDefinition + ConvertTo<Rc<RefCell<V>>> + GetDefinitionOf<T> + AbstractFactory + StringFactory,
+	V: MaybeString,
+{}
+
 impl<S, T, V> RightHandCall<T, V> for S
 where
     T: DeleteReduction
@@ -384,7 +397,7 @@ where
 		+ ConvertTo<Rc<RefCell<V>>>
 		+ GetLabel,
 	V: MaybeString,
-    Self: Definer<T, V>,
+    Self: Definer<T, V> + ExecuteReduction<T, V>,
 {
 }
 
