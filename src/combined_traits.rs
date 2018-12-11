@@ -14,26 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetId, SetId};
-use ast::traits::{Combine, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
+use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetId, SetId, Label};
+use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
+use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
 use context::traits::{BlindConceptAdder, StringAdder, StringConcept, ConceptHandler, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
 use token::parse_line;
-use traits::{
-    call::{
-        expander::Expander,
-        reduce::{Reduce, SyntaxFromConcept},
-        right_hand_call::{
-            definer::{
-                labeller::{
-					InsertDefinition,
-                },
-            },
-            Container,
-        },
-    },
-	syntax_converter::label::Label,
-};
 use utils::{ZiaError, ZiaResult};
 use constants::{DEFINE, REDUCTION};
 

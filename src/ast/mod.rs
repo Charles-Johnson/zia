@@ -22,7 +22,6 @@ use self::expression::Expression;
 use self::symbol::Symbol;
 
 use self::traits::{Display, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
-pub use self::traits::Combine;
 
 pub enum AbstractSyntaxTree<T> {
     Symbol(Symbol<T>),

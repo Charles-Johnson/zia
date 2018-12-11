@@ -16,19 +16,5 @@
 */
 pub mod definer;
 
-use traits::call::MightExpand;
+pub use ast::traits::Container;
 
-pub trait Container
-where
-    Self: PartialEq + MightExpand,
-{
-    fn contains(&self, other: &Self) -> bool {
-        if let Some((ref left, ref right)) = self.get_expansion() {
-            left == other || right == other || left.contains(other) || right.contains(other)
-        } else {
-            false
-        }
-    }
-}
-
-impl<T> Container for T where T: PartialEq + MightExpand {}

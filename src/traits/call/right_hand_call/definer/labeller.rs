@@ -15,42 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 pub use context::traits::{BlindConceptAdder, LabelConcept};
-use std::marker;
-use traits::call::right_hand_call::Container;
-use traits::call::GetReduction;
-use utils::{ZiaError, ZiaResult};
 pub use concepts::traits::{SetDefinition, SetReduction, AbstractFactory, StringFactory, UpdateNormalForm};
 
-pub trait InsertDefinition
-where
-    Self: SetDefinition<Self> + marker::Sized + Container + GetReduction<Self>,
-{
-    fn insert_definition(&mut self, lefthand: &mut Self, righthand: &mut Self) -> ZiaResult<()> {
-        if lefthand.contains(self) || righthand.contains(self) {
-            Err(ZiaError::InfiniteDefinition)
-        } else {
-            try!(self.check_reductions(lefthand));
-            try!(self.check_reductions(righthand));
-            self.set_definition(lefthand, righthand);
-            lefthand.add_as_lefthand_of(self);
-            righthand.add_as_righthand_of(self);
-            Ok(())
-        }
-    }
-    fn check_reductions(&self, concept: &Self) -> ZiaResult<()> {
-        if let Some(ref r) = concept.get_reduction() {
-            if r == self || r.contains(self) {
-                Err(ZiaError::ExpandingReduction)
-            } else {
-                self.check_reductions(r)
-            }
-        } else {
-            Ok(())
-        }
-    }
-}
 
-impl<T> InsertDefinition for T where
-    T: SetDefinition<T> + marker::Sized + Container + GetReduction<Self>
-{
-}
