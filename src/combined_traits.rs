@@ -14,15 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, Label};
+use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected};
 use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand, SyntaxFactory};
 use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept};
-use context::traits::{BlindConceptAdder, StringAdder, StringConcept, ConceptNumber, LabelConcept};
+use context::traits::{BlindConceptAdder, StringAdder, ConceptNumber, LabelConcept};
 use std::{cell::RefCell, rc::Rc};
 use token::parse_line;
 use utils::{ZiaError, ZiaResult};
 use constants::{DEFINE, REDUCTION};
 use self::concept_tidyer::{ConceptTidyer, GetId, SetId};
+use self::syntax_finder::{Label, SyntaxFinder};
 
 pub trait ContextMaker<T, V>
 where
@@ -147,24 +148,28 @@ where
 {
 }
 
-pub trait SyntaxFinder<T>
-where
-    T: Label,
-    Self: StringConcept<T>,
-{
-    fn concept_from_label(&self, s: &str) -> Option<T> {
-        match self.get_string_concept(s) {
-            None => None,
-            Some(c) => c.get_labellee(),
-        }
-    }
-}
+mod syntax_finder {
+	pub use concepts::traits::Label;
+	use context::traits::StringConcept;
+	pub trait SyntaxFinder<T>
+	where
+		T: Label,
+		Self: StringConcept<T>,
+	{
+		fn concept_from_label(&self, s: &str) -> Option<T> {
+		    match self.get_string_concept(s) {
+		        None => None,
+		        Some(c) => c.get_labellee(),
+		    }
+		}
+	}
 
-impl<S, T> SyntaxFinder<T> for S
-where
-    S: StringConcept<T>,
-    T: Label,
-{
+	impl<S, T> SyntaxFinder<T> for S
+	where
+		S: StringConcept<T>,
+		T: Label,
+	{
+	}
 }
 
 pub trait Call<T, V>
