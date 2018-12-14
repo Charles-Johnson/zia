@@ -17,76 +17,77 @@
 
 pub mod traits;
 
-use constants::LABEL;
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
-use self::traits::{StringAdder, StringConcept, ConceptHandler, BlindConceptAdder, LabelConcept, ConceptNumber};
+use self::traits::{
+    BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
+    StringCleaner, StringConcept,
+};
+use std::collections::HashMap;
 
-pub struct Context<T, V> {
-    string_map: HashMap<String, Rc<RefCell<V>>>,
+pub struct Context<T> {
+    string_map: HashMap<String, usize>,
     concepts: Vec<T>,
 }
 
-impl<T, V> Default for Context<T, V> {
-	fn default() -> Context<T, V> {
-		Context::<T,V> {
-			string_map: HashMap::new(),
-			concepts: Vec::new(),
-		}
-	}
-}
-
-impl<T, V> StringAdder<V> for Context<T, V>
-{
-    fn add_string(&mut self, string_ref: &Rc<RefCell<V>>, string: &str) {
-        self.string_map
-            .insert(string.to_string(), string_ref.clone());
+impl<T> Default for Context<T> {
+    fn default() -> Context<T> {
+        Context::<T> {
+            string_map: HashMap::new(),
+            concepts: Vec::new(),
+        }
     }
 }
 
-impl<T, V> ConceptHandler<T> for Context<T, V> 
-where
-	T: Clone,
-{
-	fn get_concept(&self, id: usize) -> T {
-		self.concepts[id].clone()
-	}
-	fn remove_concept_by_id(&mut self, id: usize) {
-		self.concepts.remove(id);		
-	}
+impl<T> StringCleaner for Context<T> {
+    fn clean_strings(&mut self, removed_concept: usize) {
+        for value in self.string_map.values_mut() {
+            if *value > removed_concept {
+                *value -= 1;
+            }
+        }
+    }
 }
 
-impl<T, V> ConceptNumber for Context<T, V> {
+impl<T> StringAdder for Context<T> {
+    fn add_string(&mut self, string_ref: usize, string: &str) {
+        self.string_map.insert(string.to_string(), string_ref);
+    }
+}
+
+impl<T> ConceptWriter<T> for Context<T> {
+    fn write_concept(&mut self, id: usize) -> &mut T {
+        &mut self.concepts[id]
+    }
+}
+
+impl<T> ConceptReader<T> for Context<T> {
+    fn read_concept(&self, id: usize) -> &T {
+        &self.concepts[id]
+    }
+}
+
+impl<T> ConceptRemover for Context<T> {
+    fn remove_concept(&mut self, id: usize) {
+        self.concepts.remove(id);
+    }
+}
+
+impl<T> ConceptNumber for Context<T> {
     fn number_of_concepts(&self) -> usize {
         self.concepts.len()
     }
 }
 
-impl<T, V> BlindConceptAdder<T> for Context<T, V> 
-where
-	T: Clone,
-{
-	fn blindly_add_concept(&mut self, concept: &T) {
-		self.concepts.push(concept.clone())
-	}
-}
-
-impl<T, V> StringConcept<T> for Context<T, V>
-where
-    T: From<Rc<RefCell<V>>> + Clone,
-{
-    fn get_string_concept(&self, s: &str) -> Option<T> {
-        match self.string_map.get(s) {
-            None => None,
-            Some(sr) => Some(sr.clone().into()),
-        }
+impl<T> BlindConceptAdder<T> for Context<T> {
+    fn blindly_add_concept(&mut self, concept: T) {
+        self.concepts.push(concept)
     }
 }
 
-impl<T, V> LabelConcept<T> for Context<T, V>
-where
-    T: Clone,
-{
-    fn get_label_concept(&self) -> T {
-        self.concepts[LABEL].clone()
+impl<T> StringConcept for Context<T> {
+    fn get_string_concept(&self, s: &str) -> Option<usize> {
+        match self.string_map.get(s) {
+            None => None,
+            Some(sr) => Some(*sr),
+        }
     }
 }

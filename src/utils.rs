@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use ast::traits::Display;
+use std::fmt;
 
 pub type ZiaResult<T> = Result<T, ZiaError>;
 
@@ -33,20 +33,20 @@ pub enum ZiaError {
     DefinitionCollision,
 }
 
-impl Display for ZiaError {
-    fn to_string(&self) -> String {
+impl fmt::Display for ZiaError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ZiaError::RedundantReduction => "That reduction rule already exists.".to_string(),
-			ZiaError::RedundantDefinition => "That definition already exists.".to_string(),
-			ZiaError::RedundantRefactor => "Relabelling something that doesn't yet exist has no effect.".to_string(),
-            ZiaError::NotAProgram => "No program exists for this syntax.".to_string(),
-            ZiaError::BadDefinition => "Cannot define expressions.".to_string(),
-            ZiaError::CyclicReduction => "Cannot allow a chain of reduction rules to loop.".to_string(),
-            ZiaError::ExpandingReduction => "Cannot reduce a concept to an expression containing itself.".to_string(),
-            ZiaError::InfiniteDefinition => "Cannot define a concept as an expression containing itself.".to_string(),
-			ZiaError::EmptyParentheses => "Parentheses need to contain a symbol or expression.".to_string(),
-			ZiaError::AmbiguousExpression => "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression.".to_string(),
-			ZiaError::DefinitionCollision => "Cannot define a used symbol as another used symbol or expression.".to_string(),
+            ZiaError::RedundantReduction => write!(f, "That reduction rule already exists."),
+			ZiaError::RedundantDefinition => write!(f, "That definition already exists."),
+			ZiaError::RedundantRefactor => write!(f, "Relabelling something that doesn't yet exist has no effect."),
+            ZiaError::NotAProgram => write!(f, "No program exists for this syntax."),
+            ZiaError::BadDefinition => write!(f, "Cannot define expressions."),
+            ZiaError::CyclicReduction => write!(f, "Cannot allow a chain of reduction rules to loop."),
+            ZiaError::ExpandingReduction => write!(f, "Cannot reduce a concept to an expression containing itself."),
+            ZiaError::InfiniteDefinition => write!(f, "Cannot define a concept as an expression containing itself."),
+			ZiaError::EmptyParentheses => write!(f, "Parentheses need to contain a symbol or expression."),
+			ZiaError::AmbiguousExpression => write!(f, "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression."),
+			ZiaError::DefinitionCollision => write!(f, "Cannot define a used symbol as another used symbol or expression."),
         }
     }
 }

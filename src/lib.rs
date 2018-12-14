@@ -24,12 +24,10 @@ mod context;
 mod token;
 mod utils;
 
-use ast::AbstractSyntaxTree as GenericAbstractSyntaxTree;
-pub use ast::traits::Display;
-use concepts::{ConceptRef, StringConcept};
-use context::Context as GenericContext;
+pub use ast::AbstractSyntaxTree;
 pub use combined_traits::{ContextMaker, Execute};
+use concepts::Concept;
+use context::Context as GenericContext;
 pub use utils::ZiaError;
 
-pub type AbstractSyntaxTree = GenericAbstractSyntaxTree<ConceptRef>;
-pub type Context = GenericContext<ConceptRef, StringConcept<ConceptRef>>;
+pub type Context = GenericContext<Concept>;

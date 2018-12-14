@@ -18,194 +18,158 @@ mod abstract_concept;
 pub mod string_concept;
 pub mod traits;
 
-use self::abstract_concept::{AbstractConcept, AbstractRef};
+use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
-use self::string_concept::StringRef;
-use self::traits::{GetDefinition, GetId, SetId, FindWhatReducesToIt, GetReduction, RemoveReduction, SetDefinition, SetReduction, RemoveDefinition, GetDefinitionOf, MaybeString, AbstractFactory, StringFactory, ConvertTo};
+use self::traits::{
+    AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
+    MaybeString, Refresh, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+    StringFactory,
+};
 
-pub enum ConceptRef {
-    Abstract(AbstractRef<ConceptRef>),
-    String(StringRef<ConceptRef>),
+pub enum Concept {
+    Abstract(AbstractConcept),
+    String(StringConcept),
 }
 
-impl SetId for ConceptRef {
-    fn set_id(&mut self, number: usize) {
+impl GetDefinition for Concept {
+    fn get_definition(&self) -> Option<(usize, usize)> {
         match *self {
-            ConceptRef::Abstract(ref mut r) => r.borrow_mut().set_id(number),
-            ConceptRef::String(ref mut r) => r.borrow_mut().set_id(number),
-        }
-    }
-}
-
-impl ConvertTo<StringRef<ConceptRef>> for ConceptRef {
-    fn convert(&self) -> Option<StringRef<ConceptRef>> {
-        match *self {
-            ConceptRef::String(ref a) => Some(a.clone()),
-            _ => None,
+            Concept::Abstract(ref c) => c.get_definition(),
+            Concept::String(ref c) => c.get_definition(),
         }
     }
 }
 
-impl From<StringRef<ConceptRef>> for ConceptRef {
-    fn from(sr: StringRef<ConceptRef>) -> ConceptRef {
-        ConceptRef::String(sr.clone())
-    }
-}
-
-impl Clone for ConceptRef {
-    fn clone(&self) -> Self {
+impl GetDefinitionOf for Concept {
+    fn get_righthand_of(&self) -> Vec<usize> {
         match *self {
-            ConceptRef::Abstract(ref r) => ConceptRef::Abstract(r.clone()),
-            ConceptRef::String(ref r) => ConceptRef::String(r.clone()),
+            Concept::Abstract(ref c) => c.get_righthand_of(),
+            Concept::String(ref c) => c.get_righthand_of(),
+        }
+    }
+    fn get_lefthand_of(&self) -> Vec<usize> {
+        match *self {
+            Concept::Abstract(ref c) => c.get_lefthand_of(),
+            Concept::String(ref c) => c.get_lefthand_of(),
         }
     }
 }
 
-impl GetDefinition<ConceptRef> for ConceptRef {
-    fn get_definition(&self) -> Option<(ConceptRef, ConceptRef)> {
+impl SetDefinition for Concept {
+    fn set_definition(&mut self, lefthand: usize, righthand: usize) {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_definition(),
-            ConceptRef::String(ref c) => c.borrow().get_definition(),
+            Concept::Abstract(ref mut c) => c.set_definition(lefthand, righthand),
+            Concept::String(ref mut c) => c.set_definition(lefthand, righthand),
+        }
+    }
+    fn add_as_lefthand_of(&mut self, lefthand: usize) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.add_as_lefthand_of(lefthand),
+            Concept::String(ref mut c) => c.add_as_lefthand_of(lefthand),
+        }
+    }
+    fn add_as_righthand_of(&mut self, righthand: usize) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.add_as_righthand_of(righthand),
+            Concept::String(ref mut c) => c.add_as_righthand_of(righthand),
         }
     }
 }
 
-impl GetDefinitionOf<ConceptRef> for ConceptRef {
-    fn get_righthand_of(&self) -> Vec<ConceptRef> {
-        match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_righthand_of(),
-            ConceptRef::String(ref c) => c.borrow().get_righthand_of(),
-        }
-    }
-    fn get_lefthand_of(&self) -> Vec<ConceptRef> {
-        match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_lefthand_of(),
-            ConceptRef::String(ref c) => c.borrow().get_lefthand_of(),
-        }
-    }
-}
-
-impl SetDefinition<ConceptRef> for ConceptRef {
-    fn set_definition(&mut self, lefthand: &ConceptRef, righthand: &ConceptRef) {
-        match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().set_definition(lefthand, righthand),
-        }
-    }
-    fn add_as_lefthand_of(&mut self, lefthand: &ConceptRef) {
-        match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_as_lefthand_of(lefthand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_as_lefthand_of(lefthand),
-        }
-    }
-    fn add_as_righthand_of(&mut self, righthand: &ConceptRef) {
-        match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().add_as_righthand_of(righthand),
-            ConceptRef::String(ref mut c) => c.borrow_mut().add_as_righthand_of(righthand),
-        }
-    }
-}
-
-impl RemoveDefinition<ConceptRef> for ConceptRef {
+impl RemoveDefinition for Concept {
     fn remove_definition(&mut self) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_definition(),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_definition(),
+            Concept::Abstract(ref mut c) => c.remove_definition(),
+            Concept::String(ref mut c) => c.remove_definition(),
         }
     }
-    fn remove_as_lefthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_lefthand_of(&mut self, definition: usize) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_as_lefthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_as_lefthand_of(definition),
+            Concept::Abstract(ref mut c) => c.remove_as_lefthand_of(definition),
+            Concept::String(ref mut c) => c.remove_as_lefthand_of(definition),
         }
     }
-    fn remove_as_righthand_of(&mut self, definition: &ConceptRef) {
+    fn remove_as_righthand_of(&mut self, definition: usize) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().remove_as_righthand_of(definition),
-            ConceptRef::String(ref mut c) => c.borrow_mut().remove_as_righthand_of(definition),
+            Concept::Abstract(ref mut c) => c.remove_as_righthand_of(definition),
+            Concept::String(ref mut c) => c.remove_as_righthand_of(definition),
         }
     }
 }
 
-impl GetId for ConceptRef {
-    fn get_id(&self) -> usize {
+impl GetReduction for Concept {
+    fn get_reduction(&self) -> Option<usize> {
         match *self {
-            ConceptRef::Abstract(ref r) => r.borrow().get_id(),
-            ConceptRef::String(ref r) => r.borrow().get_id(),
+            Concept::Abstract(ref c) => c.get_reduction(),
+            Concept::String(ref c) => c.get_reduction(),
         }
     }
 }
 
-impl GetReduction<ConceptRef> for ConceptRef {
-    fn get_reduction(&self) -> Option<ConceptRef> {
+impl FindWhatReducesToIt for Concept {
+    fn find_what_reduces_to_it(&self) -> Vec<usize> {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().get_reduction(),
-            ConceptRef::String(ref c) => c.borrow().get_reduction(),
+            Concept::Abstract(ref c) => c.find_what_reduces_to_it(),
+            Concept::String(ref c) => c.find_what_reduces_to_it(),
         }
     }
 }
 
-impl FindWhatReducesToIt<ConceptRef> for ConceptRef {
-    fn find_what_reduces_to_it(&self) -> Vec<ConceptRef> {
+impl SetReduction for Concept {
+    fn make_reduce_to(&mut self, concept: usize) {
         match *self {
-            ConceptRef::Abstract(ref c) => c.borrow().find_what_reduces_to_it(),
-            ConceptRef::String(ref c) => c.borrow().find_what_reduces_to_it(),
+            Concept::Abstract(ref mut c) => c.make_reduce_to(concept),
+            Concept::String(ref mut c) => c.make_reduce_to(concept),
+        }
+    }
+    fn make_reduce_from(&mut self, concept: usize) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.make_reduce_from(concept),
+            Concept::String(ref mut c) => c.make_reduce_from(concept),
         }
     }
 }
 
-impl SetReduction<ConceptRef> for ConceptRef {
-    fn make_reduce_to(&mut self, concept: &ConceptRef) {
-        match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_to(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_to(concept),
-        }
-    }
-    fn make_reduce_from(&mut self, concept: &ConceptRef) {
-        match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_from(concept),
-        }
-    }
-}
-
-impl RemoveReduction<ConceptRef> for ConceptRef {
+impl RemoveReduction for Concept {
     fn make_reduce_to_none(&mut self) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().make_reduce_to_none(),
-            ConceptRef::String(ref mut c) => c.borrow_mut().make_reduce_to_none(),
+            Concept::Abstract(ref mut c) => c.make_reduce_to_none(),
+            Concept::String(ref mut c) => c.make_reduce_to_none(),
         };
     }
-    fn no_longer_reduces_from(&mut self, concept: &ConceptRef) {
+    fn no_longer_reduces_from(&mut self, concept: usize) {
         match *self {
-            ConceptRef::Abstract(ref mut c) => c.borrow_mut().no_longer_reduces_from(concept),
-            ConceptRef::String(ref mut c) => c.borrow_mut().no_longer_reduces_from(concept),
+            Concept::Abstract(ref mut c) => c.no_longer_reduces_from(concept),
+            Concept::String(ref mut c) => c.no_longer_reduces_from(concept),
         };
     }
 }
 
-impl PartialEq for ConceptRef {
-    fn eq(&self, other: &ConceptRef) -> bool {
-        self.get_id() == other.get_id()
+impl Refresh for Concept {
+    fn refresh(&mut self, removed_concept: usize) {
+        match *self {
+            Concept::Abstract(ref mut c) => c.refresh(removed_concept),
+            Concept::String(ref mut c) => c.refresh(removed_concept),
+        };
     }
 }
 
-impl StringFactory for ConceptRef {
-    fn new_string(id: usize, string: &str) -> ConceptRef {
-        ConceptRef::String(StringConcept::new_ref(id, string))
+impl StringFactory for Concept {
+    fn new_string(string: &str) -> Concept {
+        Concept::String(StringConcept::new(string))
     }
 }
 
-impl AbstractFactory for ConceptRef {
-    fn new_abstract(id: usize) -> ConceptRef {
-        ConceptRef::Abstract(AbstractConcept::new_ref(id))
+impl AbstractFactory for Concept {
+    fn new_abstract() -> Concept {
+        Concept::Abstract(AbstractConcept::new())
     }
 }
 
-impl MaybeString for ConceptRef {
+impl MaybeString for Concept {
     fn get_string(&self) -> Option<String> {
         match *self {
-            ConceptRef::String(ref s) => s.borrow().get_string(),
+            Concept::String(ref s) => s.get_string(),
             _ => None,
         }
     }

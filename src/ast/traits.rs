@@ -17,45 +17,38 @@
 pub use self::container::{Container, MightExpand};
 
 mod container {
-	pub trait Container
-	where
-		Self: PartialEq + MightExpand,
-	{
-		fn contains(&self, other: &Self) -> bool {
-		    if let Some((ref left, ref right)) = self.get_expansion() {
-		        left == other || right == other || left.contains(other) || right.contains(other)
-		    } else {
-		        false
-		    }
-		}
-	}
+    pub trait Container
+    where
+        Self: MightExpand<Self> + PartialEq + Sized,
+    {
+        fn contains(&self, other: &Self) -> bool {
+            if let Some((ref left, ref right)) = self.get_expansion() {
+                left == other || right == other || left.contains(other) || right.contains(other)
+            } else {
+                false
+            }
+        }
+    }
 
-	impl<T> Container for T where T: PartialEq + MightExpand {}
+    impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
 
-	pub trait MightExpand
-	where
-		Self: Sized,
-	{
-		fn get_expansion(&self) -> Option<(Self, Self)>;
-	}
-}
-
-pub trait Display {
-    fn to_string(&self) -> String;
+    pub trait MightExpand<T> {
+        fn get_expansion(&self) -> Option<(T, T)>;
+    }
 }
 
 pub trait DisplayJoint {
     fn display_joint(&self) -> String;
 }
 
-pub trait MaybeConcept<T> {
-    fn get_concept(&self) -> Option<T>;
+pub trait MaybeConcept {
+    fn get_concept(&self) -> Option<usize>;
 }
 
-pub trait Pair<T, U> {
-    fn from_pair(&str, Option<T>, &U, &U) -> Self;
+pub trait Pair<U> {
+    fn from_pair(&str, Option<usize>, &U, &U) -> Self;
 }
 
-pub trait SyntaxFactory<T> {
-    fn new(&str, Option<T>) -> Self;
+pub trait SyntaxFactory {
+    fn new(&str, Option<usize>) -> Self;
 }

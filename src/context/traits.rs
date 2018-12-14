@@ -14,29 +14,34 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use std::{cell::RefCell, rc::Rc};
 
-pub trait LabelConcept<T> {
-    fn get_label_concept(&self) -> T;
-}
-
-pub trait StringAdder<V> {
-    fn add_string(&mut self, &Rc<RefCell<V>>, &str);
+pub trait StringAdder {
+    fn add_string(&mut self, usize, &str);
 }
 
 pub trait BlindConceptAdder<T> {
-	fn blindly_add_concept(&mut self, &T);
+    fn blindly_add_concept(&mut self, T);
 }
 
-pub trait ConceptHandler<T> {
-	fn get_concept(&self, usize) -> T;
-	fn remove_concept_by_id(&mut self, usize);
+pub trait ConceptReader<T> {
+    fn read_concept(&self, usize) -> &T;
 }
 
-pub trait StringConcept<T> {
-    fn get_string_concept(&self, &str) -> Option<T>;
+pub trait ConceptWriter<T> {
+    fn write_concept(&mut self, usize) -> &mut T;
+}
+pub trait ConceptRemover {
+    fn remove_concept(&mut self, usize);
+}
+
+pub trait StringConcept {
+    fn get_string_concept(&self, &str) -> Option<usize>;
 }
 
 pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
+}
+
+pub trait StringCleaner {
+    fn clean_strings(&mut self, usize);
 }

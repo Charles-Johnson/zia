@@ -14,65 +14,81 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concepts::traits::{AbstractFactory, StringFactory, UpdateNormalForm, ConvertTo, DeleteDefinition, GetNormalForm, GetDefinitionOf, MaybeString, FindDefinition, DeleteReduction, Unlabeller, MaybeDisconnected, GetLabel};
-use ast::traits::{Container, Display, Pair, MaybeConcept, MightExpand};
-use concept_and_ast_traits::{Combine, Expander, InsertDefinition, Reduce, SyntaxFromConcept, TryRemovingReduction};
-use context::traits::{BlindConceptAdder, StringAdder, ConceptNumber, LabelConcept};
-use std::{cell::RefCell, rc::Rc};
+use ast::traits::{
+    Container as SyntaxContainer, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory,
+};
+use concepts::traits::{
+    AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
+    MaybeString, Refresh, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+    StringFactory,
+};
+use constants::{DEFINE, LABEL, REDUCTION};
+use context::traits::{
+    BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
+    StringCleaner, StringConcept,
+};
+use std::fmt;
 use token::parse_line;
 use utils::{ZiaError, ZiaResult};
-use constants::{DEFINE, REDUCTION};
-use self::concept_tidyer::{ConceptTidyer, GetId, SetId};
-use self::syntax_finder::{Label, SyntaxFinder, SyntaxFactory};
 
-pub trait ContextMaker<T, V>
+pub trait ContextMaker<T>
 where
-	Self: Labeller<T, V> + Sized + Default,
-    T: InsertDefinition
-        + UpdateNormalForm
-        + GetDefinitionOf<T>
+    Self: Labeller<T> + Default,
+    T: GetDefinitionOf
         + StringFactory
         + AbstractFactory
-        + ConvertTo<Rc<RefCell<V>>>,
-	V: MaybeString,
+        + SetReduction
+        + GetDefinition
+        + GetReduction
+        + SetDefinition
+        + MaybeString,
 {
-	fn new() -> Self {
+    fn new() -> Self {
         let mut cont = Self::default();
         cont.setup().unwrap();
         cont
     }
 }
 
-impl<S, T, V> ContextMaker<T, V> for S
+impl<S, T> ContextMaker<T> for S
 where
-	S: Labeller<T, V> + Sized + Default,
-    T: InsertDefinition
-        + UpdateNormalForm
-        + GetDefinitionOf<T>
+    S: Labeller<T> + Default,
+    T: GetDefinitionOf
         + StringFactory
         + AbstractFactory
-        + ConvertTo<Rc<RefCell<V>>>,
-	V: MaybeString,
-{}
+        + SetReduction
+        + GetDefinition
+        + GetReduction
+        + SetDefinition
+        + MaybeString,
+{
+}
 
-pub trait Execute<T, V>
+pub trait Execute<T>
 where
-    Self: Call<T, V> + SyntaxConverter<T>,
+    Self: Call<T> + SyntaxConverter<T>,
     T: StringFactory
         + AbstractFactory
-        + InsertDefinition
-        + DeleteDefinition
-        + DeleteReduction
-        + UpdateNormalForm
-        + SyntaxFromConcept
-        + MaybeDisconnected
-        + Display
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + GetDefinition
+        + MaybeString
+        + GetDefinitionOf
+        + GetReduction
+        + FindWhatReducesToIt
+        + Refresh,
 {
-    fn execute<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
+    fn execute<
+        U: MaybeConcept
+            + SyntaxContainer
+            + SyntaxFactory
+            + Clone
+            + fmt::Display
+            + Pair<U>
+            + DisplayJoint,
+    >(
         &mut self,
         command: &str,
     ) -> String {
@@ -87,32 +103,33 @@ where
     }
 }
 
-impl<S, T, V> Execute<T, V> for S
+impl<S, T> Execute<T> for S
 where
     T: AbstractFactory
         + StringFactory
-        + InsertDefinition
-        + DeleteDefinition
-        + DeleteReduction
-        + UpdateNormalForm
-        + SyntaxFromConcept
-        + MaybeDisconnected
-        + Display
-        + From<Rc<RefCell<V>>>
-        + ConvertTo<Rc<RefCell<V>>>
-        + SetId
-		+ GetLabel,
-    S: Call<T, V> + SyntaxConverter<T>,
-	V: MaybeString,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + GetDefinition
+        + MaybeString
+        + GetDefinitionOf
+        + GetReduction
+        + FindWhatReducesToIt
+        + Refresh,
+    S: Call<T> + SyntaxConverter<T>,
 {
 }
 
 pub trait SyntaxConverter<T>
 where
-    Self: SyntaxFinder<T>,
-    T: Label + GetDefinitionOf<T> + PartialEq,
+    Self: SyntaxFinder<T> + Combine<T>,
+    T: GetDefinitionOf + GetDefinition + FindWhatReducesToIt,
 {
-    fn ast_from_expression<U: SyntaxFactory<T> + Combine<T>>(&mut self, s: &str) -> ZiaResult<U> {
+    fn ast_from_expression<U: SyntaxFactory + Pair<U> + MaybeConcept + DisplayJoint>(
+        &mut self,
+        s: &str,
+    ) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::EmptyParentheses),
@@ -121,16 +138,19 @@ where
             _ => Err(ZiaError::AmbiguousExpression),
         }
     }
-    fn ast_from_pair<U: SyntaxFactory<T> + Combine<T>>(
+    fn ast_from_pair<U: SyntaxFactory + DisplayJoint + MaybeConcept + Pair<U>>(
         &mut self,
         left: &str,
         right: &str,
     ) -> ZiaResult<U> {
         let lefthand = try!(self.ast_from_token::<U>(left));
         let righthand = try!(self.ast_from_token::<U>(right));
-        Ok(lefthand.combine_with(&righthand))
+        Ok(self.combine(&lefthand, &righthand))
     }
-    fn ast_from_token<U: SyntaxFactory<T> + Combine<T>>(&mut self, t: &str) -> ZiaResult<U> {
+    fn ast_from_token<U: SyntaxFactory + MaybeConcept + DisplayJoint + Pair<U>>(
+        &mut self,
+        t: &str,
+    ) -> ZiaResult<U> {
         if t.contains(' ') {
             self.ast_from_expression::<U>(t)
         } else {
@@ -141,59 +161,60 @@ where
 
 impl<S, T> SyntaxConverter<T> for S
 where
-    S: SyntaxFinder<T>,
-    T: Label + GetDefinitionOf<T> + PartialEq,
+    S: SyntaxFinder<T> + Combine<T>,
+    T: GetDefinitionOf + GetDefinition + FindWhatReducesToIt,
 {
 }
 
-mod syntax_finder {
-	pub use concepts::traits::Label;
-	pub use ast::traits::SyntaxFactory;
-	use context::traits::StringConcept;
-
-	pub trait SyntaxFinder<T>
-	where
-		T: Label,
-		Self: StringConcept<T>,
-	{
-		fn concept_from_label(&self, s: &str) -> Option<T> {
-		    match self.get_string_concept(s) {
-		        None => None,
-		        Some(c) => c.get_labellee(),
-		    }
-		}
-		fn ast_from_symbol<U: SyntaxFactory<T>>(&mut self, s: &str) -> U {
-        	let concept_if_exists = self.concept_from_label(s);
-        	U::new(s, concept_if_exists)
-    	}
-	}
-
-	impl<S, T> SyntaxFinder<T> for S
-	where
-		S: StringConcept<T>,
-		T: Label,
-	{
-	}
+pub trait SyntaxFinder<T>
+where
+    Self: StringConcept + Label<T>,
+    T: FindWhatReducesToIt + GetDefinition,
+{
+    fn concept_from_label(&self, s: &str) -> Option<usize> {
+        match self.get_string_concept(s) {
+            None => None,
+            Some(c) => self.get_labellee(c),
+        }
+    }
+    fn ast_from_symbol<U: SyntaxFactory>(&mut self, s: &str) -> U {
+        let concept_if_exists = self.concept_from_label(s);
+        U::new(s, concept_if_exists)
+    }
 }
 
-pub trait Call<T, V>
+impl<S, T> SyntaxFinder<T> for S
 where
-    Self: RightHandCall<T, V>,
+    S: StringConcept + Label<T>,
+    T: FindWhatReducesToIt + GetDefinition,
+{
+}
+
+pub trait Call<T>
+where
+    Self: RightHandCall<T> + Expander<T>,
     T: StringFactory
         + AbstractFactory
-        + InsertDefinition
-        + DeleteDefinition
-        + DeleteReduction
-        + UpdateNormalForm
-        + SyntaxFromConcept
-        + MaybeDisconnected
-        + Display
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + GetDefinition
+        + GetDefinitionOf
+        + MaybeString
+        + Refresh,
 {
-    fn call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
+    fn call<
+        U: MaybeConcept
+            + SyntaxFactory
+            + Clone
+            + SyntaxContainer
+            + DisplayJoint
+            + Pair<U>
+            + fmt::Display,
+    >(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
@@ -213,19 +234,28 @@ where
             }
         }
     }
-    fn call_pair<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
+    fn call_pair<
+        U: MaybeConcept
+            + Clone
+            + DisplayJoint
+            + SyntaxFactory
+            + Pair<U>
+            + SyntaxContainer
+            + fmt::Display,
+    >(
         &mut self,
         left: &mut U,
         right: &U,
     ) -> ZiaResult<String> {
         match right.get_concept() {
-            Some(c) => match c.get_id() {
-                REDUCTION => Ok(left.recursively_reduce().to_string()),
-                DEFINE => Ok(left.expand().to_string()),
+            Some(c) => match c {
+                REDUCTION => Ok(self.recursively_reduce(left).to_string()),
+                DEFINE => Ok(self.expand(left).to_string()),
                 _ => {
-                    let right_reduction = c.get_reduction();
+                    let right_reduction = self.read_concept(c).get_reduction();
                     if let Some(r) = right_reduction {
-                        self.call_pair(left, &r.to_ast())
+                        let ast = self.to_ast::<U>(r);
+                        self.call_pair(left, &ast)
                     } else {
                         self.call_as_righthand(left, right)
                     }
@@ -234,22 +264,38 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
-    fn try_expanding_then_call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
+    fn try_expanding_then_call<
+        U: MaybeConcept
+            + DisplayJoint
+            + Pair<U>
+            + SyntaxFactory
+            + Clone
+            + SyntaxContainer
+            + fmt::Display,
+    >(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
-        let expansion = &ast.expand();
+        let expansion = &self.expand(ast);
         if expansion != ast {
             self.call(expansion)
         } else {
             Err(ZiaError::NotAProgram)
         }
     }
-    fn try_reducing_then_call<U: TryRemovingReduction<T> + Reduce<T> + Expander<T> + Container + Display>(
+    fn try_reducing_then_call<
+        U: MaybeConcept
+            + Clone
+            + SyntaxFactory
+            + Pair<U>
+            + DisplayJoint
+            + SyntaxContainer
+            + fmt::Display,
+    >(
         &mut self,
         ast: &U,
     ) -> ZiaResult<String> {
-        let normal_form = &ast.recursively_reduce();
+        let normal_form = &self.recursively_reduce(ast);
         if normal_form != ast {
             self.call(normal_form)
         } else {
@@ -258,43 +304,48 @@ where
     }
 }
 
-impl<S, T, V> Call<T, V> for S
+impl<S, T> Call<T> for S
 where
-    S: RightHandCall<T, V>,
+    S: RightHandCall<T> + Expander<T>,
     T: StringFactory
         + AbstractFactory
-        + InsertDefinition
-        + DeleteDefinition
-        + DeleteReduction
-        + UpdateNormalForm
-        + SyntaxFromConcept
-        + MaybeDisconnected
-        + Display
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + GetDefinition
+        + GetDefinitionOf
+        + MaybeString
+        + Refresh,
 {
 }
 
-pub trait RightHandCall<T, V>
+pub trait RightHandCall<T>
 where
-    T: DeleteReduction
-        + UpdateNormalForm
-        + InsertDefinition
-        + DeleteDefinition
-        + AbstractFactory
+    T: AbstractFactory
         + StringFactory
-        + MaybeDisconnected
-        + SyntaxFromConcept
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
-    Self: Definer<T, V> + ExecuteReduction<T, V>,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + MaybeString
+        + GetDefinitionOf
+        + GetDefinition
+        + GetReduction
+        + FindWhatReducesToIt
+        + Refresh,
+    Self: Definer<T> + ExecuteReduction<T> + Reduce<T>,
 {
     fn call_as_righthand<
-        U: TryRemovingReduction<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+        U: MaybeConcept
+            + SyntaxContainer
+            + Pair<U>
+            + DisplayJoint
+            + fmt::Display
+            + Clone
+            + SyntaxFactory,
     >(
         &mut self,
         left: &mut U,
@@ -308,7 +359,13 @@ where
         }
     }
     fn match_righthand_pair<
-        U: TryRemovingReduction<T> + Container + Pair<T, U> + Display + Clone + Combine<T> + SyntaxFactory<T>,
+        U: MaybeConcept
+            + SyntaxContainer
+            + Pair<U>
+            + fmt::Display
+            + Clone
+            + DisplayJoint
+            + SyntaxFactory,
     >(
         &mut self,
         left: &mut U,
@@ -316,13 +373,14 @@ where
         rightright: &mut U,
     ) -> ZiaResult<String> {
         match rightleft.get_concept() {
-            Some(c) => match c.get_id() {
+            Some(c) => match c {
                 REDUCTION => self.execute_reduction::<U>(left, rightright),
                 DEFINE => self.execute_definition::<U>(left, rightright),
                 _ => {
-                    let rightleft_reduction = c.get_reduction();
+                    let rightleft_reduction = self.read_concept(c).get_reduction();
                     if let Some(r) = rightleft_reduction {
-                        self.match_righthand_pair::<U>(left, &r.to_ast(), rightright)
+                        let ast = self.to_ast::<U>(r);
+                        self.match_righthand_pair::<U>(left, &ast, rightright)
                     } else {
                         Err(ZiaError::NotAProgram)
                     }
@@ -333,76 +391,88 @@ where
     }
 }
 
-pub trait ExecuteReduction<T, V>
+impl<S, T> RightHandCall<T> for S
 where
-	Self: ConceptMaker<T, V>,
-	T: DeleteReduction + UpdateNormalForm + InsertDefinition + ConvertTo<Rc<RefCell<V>>> + GetDefinitionOf<T> + AbstractFactory + StringFactory,
-	V: MaybeString,
+    T: AbstractFactory
+        + StringFactory
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + MaybeString
+        + GetDefinitionOf
+        + GetDefinition
+        + GetReduction
+        + FindWhatReducesToIt
+        + Refresh,
+    S: Definer<T> + ExecuteReduction<T> + Reduce<T>,
 {
-	fn execute_reduction<U: Container + TryRemovingReduction<T> + Display>(
-		&mut self,
-        syntax: &mut U,
+}
+
+pub trait ExecuteReduction<T>
+where
+    Self: ConceptMaker<T> + DeleteReduction<T>,
+    T: SetReduction
+        + GetDefinitionOf
+        + AbstractFactory
+        + StringFactory
+        + RemoveReduction
+        + GetReduction
+        + SetDefinition
+        + GetDefinition
+        + MaybeString,
+{
+    fn execute_reduction<U: SyntaxContainer + MaybeConcept + fmt::Display>(
+        &mut self,
+        syntax: &U,
         normal_form: &U,
-	) -> ZiaResult<String> {
-		if normal_form.contains(syntax) {
+    ) -> ZiaResult<String> {
+        if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
-            try!(syntax.try_removing_reduction());
-			Ok("".to_string())
+            try!(self.try_removing_reduction::<U>(syntax));
+            Ok("".to_string())
         } else {
-            let mut syntax_concept = try!(self.concept_from_ast::<U>(syntax));
-            let mut normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
-            try!(syntax_concept.update_normal_form(&mut normal_form_concept));
+            let syntax_concept = try!(self.concept_from_ast::<U>(syntax));
+            let normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
+            try!(self.update_normal_form(syntax_concept, normal_form_concept));
             Ok("".to_string())
         }
-	}
+    }
 }
 
-impl<S, T, V> ExecuteReduction<T, V> for S
+impl<S, T> ExecuteReduction<T> for S
 where
-	S: ConceptMaker<T, V>,
-	T: DeleteReduction + UpdateNormalForm + InsertDefinition + ConvertTo<Rc<RefCell<V>>> + GetDefinitionOf<T> + AbstractFactory + StringFactory,
-	V: MaybeString,
-{}
-
-impl<S, T, V> RightHandCall<T, V> for S
-where
-    T: DeleteReduction
-        + UpdateNormalForm
-        + InsertDefinition
-        + DeleteDefinition
+    S: ConceptMaker<T> + DeleteReduction<T>,
+    T: SetReduction
+        + GetDefinitionOf
         + AbstractFactory
         + StringFactory
-        + MaybeDisconnected
-        + SyntaxFromConcept
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
-    Self: Definer<T, V> + ExecuteReduction<T, V>,
+        + RemoveReduction
+        + GetReduction
+        + SetDefinition
+        + GetDefinition
+        + MaybeString,
 {
 }
 
-pub trait Definer<T, V>
+pub trait Definer<T>
 where
-    T: DeleteReduction
-        + UpdateNormalForm
-        + InsertDefinition
-        + DeleteDefinition
-        + StringFactory
+    T: StringFactory
         + AbstractFactory
-        + Unlabeller
-        + MaybeDisconnected
-        + FindDefinition<T>
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
-    Self: ConceptMaker<T, V> + DefinitionDeleter<T>,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + GetDefinition
+        + GetDefinitionOf
+        + MaybeString
+        + Refresh,
+    Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
 {
-    fn execute_definition<
-        U: Container + MaybeConcept<T> + Pair<T, U> + Display
-    >(
+    fn execute_definition<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         new: &U,
         old: &mut U,
@@ -414,7 +484,7 @@ where
             Ok("".to_string())
         }
     }
-    fn define<U: MightExpand + MaybeConcept<T> + Pair<T, U> + Display>(
+    fn define<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         before: &mut U,
         after: &U,
@@ -428,104 +498,146 @@ where
                 before.get_expansion(),
             ) {
                 (_, None, None) => Err(ZiaError::RedundantRefactor),
-                (None, Some(ref mut b), None) => self.relabel(b, &after.to_string()),
-                (None, Some(ref mut b), Some(_)) => if b.get_label().is_none() {
-                    self.label(b, &after.to_string())
-                } else {
-                    self.relabel(b, &after.to_string())
-                },
+                (None, Some(b), None) => self.relabel(b, &after.to_string()),
+                (None, Some(b), Some(_)) => {
+                    if self.get_label(b).is_none() {
+                        self.label(b, &after.to_string())
+                    } else {
+                        self.relabel(b, &after.to_string())
+                    }
+                }
                 (None, None, Some((ref left, ref right))) => {
                     self.define_new_syntax(&after.to_string(), left, right)
                 }
-                (Some(ref mut a), Some(ref b), None) => if a == b {
-            		self.delete_definition(a);
-            		Ok(())
-        		} else {
-            		Err(ZiaError::DefinitionCollision)
-        		},
-                (Some(ref a), Some(ref b), Some(_)) => if a == b {
-            		Err(ZiaError::RedundantDefinition)
-        		} else {
-            		Err(ZiaError::DefinitionCollision)
-        		},
-                (Some(ref mut a), None, Some((ref left, ref right))) => {
-                    self.redefine(a, left, right)
+                (Some(a), Some(b), None) => {
+                    if a == b {
+                        self.cleanly_delete_definition(a);
+                        Ok(())
+                    } else {
+                        Err(ZiaError::DefinitionCollision)
+                    }
                 }
+                (Some(a), Some(b), Some(_)) => {
+                    if a == b {
+                        Err(ZiaError::RedundantDefinition)
+                    } else {
+                        Err(ZiaError::DefinitionCollision)
+                    }
+                }
+                (Some(a), None, Some((ref left, ref right))) => self.redefine(a, left, right),
             }
         }
     }
-    fn redefine<U: MightExpand + MaybeConcept<T> + Display>(
+    fn redefine<U: SyntaxContainer + MaybeConcept + fmt::Display>(
         &mut self,
-        concept: &mut T,
+        concept: usize,
         left: &U,
         right: &U,
     ) -> ZiaResult<()> {
-        if let Some((ref mut left_concept, ref mut right_concept)) = concept.get_definition() {
+        if let Some((left_concept, right_concept)) = self.read_concept(concept).get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
             self.relabel(right_concept, &right.to_string())
         } else {
-            let mut left_concept = try!(self.concept_from_ast(left));
-            let mut right_concept = try!(self.concept_from_ast(right));
-            try!(concept.insert_definition(&mut left_concept, &mut right_concept));
+            let left_concept = try!(self.concept_from_ast(left));
+            let right_concept = try!(self.concept_from_ast(right));
+            try!(self.insert_definition(concept, left_concept, right_concept));
             Ok(())
         }
     }
-    fn relabel(&mut self, concept: &mut T, new_label: &str) -> ZiaResult<()> {
-        concept.unlabel();
+    fn relabel(&mut self, concept: usize, new_label: &str) -> ZiaResult<()> {
+        self.unlabel(concept);
         self.label(concept, new_label)
     }
-    fn define_new_syntax<U: MightExpand + MaybeConcept<T> + Pair<T, U> + Display>(
+    fn define_new_syntax<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         syntax: &str,
         left: &U,
         right: &U,
     ) -> ZiaResult<()> {
-        let mut definition_concept: Option<T> = None;
-        if let (Some(ref l), Some(ref r)) = (left.get_concept(), right.get_concept()) {
-            definition_concept = l.find_definition(r);
-        }
+        let definition_concept =
+            if let (Some(l), Some(r)) = (left.get_concept(), right.get_concept()) {
+                self.find_definition(l, r)
+            } else {
+                None
+            };
         let new_syntax_tree = U::from_pair(syntax, definition_concept, left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
     }
 }
 
-impl<S, T, V> Definer<T, V> for S
+impl<S, T> Definer<T> for S
 where
-    T: DeleteReduction
-        + UpdateNormalForm
-        + InsertDefinition
-        + DeleteDefinition
-        + StringFactory
+    T: StringFactory
         + AbstractFactory
-        + MaybeDisconnected
-        + Unlabeller
-        + FindDefinition<T>
-		+ SetId
-		+ ConvertTo<Rc<RefCell<V>>>
-		+ GetLabel,
-	V: MaybeString,
-    S: ConceptMaker<T, V> + DefinitionDeleter<T>,
+        + RemoveDefinition
+        + SetReduction
+        + RemoveReduction
+        + SetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + GetDefinition
+        + GetDefinitionOf
+        + MaybeString
+        + Refresh,
+    S: ConceptMaker<T> + GetLabel<T> + DefinitionDeleter<T>,
+{
+}
+
+pub trait DeleteReduction<T>
+where
+    T: GetReduction + RemoveReduction,
+    Self: ConceptWriter<T> + ConceptReader<T>,
+{
+    fn try_removing_reduction<U: MaybeConcept>(&mut self, syntax: &U) -> ZiaResult<()> {
+        if let Some(c) = syntax.get_concept() {
+            self.delete_reduction(c);
+            Ok(())
+        } else {
+            Err(ZiaError::RedundantReduction)
+        }
+    }
+    fn delete_reduction(&mut self, concept: usize) {
+        match self.read_concept(concept).get_reduction() {
+            None => panic!("No normal form to delete"),
+            Some(n) => {
+                self.write_concept(n).no_longer_reduces_from(concept);
+                self.write_concept(concept).make_reduce_to_none();
+            }
+        };
+    }
+}
+
+impl<S, T> DeleteReduction<T> for S
+where
+    S: ConceptWriter<T> + ConceptReader<T>,
+    T: GetReduction + RemoveReduction,
 {
 }
 
 pub trait DefinitionDeleter<T>
 where
-	Self: ConceptCleaner<T>,
-	T: DeleteDefinition + Unlabeller + MaybeDisconnected + SetId,
+    Self: MaybeDisconnected<T> + ConceptCleaner<T> + DeleteDefinition<T> + Unlabeller<T>,
+    T: RemoveDefinition
+        + RemoveReduction
+        + GetDefinitionOf
+        + GetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + Refresh,
 {
-	fn delete_definition(&mut self, concept: &mut T) {
-        let mut definition = concept.get_definition();
-        concept.delete_definition();
+    fn cleanly_delete_definition(&mut self, concept: usize) {
+        let definition = self.read_concept(concept).get_definition();
+        self.delete_definition(concept);
         self.try_delete_concept(concept);
-        if let Some((ref mut left, ref mut right)) = definition {
+        if let Some((left, right)) = definition {
             self.try_delete_concept(left);
             self.try_delete_concept(right);
         }
     }
-    fn try_delete_concept(&mut self, concept: &mut T) {
-        if concept.is_disconnected() {
-            concept.unlabel();
+    fn try_delete_concept(&mut self, concept: usize) {
+        if self.is_disconnected(concept) {
+            self.unlabel(concept);
             self.cleanly_remove_concept(concept);
         }
     }
@@ -533,26 +645,77 @@ where
 
 impl<S, T> DefinitionDeleter<T> for S
 where
-	S: ConceptCleaner<T>,
-	T: DeleteDefinition + Unlabeller + MaybeDisconnected + SetId,
-{}
+    S: MaybeDisconnected<T> + ConceptCleaner<T> + DeleteDefinition<T> + Unlabeller<T>,
+    T: RemoveDefinition
+        + RemoveReduction
+        + GetDefinitionOf
+        + GetDefinition
+        + FindWhatReducesToIt
+        + GetReduction
+        + Refresh,
+{
+}
 
-pub trait ConceptMaker<T, V>
+pub trait Unlabeller<T>
+where
+    T: GetReduction + RemoveReduction + GetDefinition + GetDefinitionOf,
+    Self: DeleteReduction<T> + GetConceptOfLabel<T>,
+{
+    fn unlabel(&mut self, concept: usize) {
+        match self.get_concept_of_label(concept) {
+            None => panic!("No label to remove"),
+            Some(d) => self.delete_reduction(d),
+        }
+    }
+}
+
+impl<S, T> Unlabeller<T> for S
+where
+    T: GetReduction + RemoveReduction + GetDefinitionOf + GetDefinition,
+    S: DeleteReduction<T> + GetConceptOfLabel<T>,
+{
+}
+
+pub trait DeleteDefinition<T>
+where
+    T: GetDefinition + RemoveDefinition + Sized,
+    Self: ConceptReader<T> + ConceptWriter<T>,
+{
+    fn delete_definition(&mut self, concept: usize) {
+        match self.read_concept(concept).get_definition() {
+            None => panic!("No definition to remove!"),
+            Some((left, right)) => {
+                self.write_concept(left).remove_as_lefthand_of(concept);
+                self.write_concept(right).remove_as_righthand_of(concept);
+                self.write_concept(concept).remove_definition();
+            }
+        };
+    }
+}
+
+impl<S, T> DeleteDefinition<T> for S
+where
+    T: GetDefinition + RemoveDefinition + Sized,
+    Self: ConceptReader<T> + ConceptWriter<T>,
+{
+}
+
+pub trait ConceptMaker<T>
 where
     T: StringFactory
         + AbstractFactory
-        + InsertDefinition
-        + GetNormalForm
-        + UpdateNormalForm
-        + GetDefinitionOf<T>
-		+ ConvertTo<Rc<RefCell<V>>>,
-	V: MaybeString,
-    Self: Labeller<T, V>,
+        + SetReduction
+        + GetDefinitionOf
+        + GetDefinition
+        + SetDefinition
+        + MaybeString
+        + GetReduction,
+    Self: Labeller<T> + GetNormalForm<T>,
 {
-    fn concept_from_ast<U: MaybeConcept<T> + MightExpand + Display>(
+    fn concept_from_ast<U: MaybeConcept + MightExpand<U> + fmt::Display>(
         &mut self,
         ast: &U,
-    ) -> ZiaResult<T> {
+    ) -> ZiaResult<usize> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
@@ -560,11 +723,11 @@ where
             match ast.get_expansion() {
                 None => self.new_labelled_abstract(string),
                 Some((ref left, ref right)) => {
-                    let mut appc = try!(self.concept_from_ast(left));
-                    let mut argc = try!(self.concept_from_ast(right));
-                    let mut concept = try!(self.find_or_insert_definition(&mut appc, &mut argc));
+                    let mut leftc = try!(self.concept_from_ast(left));
+                    let mut rightc = try!(self.concept_from_ast(right));
+                    let concept = try!(self.find_or_insert_definition(leftc, rightc));
                     if !string.contains(' ') {
-                        try!(self.label(&mut concept, string));
+                        try!(self.label(concept, string));
                     }
                     Ok(concept)
                 }
@@ -573,132 +736,149 @@ where
     }
 }
 
-impl<S, T, V> ConceptMaker<T, V> for S
+impl<S, T> ConceptMaker<T> for S
 where
     T: StringFactory
         + AbstractFactory
-        + InsertDefinition
-        + GetNormalForm
-        + UpdateNormalForm
-        + GetDefinitionOf<T>
-		+ ConvertTo<Rc<RefCell<V>>>,
-    S: Labeller<T, V>,
-	V: MaybeString,
+        + GetDefinitionOf
+        + SetReduction
+        + GetDefinition
+        + SetDefinition
+        + MaybeString
+        + GetReduction,
+    S: Labeller<T> + GetNormalForm<T>,
 {
 }
 
 pub trait ConceptCleaner<T>
 where
-    Self: ConceptTidyer<T> + ConceptNumber,
-    T: GetId + SetId,
+    Self: ConceptRemover + ConceptNumber + ConceptWriter<T> + StringCleaner,
+    T: Refresh,
 {
-    fn cleanly_remove_concept(&mut self, concept: &T) {
+    fn cleanly_remove_concept(&mut self, concept: usize) {
         self.remove_concept(concept);
-        for id in concept.get_id()..self.number_of_concepts() {
-            self.correct_id(id);
+        for id in 0..self.number_of_concepts() {
+            self.write_concept(id).refresh(concept);
         }
+        self.clean_strings(concept);
     }
 }
 
 impl<S, T> ConceptCleaner<T> for S
 where
-    S: ConceptTidyer<T> + ConceptNumber,
-    T: GetId + SetId,
+    S: ConceptRemover + ConceptNumber + ConceptWriter<T> + StringCleaner,
+    T: Refresh,
 {
 }
 
-mod concept_tidyer {
-	pub use concepts::traits::{GetId, SetId};
-	use context::traits::ConceptHandler;	
-	pub trait ConceptTidyer<T>
-	where
-		T: SetId + GetId,
-		Self: ConceptHandler<T>,
-	{
-		fn remove_concept(&mut self, concept: &T) {
-		    self.remove_concept_by_id(concept.get_id());
-		}
-		fn correct_id(&mut self, id: usize) {
-		    self.get_concept(id).set_id(id);
-		}
-	}
-
-impl<S, T> ConceptTidyer<T> for S 
+pub trait Labeller<T>
 where
-	T: SetId + GetId,
-	S: ConceptHandler<T>,
+    T: SetReduction
+        + StringFactory
+        + AbstractFactory
+        + GetDefinitionOf
+        + SetDefinition
+        + GetReduction
+        + GetDefinition
+        + GetReduction
+        + MaybeString,
+    Self: StringMaker<T> + FindOrInsertDefinition<T> + UpdateNormalForm<T>,
 {
-}
-}
-
-pub trait Labeller<T, V>
-where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
-    Self: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
-	V: MaybeString,
-{
-    fn label(&mut self, concept: &mut T, string: &str) -> ZiaResult<()> {
-        let mut label_concept = self.get_label_concept();
-        let mut definition = try!(self.find_or_insert_definition(&mut label_concept, concept));
-        let mut string_ref = self.new_string(string);
-        definition.update_normal_form(&mut string_ref)
+    fn label(&mut self, concept: usize, string: &str) -> ZiaResult<()> {
+        let definition = try!(self.find_or_insert_definition(LABEL, concept));
+        let string_id = self.new_string(string);
+        self.update_normal_form(definition, string_id)
     }
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<T> {
-        let mut new_abstract = self.new_abstract();
-        try!(self.label(&mut new_abstract, string));
+    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<usize> {
+        let new_abstract = self.new_abstract();
+        try!(self.label(new_abstract, string));
         Ok(new_abstract)
     }
     fn setup(&mut self) -> ZiaResult<()> {
         self.new_abstract(); // for LABEL
-        let mut define_concept = self.new_abstract(); // for DEFINE;
-        let mut reduction_concept = self.new_abstract(); // for REDUCTION
-        try!(self.label(&mut define_concept, ":=")); //two more ids occupied
-        self.label(&mut reduction_concept, "->") //two more ids occupied
+        let define_concept = self.new_abstract(); // for DEFINE;
+        let reduction_concept = self.new_abstract(); // for REDUCTION
+        try!(self.label(define_concept, ":=")); //two more ids occupied
+        self.label(reduction_concept, "->") //two more ids occupied
     }
 }
 
-impl<S, T, V> Labeller<T, V> for S
+impl<S, T> Labeller<T> for S
 where
-    T: StringFactory + AbstractFactory + InsertDefinition + UpdateNormalForm + GetDefinitionOf<T> + ConvertTo<Rc<RefCell<V>>>,
-    S: StringMaker<T, V> + FindOrInsertDefinition<T> + LabelConcept<T>,
-	V: MaybeString,
+    T: SetReduction
+        + StringFactory
+        + AbstractFactory
+        + GetDefinitionOf
+        + SetDefinition
+        + GetReduction
+        + GetDefinition
+        + GetReduction
+        + MaybeString,
+    S: StringMaker<T> + FindOrInsertDefinition<T> + UpdateNormalForm<T>,
 {
 }
 
-pub trait StringMaker<T, V>
+pub trait UpdateNormalForm<T>
 where
-    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
-    Self: ConceptAdder<T, V> + ConceptNumber,
-	V: MaybeString,
+    T: SetReduction + GetReduction,
+    Self: ConceptWriter<T> + GetNormalForm<T>,
 {
-    fn new_string(&mut self, string: &str) -> T {
+    fn update_normal_form(&mut self, concept: usize, normal_form: usize) -> ZiaResult<()> {
+        if let Some(n) = self.get_normal_form(normal_form) {
+            if concept == n {
+                return Err(ZiaError::CyclicReduction);
+            }
+        }
+        if let Some(n) = self.read_concept(concept).get_reduction() {
+            if n == normal_form {
+                return Err(ZiaError::RedundantReduction);
+            }
+        }
+        self.write_concept(concept).make_reduce_to(normal_form);
+        self.write_concept(normal_form).make_reduce_from(concept);
+        Ok(())
+    }
+}
+
+impl<S, T> UpdateNormalForm<T> for S
+where
+    T: SetReduction + GetReduction,
+    S: ConceptWriter<T> + GetNormalForm<T>,
+{
+}
+
+pub trait StringMaker<T>
+where
+    T: StringFactory + MaybeString,
+    Self: ConceptAdder<T> + ConceptNumber,
+{
+    fn new_string(&mut self, string: &str) -> usize {
         let new_id = self.number_of_concepts();
-        let string_ref = T::new_string(new_id, string);
-        self.add_concept(&string_ref);
-        string_ref
+        let string_ref = T::new_string(string);
+        self.add_concept(string_ref);
+        new_id
     }
 }
 
-impl<S, T, V> StringMaker<T, V> for S
+impl<S, T> StringMaker<T> for S
 where
-    T: StringFactory + ConvertTo<Rc<RefCell<V>>>,
-    S: ConceptAdder<T, V> + ConceptNumber,
-	V: MaybeString,
+    T: StringFactory + MaybeString,
+    S: ConceptAdder<T> + ConceptNumber,
 {
 }
 
 pub trait FindOrInsertDefinition<T>
 where
-    T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
-    Self: AbstractMaker<T>,
+    T: AbstractFactory + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    Self: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
-    fn find_or_insert_definition(&mut self, lefthand: &mut T, righthand: &mut T) -> ZiaResult<T> {
-        let application = lefthand.find_definition(righthand);
-        match application {
+    fn find_or_insert_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<usize> {
+        let pair = self.find_definition(lefthand, righthand);
+        match pair {
             None => {
-                let mut definition = self.new_abstract();
-                try!(definition.insert_definition(lefthand, righthand));
-                Ok(definition.clone())
+                let definition = self.new_abstract();
+                try!(self.insert_definition(definition, lefthand, righthand));
+                Ok(definition)
             }
             Some(def) => Ok(def),
         }
@@ -707,8 +887,52 @@ where
 
 impl<S, T> FindOrInsertDefinition<T> for S
 where
-    T: AbstractFactory + FindDefinition<T> + InsertDefinition + PartialEq + Clone,
-    S: AbstractMaker<T>,
+    T: AbstractFactory + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    S: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
+{
+}
+
+pub trait InsertDefinition<T>
+where
+    T: SetDefinition + Sized + GetDefinition + GetReduction,
+    Self: ConceptWriter<T> + Container<T>,
+{
+    fn insert_definition(
+        &mut self,
+        definition: usize,
+        lefthand: usize,
+        righthand: usize,
+    ) -> ZiaResult<()> {
+        if self.contains(lefthand, definition) || self.contains(righthand, definition) {
+            Err(ZiaError::InfiniteDefinition)
+        } else {
+            try!(self.check_reductions(definition, lefthand));
+            try!(self.check_reductions(definition, righthand));
+            self.write_concept(definition)
+                .set_definition(lefthand, righthand);
+            self.write_concept(lefthand).add_as_lefthand_of(definition);
+            self.write_concept(righthand)
+                .add_as_righthand_of(definition);
+            Ok(())
+        }
+    }
+    fn check_reductions(&self, outer_concept: usize, inner_concept: usize) -> ZiaResult<()> {
+        if let Some(r) = self.read_concept(inner_concept).get_reduction() {
+            if r == outer_concept || self.contains(r, outer_concept) {
+                Err(ZiaError::ExpandingReduction)
+            } else {
+                self.check_reductions(outer_concept, r)
+            }
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl<S, T> InsertDefinition<T> for S
+where
+    T: SetDefinition + Sized + GetDefinition + GetReduction,
+    S: ConceptWriter<T> + Container<T>,
 {
 }
 
@@ -717,11 +941,11 @@ where
     T: AbstractFactory,
     Self: BlindConceptAdder<T> + ConceptNumber,
 {
-    fn new_abstract(&mut self) -> T {
+    fn new_abstract(&mut self) -> usize {
         let new_id = self.number_of_concepts();
-        let concept_ref = T::new_abstract(new_id);
-        self.blindly_add_concept(&concept_ref);
-        concept_ref
+        let concept = T::new_abstract();
+        self.blindly_add_concept(concept);
+        new_id
     }
 }
 
@@ -732,27 +956,450 @@ where
 {
 }
 
-pub trait ConceptAdder<T, V> 
+pub trait ConceptAdder<T>
 where
-	Self: BlindConceptAdder<T> + StringAdder<V>,
-	T: ConvertTo<Rc<RefCell<V>>>,
-	V: MaybeString, 
+    Self: BlindConceptAdder<T> + StringAdder + ConceptNumber,
+    T: MaybeString,
 {
-    fn add_concept(&mut self, concept: &T) {
+    fn add_concept(&mut self, concept: T) {
+        let string = concept.get_string();
         self.blindly_add_concept(concept);
-        if let Some(ref sr) = concept.convert() {
-            self.add_string(sr, &match sr.borrow().get_string() {
-				Some(s) => s.clone(), 
-				None => panic!("Concept can be converted into a string but has no string!"),
-			});
+        if let Some(sr) = string {
+            let nc = self.number_of_concepts();
+            self.add_string(nc - 1, &sr);
         }
-	}
+    }
 }
 
-impl<S, T, V> ConceptAdder<T, V> for S
+impl<S, T> ConceptAdder<T> for S
 where
-	S: BlindConceptAdder<T> + StringAdder<V>,
-	T: ConvertTo<Rc<RefCell<V>>>,
-	V: MaybeString, 
-{}
+    S: BlindConceptAdder<T> + StringAdder + ConceptNumber,
+    T: MaybeString,
+{
+}
 
+pub trait Expander<T>
+where
+    Self: Display<T> + FindDefinition<T> + Combine<T> + Reduce<T>,
+    T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
+{
+    fn expand<
+        U: MaybeConcept
+            + MightExpand<U>
+            + fmt::Display
+            + Clone
+            + Pair<U>
+            + DisplayJoint
+            + SyntaxFactory,
+    >(
+        &self,
+        ast: &U,
+    ) -> U {
+        if let Some(con) = ast.get_concept() {
+            if let Some((left, right)) = self.read_concept(con).get_definition() {
+                self.combine(
+                    &self.expand(&self.to_ast::<U>(left)),
+                    &self.expand(&self.to_ast::<U>(right)),
+                )
+            } else {
+                self.to_ast::<U>(con)
+            }
+        } else if let Some((ref left, ref right)) = ast.get_expansion() {
+            self.combine(&self.expand(left), &self.expand(right))
+        } else {
+            ast.clone()
+        }
+    }
+}
+
+impl<S, T> Expander<T> for S
+where
+    S: FindDefinition<T> + Display<T> + Combine<T> + Reduce<T>,
+    T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
+{
+}
+
+pub trait GetLabel<T>
+where
+    T: MaybeString + GetDefinitionOf + GetDefinition + GetReduction,
+    Self: GetNormalForm<T> + GetConceptOfLabel<T>,
+{
+    fn get_label(&self, concept: usize) -> Option<String> {
+        match self.get_concept_of_label(concept) {
+            None => None,
+            Some(d) => match self.get_normal_form(d) {
+                None => None,
+                Some(n) => self.read_concept(n).get_string(),
+            },
+        }
+    }
+}
+
+impl<S, T> GetLabel<T> for S
+where
+    T: MaybeString + GetDefinitionOf + GetDefinition + GetReduction,
+    S: GetNormalForm<T> + GetConceptOfLabel<T>,
+{
+}
+
+pub trait GetNormalForm<T>
+where
+    T: GetReduction,
+    Self: ConceptReader<T>,
+{
+    fn get_normal_form(&self, concept: usize) -> Option<usize> {
+        match self.read_concept(concept).get_reduction() {
+            None => None,
+            Some(n) => match self.get_normal_form(n) {
+                None => Some(n),
+                Some(m) => Some(m),
+            },
+        }
+    }
+}
+
+impl<S, T> GetNormalForm<T> for S
+where
+    S: ConceptReader<T>,
+    T: GetReduction,
+{
+}
+
+pub trait GetConceptOfLabel<T>
+where
+    T: GetDefinition + GetDefinitionOf,
+    Self: ConceptReader<T>,
+{
+    fn get_concept_of_label(&self, concept: usize) -> Option<usize> {
+        for candidate in self.read_concept(concept).get_righthand_of() {
+            match self.read_concept(candidate).get_definition() {
+                None => panic!("Candidate should have a definition!"),
+                Some((left, _)) => {
+                    if left == LABEL {
+                        return Some(candidate);
+                    }
+                }
+            };
+        }
+        None
+    }
+}
+
+impl<S, T> GetConceptOfLabel<T> for S
+where
+    T: GetDefinition + GetDefinitionOf,
+    S: ConceptReader<T>,
+{
+}
+
+pub trait MaybeDisconnected<T>
+where
+    T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
+    Self: ConceptReader<T>,
+{
+    fn is_disconnected(&self, concept: usize) -> bool {
+        self.read_concept(concept).get_reduction().is_none()
+            && self.read_concept(concept).get_definition().is_none()
+            && self.read_concept(concept).get_lefthand_of().is_empty()
+            && self.righthand_of_without_label_is_empty(concept)
+            && self
+                .read_concept(concept)
+                .find_what_reduces_to_it()
+                .is_empty()
+    }
+    fn righthand_of_without_label_is_empty(&self, con: usize) -> bool {
+        for concept in self.read_concept(con).get_righthand_of() {
+            if let Some((left, _)) = self.read_concept(concept).get_definition() {
+                if left != LABEL {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
+impl<S, T> MaybeDisconnected<T> for S
+where
+    T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
+    S: ConceptReader<T>,
+{
+}
+
+pub trait FindDefinition<T>
+where
+    T: GetDefinitionOf,
+    Self: ConceptReader<T>,
+{
+    fn find_definition(&self, lefthand: usize, righthand: usize) -> Option<usize> {
+        let mut candidates: Vec<usize> = Vec::new();
+        for candidate in self.read_concept(lefthand).get_lefthand_of() {
+            let has_righthand = self
+                .read_concept(righthand)
+                .get_righthand_of()
+                .contains(&candidate);
+            let new_candidate = !candidates.contains(&candidate);
+            if has_righthand && new_candidate {
+                candidates.push(candidate);
+            }
+        }
+        match candidates.len() {
+            0 => None,
+            1 => Some(candidates[0]),
+            _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
+        }
+    }
+}
+
+impl<S, T> FindDefinition<T> for S
+where
+    T: GetDefinitionOf,
+    S: ConceptReader<T>,
+{
+}
+
+pub trait Label<T>
+where
+    T: GetDefinition + FindWhatReducesToIt,
+    Self: ConceptReader<T> + FindWhatItsANormalFormOf<T>,
+{
+    fn get_labellee(&self, concept: usize) -> Option<usize> {
+        let mut candidates: Vec<usize> = Vec::new();
+        for label in self.find_what_its_a_normal_form_of(concept) {
+            match self.read_concept(label).get_definition() {
+                None => continue,
+                Some((r, x)) => {
+                    if r == LABEL {
+                        candidates.push(x)
+                    } else {
+                        continue;
+                    }
+                }
+            };
+        }
+        match candidates.len() {
+            0 => None,
+            1 => Some(candidates[0]),
+            _ => panic!("Multiple concepts are labelled with the same string"),
+        }
+    }
+}
+
+impl<S, T> Label<T> for S
+where
+    S: ConceptReader<T> + FindWhatItsANormalFormOf<T>,
+    T: GetDefinition + FindWhatReducesToIt,
+{
+}
+
+pub trait FindWhatItsANormalFormOf<T>
+where
+    T: FindWhatReducesToIt,
+    Self: ConceptReader<T>,
+{
+    fn find_what_its_a_normal_form_of(&self, con: usize) -> Vec<usize> {
+        let mut normal_form_of: Vec<usize> = Vec::new();
+        for concept in self.read_concept(con).find_what_reduces_to_it() {
+            normal_form_of.push(concept);
+            for concept2 in self.find_what_its_a_normal_form_of(concept) {
+                normal_form_of.push(concept2);
+            }
+        }
+        normal_form_of
+    }
+}
+
+impl<S, T> FindWhatItsANormalFormOf<T> for S
+where
+    S: ConceptReader<T>,
+    T: FindWhatReducesToIt,
+{
+}
+
+pub trait Display<T>
+where
+    Self: GetLabel<T>,
+    T: MaybeString + GetDefinitionOf + GetDefinition + GetReduction,
+{
+    fn display(&self, concept: usize) -> String {
+        match self.read_concept(concept).get_string() {
+            Some(s) => "\"".to_string() + &s + "\"",
+            None => match self.get_label(concept) {
+                Some(l) => l,
+                None => match self.read_concept(concept).get_definition() {
+                    Some((left, right)) => {
+                        let mut left_string = self.display(left);
+                        if left_string.contains(' ') {
+                            left_string = "(".to_string() + &left_string;
+                        }
+                        let mut right_string = self.display(right);
+                        if right_string.contains(' ') {
+                            right_string += ")";
+                        }
+                        left_string + " " + &right_string
+                    }
+                    None => panic!("Unlabelled concept with no definition!"),
+                },
+            },
+        }
+    }
+}
+
+impl<S, T> Display<T> for S
+where
+    S: GetLabel<T>,
+    T: MaybeString + GetDefinitionOf + GetDefinition + GetReduction,
+{
+}
+
+pub trait Reduce<T>
+where
+    Self: GetLabel<T> + FindDefinition<T> + Combine<T>,
+    T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
+{
+    fn recursively_reduce<
+        U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
+    >(
+        &self,
+        ast: &U,
+    ) -> U {
+        match self.reduce(ast) {
+            Some(ref a) => self.recursively_reduce(a),
+            None => ast.clone(),
+        }
+    }
+    fn reduce<U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+        &self,
+        ast: &U,
+    ) -> Option<U> {
+        match ast.get_concept() {
+            Some(c) => self.reduce_concept::<U>(c),
+            None => match ast.get_expansion() {
+                None => None,
+                Some((ref left, ref right)) => {
+                    self.match_left_right::<U>(self.reduce(left), self.reduce(right), left, right)
+                }
+            },
+        }
+    }
+    fn reduce_concept<U: SyntaxFactory + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+        &self,
+        concept: usize,
+    ) -> Option<U> {
+        match self.get_normal_form(concept) {
+            None => match self.read_concept(concept).get_definition() {
+                Some((left, right)) => {
+                    let left_result = self.reduce_concept::<U>(left);
+                    let right_result = self.reduce_concept::<U>(right);
+                    self.match_left_right::<U>(
+                        left_result,
+                        right_result,
+                        &self.to_ast::<U>(left),
+                        &self.to_ast::<U>(right),
+                    )
+                }
+                None => None,
+            },
+            Some(n) => Some(self.to_ast::<U>(n)),
+        }
+    }
+    fn to_ast<U: SyntaxFactory + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+        &self,
+        concept: usize,
+    ) -> U {
+        match self.get_label(concept) {
+            Some(ref s) => U::new(s, Some(concept)),
+            None => match self.read_concept(concept).get_definition() {
+                Some((left, right)) => {
+                    self.combine(&self.to_ast::<U>(left), &self.to_ast::<U>(right))
+                }
+                None => panic!("Unlabelled concept with no definition"),
+            },
+        }
+    }
+    fn match_left_right<U: Pair<U> + MaybeConcept + DisplayJoint>(
+        &self,
+        left: Option<U>,
+        right: Option<U>,
+        original_left: &U,
+        original_right: &U,
+    ) -> Option<U> {
+        match (left, right) {
+            (None, None) => None,
+            (Some(new_left), None) => Some(self.contract_pair::<U>(&new_left, original_right)),
+            (None, Some(new_right)) => Some(self.contract_pair::<U>(original_left, &new_right)),
+            (Some(new_left), Some(new_right)) => {
+                Some(self.contract_pair::<U>(&new_left, &new_right))
+            }
+        }
+    }
+    fn contract_pair<U: MaybeConcept + Pair<U> + DisplayJoint>(
+        &self,
+        lefthand: &U,
+        righthand: &U,
+    ) -> U {
+        if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
+            if let Some(def) = self.find_definition(lc, rc) {
+                if let Some(ref a) = self.get_label(def) {
+                    return U::from_pair(a, Some(def), lefthand, righthand);
+                }
+            }
+        }
+        self.combine(lefthand, righthand)
+    }
+}
+
+impl<S, T> Reduce<T> for S
+where
+    S: GetLabel<T> + FindDefinition<T> + Combine<T>,
+    T: GetDefinitionOf + GetDefinition + MaybeString + GetReduction,
+{
+}
+
+pub trait Combine<T>
+where
+    Self: FindDefinition<T>,
+    T: GetDefinitionOf,
+{
+    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(&self, ast: &U, other: &U) -> U {
+        let left_string = ast.display_joint();
+        let right_string = other.display_joint();
+        let definition = if let (Some(l), Some(r)) = (ast.get_concept(), other.get_concept()) {
+            self.find_definition(l, r)
+        } else {
+            None
+        };
+        U::from_pair(&(left_string + " " + &right_string), definition, ast, other)
+    }
+}
+
+impl<S, T> Combine<T> for S
+where
+    T: GetDefinitionOf,
+    S: FindDefinition<T>,
+{
+}
+
+pub trait Container<T>
+where
+    Self: ConceptReader<T>,
+    T: GetDefinition,
+{
+    fn contains(&self, outer: usize, inner: usize) -> bool {
+        if let Some((left, right)) = self.read_concept(outer).get_definition() {
+            left == inner
+                || right == inner
+                || self.contains(left, inner)
+                || self.contains(right, inner)
+        } else {
+            false
+        }
+    }
+}
+
+impl<S, T> Container<T> for S
+where
+    S: ConceptReader<T>,
+    T: GetDefinition,
+{
+}

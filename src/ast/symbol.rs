@@ -14,16 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use super::traits::{MaybeConcept, SyntaxFactory};
+use std::fmt;
 
-use super::traits::{MaybeConcept, SyntaxFactory, Display};
-
-pub struct Symbol<T> {
+pub struct Symbol {
     syntax: String,
-    concept: Option<T>,
+    concept: Option<usize>,
 }
 
-impl<T> SyntaxFactory<T> for Symbol<T> {
-    fn new(s: &str, concept: Option<T>) -> Symbol<T> {
+impl SyntaxFactory for Symbol {
+    fn new(s: &str, concept: Option<usize>) -> Symbol {
         Symbol {
             syntax: s.to_string(),
             concept,
@@ -31,23 +31,23 @@ impl<T> SyntaxFactory<T> for Symbol<T> {
     }
 }
 
-impl<T> Display for Symbol<T> {
-    fn to_string(&self) -> String {
-        self.syntax.clone()
+impl fmt::Display for Symbol {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", &self.syntax)
     }
 }
 
-impl<T: Clone> MaybeConcept<T> for Symbol<T> {
-    fn get_concept(&self) -> Option<T> {
-        self.concept.clone()
+impl MaybeConcept for Symbol {
+    fn get_concept(&self) -> Option<usize> {
+        self.concept
     }
 }
 
-impl<T: Clone> Clone for Symbol<T> {
-    fn clone(&self) -> Symbol<T> {
-        Symbol::<T> {
+impl Clone for Symbol {
+    fn clone(&self) -> Symbol {
+        Symbol {
             syntax: self.syntax.clone(),
-            concept: self.concept.clone(),
+            concept: self.concept,
         }
     }
 }

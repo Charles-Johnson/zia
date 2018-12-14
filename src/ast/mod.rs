@@ -20,16 +20,16 @@ pub mod traits;
 
 use self::expression::Expression;
 use self::symbol::Symbol;
+use self::traits::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
+use std::fmt;
 
-use self::traits::{Display, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
-
-pub enum AbstractSyntaxTree<T> {
-    Symbol(Symbol<T>),
-    Expression(Expression<AbstractSyntaxTree<T>, T>),
+pub enum AbstractSyntaxTree {
+    Symbol(Symbol),
+    Expression(Expression<AbstractSyntaxTree>),
 }
 
-impl<T: Clone> MaybeConcept<T> for AbstractSyntaxTree<T> {
-    fn get_concept(&self) -> Option<T> {
+impl MaybeConcept for AbstractSyntaxTree {
+    fn get_concept(&self) -> Option<usize> {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => a.get_concept(),
             AbstractSyntaxTree::Expression(ref e) => e.get_concept(),
@@ -37,14 +37,14 @@ impl<T: Clone> MaybeConcept<T> for AbstractSyntaxTree<T> {
     }
 }
 
-impl<T> PartialEq for AbstractSyntaxTree<T> {
+impl PartialEq for AbstractSyntaxTree {
     fn eq(&self, other: &Self) -> bool {
         self.to_string() == other.to_string()
     }
 }
 
-impl<T: Clone> Clone for AbstractSyntaxTree<T> {
-    fn clone(&self) -> AbstractSyntaxTree<T> {
+impl Clone for AbstractSyntaxTree {
+    fn clone(&self) -> AbstractSyntaxTree {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => AbstractSyntaxTree::Symbol(a.clone()),
             AbstractSyntaxTree::Expression(ref e) => AbstractSyntaxTree::Expression(e.clone()),
@@ -52,8 +52,8 @@ impl<T: Clone> Clone for AbstractSyntaxTree<T> {
     }
 }
 
-impl<T: Clone> MightExpand for AbstractSyntaxTree<T> {
-    fn get_expansion(&self) -> Option<(AbstractSyntaxTree<T>, AbstractSyntaxTree<T>)> {
+impl MightExpand<AbstractSyntaxTree> for AbstractSyntaxTree {
+    fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
         match *self {
             AbstractSyntaxTree::Symbol(_) => None,
             AbstractSyntaxTree::Expression(ref e) => Some((e.get_lefthand(), e.get_righthand())),
@@ -61,7 +61,7 @@ impl<T: Clone> MightExpand for AbstractSyntaxTree<T> {
     }
 }
 
-impl<T> DisplayJoint for AbstractSyntaxTree<T> {
+impl DisplayJoint for AbstractSyntaxTree {
     fn display_joint(&self) -> String {
         match *self {
             AbstractSyntaxTree::Expression(ref e) => "(".to_string() + &e.to_string() + ")",
@@ -70,30 +70,30 @@ impl<T> DisplayJoint for AbstractSyntaxTree<T> {
     }
 }
 
-impl<T> Display for AbstractSyntaxTree<T> {
-    fn to_string(&self) -> String {
+impl fmt::Display for AbstractSyntaxTree {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            AbstractSyntaxTree::Symbol(ref a) => a.to_string(),
-            AbstractSyntaxTree::Expression(ref e) => e.to_string(),
+            AbstractSyntaxTree::Symbol(ref a) => write!(f, "{}", a.to_string()),
+            AbstractSyntaxTree::Expression(ref e) => write!(f, "{}", e.to_string()),
         }
     }
 }
 
-impl<T: Clone> Pair<T, AbstractSyntaxTree<T>> for AbstractSyntaxTree<T> {
+impl Pair<AbstractSyntaxTree> for AbstractSyntaxTree {
     fn from_pair(
         syntax: &str,
-        concept: Option<T>,
-        lefthand: &AbstractSyntaxTree<T>,
-        righthand: &AbstractSyntaxTree<T>,
-    ) -> AbstractSyntaxTree<T> {
-        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree<T>, T>::from_pair(
+        concept: Option<usize>,
+        lefthand: &AbstractSyntaxTree,
+        righthand: &AbstractSyntaxTree,
+    ) -> AbstractSyntaxTree {
+        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree>::from_pair(
             syntax, concept, lefthand, righthand,
         ))
     }
 }
 
-impl<T> SyntaxFactory<T> for AbstractSyntaxTree<T> {
-    fn new(s: &str, concept: Option<T>) -> AbstractSyntaxTree<T> {
-        AbstractSyntaxTree::Symbol(Symbol::<T>::new(s, concept))
+impl SyntaxFactory for AbstractSyntaxTree {
+    fn new(s: &str, concept: Option<usize>) -> AbstractSyntaxTree {
+        AbstractSyntaxTree::Symbol(Symbol::new(s, concept))
     }
 }

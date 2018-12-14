@@ -15,114 +15,102 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::abstract_concept::AbstractConcept;
-use std::cell::RefCell;
-use std::rc::Rc;
-use super::traits::{GetDefinition, GetId, SetId, FindWhatReducesToIt, GetReduction, RemoveReduction, SetDefinition, SetReduction, RemoveDefinition, GetDefinitionOf, MaybeString};
-pub type StringRef<T> = Rc<RefCell<StringConcept<T>>>;
+use super::traits::{
+    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString, Refresh,
+    RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+};
 
-pub struct StringConcept<T> {
-    abstract_concept: AbstractConcept<T>,
+pub struct StringConcept {
+    abstract_concept: AbstractConcept,
     string: String,
 }
 
-impl<T> StringConcept<T> {
-    pub fn new_ref(id: usize, string: &str) -> StringRef<T> {
-        Rc::new(RefCell::new(StringConcept::<T> {
+impl StringConcept {
+    pub fn new(string: &str) -> StringConcept {
+        StringConcept {
             string: string.to_string(),
-            abstract_concept: AbstractConcept::new(id),
-        }))
+            abstract_concept: AbstractConcept::new(),
+        }
     }
 }
 
-impl<T> SetId for StringConcept<T> {
-    fn set_id(&mut self, number: usize) {
-        self.abstract_concept.set_id(number);
+impl Refresh for StringConcept {
+    fn refresh(&mut self, removed_concept: usize) {
+        self.abstract_concept.refresh(removed_concept);
     }
 }
 
-impl<T> MaybeString for StringConcept<T> {
+impl MaybeString for StringConcept {
     fn get_string(&self) -> Option<String> {
         Some(self.string.clone())
     }
 }
 
-impl<T: Clone> FindWhatReducesToIt<T> for StringConcept<T> {
-    fn find_what_reduces_to_it(&self) -> Vec<T> {
+impl FindWhatReducesToIt for StringConcept {
+    fn find_what_reduces_to_it(&self) -> Vec<usize> {
         self.abstract_concept.find_what_reduces_to_it()
     }
 }
 
-impl<T: Clone> GetDefinitionOf<T> for StringConcept<T> {
-    fn get_lefthand_of(&self) -> Vec<T> {
+impl GetDefinitionOf for StringConcept {
+    fn get_lefthand_of(&self) -> Vec<usize> {
         self.abstract_concept.get_lefthand_of()
     }
-    fn get_righthand_of(&self) -> Vec<T> {
+    fn get_righthand_of(&self) -> Vec<usize> {
         self.abstract_concept.get_righthand_of()
     }
 }
 
-impl<T: Clone> GetDefinition<T> for StringConcept<T> {
-    fn get_definition(&self) -> Option<(T, T)> {
+impl GetDefinition for StringConcept {
+    fn get_definition(&self) -> Option<(usize, usize)> {
         self.abstract_concept.get_definition()
     }
 }
 
-impl<T: Clone> SetDefinition<T> for StringConcept<T> {
-    fn set_definition(&mut self, lefthand: &T, righthand: &T) {
+impl SetDefinition for StringConcept {
+    fn set_definition(&mut self, lefthand: usize, righthand: usize) {
         self.abstract_concept.set_definition(lefthand, righthand);
     }
-    fn add_as_lefthand_of(&mut self, lefthand: &T) {
+    fn add_as_lefthand_of(&mut self, lefthand: usize) {
         self.abstract_concept.add_as_lefthand_of(lefthand);
     }
-    fn add_as_righthand_of(&mut self, righthand: &T) {
+    fn add_as_righthand_of(&mut self, righthand: usize) {
         self.abstract_concept.add_as_righthand_of(righthand);
     }
 }
 
-impl<T: GetId + PartialEq> RemoveDefinition<T> for StringConcept<T> {
+impl RemoveDefinition for StringConcept {
     fn remove_definition(&mut self) {
         self.abstract_concept.remove_definition();
     }
-    fn remove_as_lefthand_of(&mut self, definition: &T) {
+    fn remove_as_lefthand_of(&mut self, definition: usize) {
         self.abstract_concept.remove_as_lefthand_of(definition)
     }
-    fn remove_as_righthand_of(&mut self, definition: &T) {
+    fn remove_as_righthand_of(&mut self, definition: usize) {
         self.abstract_concept.remove_as_righthand_of(definition)
     }
 }
 
-impl<T> GetId for StringConcept<T> {
-    fn get_id(&self) -> usize {
-        self.abstract_concept.get_id()
-    }
-}
-
-impl<T: Clone> GetReduction<T> for StringConcept<T> {
-    fn get_reduction(&self) -> Option<T> {
+impl GetReduction for StringConcept {
+    fn get_reduction(&self) -> Option<usize> {
         self.abstract_concept.get_reduction()
     }
 }
 
-impl<T: Clone> SetReduction<T> for StringConcept<T> {
-    fn make_reduce_to(&mut self, _: &T) {
-        panic!(
-            "Concept number {} is a string so must be its own normal form",
-            self.get_id()
-        )
+impl SetReduction for StringConcept {
+    fn make_reduce_to(&mut self, _: usize) {
+        panic!("Concept is a string so must be its own normal form",)
     }
-    fn make_reduce_from(&mut self, concept: &T) {
+    fn make_reduce_from(&mut self, concept: usize) {
         self.abstract_concept.make_reduce_from(concept);
     }
 }
 
-impl<T: GetId + PartialEq> RemoveReduction<T> for StringConcept<T> {
+impl RemoveReduction for StringConcept {
     fn make_reduce_to_none(&mut self) {
-        panic!(
-            "Concept number {} is a string so no need to remove reduction.",
-            self.get_id()
-        )
+        panic!("Concept number {} is a string so no need to remove reduction.")
     }
-    fn no_longer_reduces_from(&mut self, concept: &T) {
+    fn no_longer_reduces_from(&mut self, concept: usize) {
         self.abstract_concept.no_longer_reduces_from(concept);
     }
 }

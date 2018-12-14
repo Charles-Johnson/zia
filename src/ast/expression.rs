@@ -15,16 +15,16 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::symbol::Symbol;
-use std::borrow::Borrow;
-use super::traits::{MaybeConcept, Pair, SyntaxFactory, Display};
+use super::traits::{MaybeConcept, Pair, SyntaxFactory};
+use std::{borrow::Borrow, fmt};
 
-pub struct Expression<T, U> {
-    symbol: Symbol<U>,
+pub struct Expression<T> {
+    symbol: Symbol,
     lefthand: Box<T>,
     righthand: Box<T>,
 }
 
-impl<T: Clone, U> Expression<T, U> {
+impl<T: Clone> Expression<T> {
     pub fn get_lefthand(&self) -> T {
         let borrowed_left: &T = self.lefthand.borrow();
         borrowed_left.clone()
@@ -35,14 +35,14 @@ impl<T: Clone, U> Expression<T, U> {
     }
 }
 
-impl<T: Clone, U> Pair<U, T> for Expression<T, U> {
+impl<T: Clone> Pair<T> for Expression<T> {
     fn from_pair(
         syntax: &str,
-        concept: Option<U>,
+        concept: Option<usize>,
         lefthand: &T,
         righthand: &T,
-    ) -> Expression<T, U> {
-        Expression::<T, U> {
+    ) -> Expression<T> {
+        Expression::<T> {
             symbol: Symbol::new(syntax, concept),
             lefthand: Box::new(lefthand.clone()),
             righthand: Box::new(righthand.clone()),
@@ -50,21 +50,21 @@ impl<T: Clone, U> Pair<U, T> for Expression<T, U> {
     }
 }
 
-impl<T, U> Display for Expression<T, U> {
-    fn to_string(&self) -> String {
-        self.symbol.to_string()
+impl<T> fmt::Display for Expression<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.symbol.to_string())
     }
 }
 
-impl<T, U: Clone> MaybeConcept<U> for Expression<T, U> {
-    fn get_concept(&self) -> Option<U> {
+impl<T> MaybeConcept for Expression<T> {
+    fn get_concept(&self) -> Option<usize> {
         self.symbol.get_concept()
     }
 }
 
-impl<T: Clone, U: Clone> Clone for Expression<T, U> {
-    fn clone(&self) -> Expression<T, U> {
-        Expression::<T, U> {
+impl<T: Clone> Clone for Expression<T> {
+    fn clone(&self) -> Expression<T> {
+        Expression::<T> {
             symbol: self.symbol.clone(),
             lefthand: Box::new(self.get_lefthand()),
             righthand: Box::new(self.get_righthand()),

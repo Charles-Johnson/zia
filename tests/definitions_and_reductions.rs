@@ -16,7 +16,7 @@
 */
 extern crate zia;
 
-use zia::{AbstractSyntaxTree, Context, Display, Execute, ContextMaker, ZiaError};
+use zia::{AbstractSyntaxTree, Context, ContextMaker, Execute, ZiaError};
 
 #[test]
 fn indirect_reduction() {
