@@ -17,7 +17,6 @@
 
 mod ast;
 mod combined_traits;
-mod concept_and_ast_traits;
 mod concepts;
 mod constants;
 mod context;
