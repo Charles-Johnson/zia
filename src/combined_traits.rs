@@ -15,10 +15,10 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use ast::traits::{
-    Container as SyntaxContainer, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory,
+    Container as SyntaxContainer, MightExpand, SyntaxFactory,
 };
 use self::concept_reader::{ConceptReader, GetReduction, GetDefinition, GetDefinitionOf,
-	FindWhatReducesToIt, FindDefinition, Container, MaybeDisconnected, GetConceptOfLabel, FindWhatItsANormalFormOf, GetNormalForm};
+	FindWhatReducesToIt, FindDefinition, Container, MaybeDisconnected, GetConceptOfLabel, Label, GetNormalForm, Combine, Pair, DisplayJoint, MaybeConcept, };
 use concepts::traits::{
     AbstractFactory, MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
     StringFactory,
@@ -819,18 +819,20 @@ where
 pub trait StringMaker<T>
 where
     T: StringFactory + MaybeString,
-    Self: ConceptAdder<T>,
+    Self: BlindConceptAdder<T> + StringAdder,
 {
     fn new_string(&mut self, string: &str) -> usize {
         let string_concept = T::new_string(string);
-        self.add_concept(string_concept)
+        let index = self.blindly_add_concept(string_concept);
+		self.add_string(index, string);
+		index
     }
 }
 
 impl<S, T> StringMaker<T> for S
 where
     T: StringFactory + MaybeString,
-    S: ConceptAdder<T>,
+    S: BlindConceptAdder<T> + StringAdder,
 {
 }
 
@@ -921,31 +923,9 @@ where
 {
 }
 
-pub trait ConceptAdder<T>
-where
-    Self: BlindConceptAdder<T> + StringAdder,
-    T: MaybeString,
-{
-    fn add_concept(&mut self, concept: T) -> usize {
-        let string = concept.get_string();
-        let index = self.blindly_add_concept(concept);
-        if let Some(sr) = string {
-            self.add_string(index, &sr);
-        }
-		index
-    }
-}
-
-impl<S, T> ConceptAdder<T> for S
-where
-    S: BlindConceptAdder<T> + StringAdder,
-    T: MaybeString,
-{
-}
-
 pub trait Expander<T>
 where
-    Self: Display<T> + FindDefinition<T> + Combine<T> + Reduce<T>,
+    Self: Display<T> + Reduce<T>,
     T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
 {
     fn expand<
@@ -979,7 +959,7 @@ where
 
 impl<S, T> Expander<T> for S
 where
-    S: FindDefinition<T> + Display<T> + Combine<T> + Reduce<T>,
+    S: Display<T> + Reduce<T>,
     T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
 {
 }
@@ -1045,7 +1025,7 @@ where
 
 pub trait Reduce<T>
 where
-    Self: GetLabel<T> + FindDefinition<T> + Combine<T>,
+    Self: GetLabel<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
 {
     fn recursively_reduce<
@@ -1142,74 +1122,72 @@ where
 
 impl<S, T> Reduce<T> for S
 where
-    S: GetLabel<T> + FindDefinition<T> + Combine<T>,
+    S: GetLabel<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + MaybeString + GetReduction,
 {
 }
 
-pub trait Combine<T>
-where
-    Self: FindDefinition<T>,
-    T: GetDefinitionOf,
-{
-    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(&self, ast: &U, other: &U) -> U {
-        let left_string = ast.display_joint();
-        let right_string = other.display_joint();
-        let definition = if let (Some(l), Some(r)) = (ast.get_concept(), other.get_concept()) {
-            self.find_definition(l, r)
-        } else {
-            None
-        };
-        U::from_pair(&(left_string + " " + &right_string), definition, ast, other)
-    }
-}
-
-impl<S, T> Combine<T> for S
-where
-    T: GetDefinitionOf,
-    S: FindDefinition<T>,
-{
-}
-
-
-pub trait Label<T>
-where
-    T: GetDefinition + FindWhatReducesToIt,
-    Self: FindWhatItsANormalFormOf<T>,
-{
-    fn get_labellee(&self, concept: usize) -> Option<usize> {
-        let mut candidates: Vec<usize> = Vec::new();
-        for label in self.find_what_its_a_normal_form_of(concept) {
-            match self.read_concept(label).get_definition() {
-                None => continue,
-                Some((r, x)) => {
-                    if r == LABEL {
-                        candidates.push(x)
-                    } else {
-                        continue;
-                    }
-                }
-            };
-        }
-        match candidates.len() {
-            0 => None,
-            1 => Some(candidates[0]),
-            _ => panic!("Multiple concepts are labelled with the same string"),
-        }
-    }
-}
-
-impl<S, T> Label<T> for S
-where
-    S: FindWhatItsANormalFormOf<T>,
-    T: GetDefinition + FindWhatReducesToIt,
-{
-}
-
 mod concept_reader {
+	pub use ast::traits::{DisplayJoint, MaybeConcept, Pair};
 	pub use context::traits::ConceptReader;
 	pub use concepts::traits::{GetReduction, GetDefinition, GetDefinitionOf, FindWhatReducesToIt};
 	use constants::LABEL;
+	pub trait Combine<T>
+	where
+		Self: FindDefinition<T>,
+		T: GetDefinitionOf,
+	{
+		fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(&self, ast: &U, other: &U) -> U {
+		    let left_string = ast.display_joint();
+		    let right_string = other.display_joint();
+		    let definition = if let (Some(l), Some(r)) = (ast.get_concept(), other.get_concept()) {
+		        self.find_definition(l, r)
+		    } else {
+		        None
+		    };
+		    U::from_pair(&(left_string + " " + &right_string), definition, ast, other)
+		}
+	}
+
+	impl<S, T> Combine<T> for S
+	where
+		T: GetDefinitionOf,
+		S: FindDefinition<T>,
+	{
+	}
+	pub trait Label<T>
+	where
+		T: GetDefinition + FindWhatReducesToIt,
+		Self: FindWhatItsANormalFormOf<T>,
+	{
+		fn get_labellee(&self, concept: usize) -> Option<usize> {
+		    let mut candidates: Vec<usize> = Vec::new();
+		    for label in self.find_what_its_a_normal_form_of(concept) {
+		        match self.read_concept(label).get_definition() {
+		            None => continue,
+		            Some((r, x)) => {
+		                if r == LABEL {
+		                    candidates.push(x)
+		                } else {
+		                    continue;
+		                }
+		            }
+		        };
+		    }
+		    match candidates.len() {
+		        0 => None,
+		        1 => Some(candidates[0]),
+		        _ => panic!("Multiple concepts are labelled with the same string"),
+		    }
+		}
+	}
+
+	impl<S, T> Label<T> for S
+	where
+		S: FindWhatItsANormalFormOf<T>,
+		T: GetDefinition + FindWhatReducesToIt,
+	{
+	}
 	pub trait GetNormalForm<T>
 	where
 		T: GetReduction,
