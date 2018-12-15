@@ -18,7 +18,7 @@
 pub mod traits;
 
 use self::traits::{
-    BlindConceptAdder, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
+    ConceptAdder, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
 	StringConcept,
 };
 use std::collections::HashMap;
@@ -70,8 +70,8 @@ impl<T> ConceptRemover for Context<T> {
     }
 }
 
-impl<T> BlindConceptAdder<T> for Context<T> {
-    fn blindly_add_concept(&mut self, concept: T) -> usize {
+impl<T> ConceptAdder<T> for Context<T> {
+    fn add_concept(&mut self, concept: T) -> usize {
 		match self.gaps.pop() {
         	None => {
 				let index = self.concepts.len();

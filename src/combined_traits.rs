@@ -25,7 +25,7 @@ use concepts::traits::{
 };
 use constants::{DEFINE, LABEL, REDUCTION};
 use context::traits::{
-    BlindConceptAdder, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
+    ConceptAdder, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
 };
 use std::fmt;
 use token::parse_line;
@@ -819,11 +819,11 @@ where
 pub trait StringMaker<T>
 where
     T: StringFactory + MaybeString,
-    Self: BlindConceptAdder<T> + StringAdder,
+    Self: ConceptAdder<T> + StringAdder,
 {
     fn new_string(&mut self, string: &str) -> usize {
         let string_concept = T::new_string(string);
-        let index = self.blindly_add_concept(string_concept);
+        let index = self.add_concept(string_concept);
 		self.add_string(index, string);
 		index
     }
@@ -832,7 +832,7 @@ where
 impl<S, T> StringMaker<T> for S
 where
     T: StringFactory + MaybeString,
-    S: BlindConceptAdder<T> + StringAdder,
+    S: ConceptAdder<T> + StringAdder,
 {
 }
 
@@ -908,18 +908,18 @@ where
 pub trait AbstractMaker<T>
 where
     T: AbstractFactory,
-    Self: BlindConceptAdder<T>,
+    Self: ConceptAdder<T>,
 {
     fn new_abstract(&mut self) -> usize {
         let concept = T::new_abstract();
-        self.blindly_add_concept(concept)
+        self.add_concept(concept)
     }
 }
 
 impl<S, T> AbstractMaker<T> for S
 where
     T: AbstractFactory,
-    S: BlindConceptAdder<T>,
+    S: ConceptAdder<T>,
 {
 }
 

@@ -19,8 +19,8 @@ pub trait StringAdder {
     fn add_string(&mut self, usize, &str);
 }
 
-pub trait BlindConceptAdder<T> {
-    fn blindly_add_concept(&mut self, T) -> usize;
+pub trait ConceptAdder<T> {
+    fn add_concept(&mut self, T) -> usize;
 }
 
 pub trait ConceptReader<T> {
