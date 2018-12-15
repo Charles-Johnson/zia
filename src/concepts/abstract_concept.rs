@@ -16,7 +16,7 @@
 */
 
 use super::traits::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, Refresh, RemoveDefinition,
+    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, RemoveDefinition,
     RemoveReduction, SetDefinition, SetReduction,
 };
 
@@ -37,49 +37,6 @@ impl AbstractConcept {
             reduces_to: None,
             reduces_from: Vec::new(),
         }
-    }
-}
-
-impl Refresh for AbstractConcept {
-    fn refresh(&mut self, removed_concept: usize) {
-        match self.get_definition() {
-            None => (),
-            Some((left, right)) => {
-                match (left > removed_concept, right > removed_concept) {
-                    (false, false) => (),
-                    (false, true) => self.set_definition(left, right - 1),
-                    (true, false) => self.set_definition(left - 1, right),
-                    (true, true) => self.set_definition(left - 1, right - 1),
-                };
-            }
-        };
-        // Not efficient
-        for concept in self.get_lefthand_of() {
-            if concept > removed_concept {
-                self.remove_as_lefthand_of(concept);
-                self.add_as_lefthand_of(concept - 1);
-            }
-        }
-        for concept in self.get_righthand_of() {
-            if concept > removed_concept {
-                self.remove_as_righthand_of(concept);
-                self.add_as_righthand_of(concept - 1);
-            }
-        }
-        for concept in self.find_what_reduces_to_it() {
-            if concept > removed_concept {
-                self.no_longer_reduces_from(concept);
-                self.make_reduce_from(concept - 1);
-            }
-        }
-        match self.get_reduction() {
-            None => (),
-            Some(n) => {
-                if n > removed_concept {
-                    self.make_reduce_to(n - 1)
-                }
-            }
-        };
     }
 }
 

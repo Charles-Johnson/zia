@@ -41,7 +41,3 @@ pub trait StringConcept {
 pub trait ConceptNumber {
     fn number_of_concepts(&self) -> usize;
 }
-
-pub trait StringCleaner {
-    fn clean_strings(&mut self, usize);
-}

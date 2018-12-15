@@ -16,7 +16,7 @@
 */
 use super::abstract_concept::AbstractConcept;
 use super::traits::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString, Refresh,
+    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
     RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
 };
 
@@ -31,12 +31,6 @@ impl StringConcept {
             string: string.to_string(),
             abstract_concept: AbstractConcept::new(),
         }
-    }
-}
-
-impl Refresh for StringConcept {
-    fn refresh(&mut self, removed_concept: usize) {
-        self.abstract_concept.refresh(removed_concept);
     }
 }
 

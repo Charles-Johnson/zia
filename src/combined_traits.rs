@@ -19,13 +19,12 @@ use ast::traits::{
 };
 use concepts::traits::{
     AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString, Refresh, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
     StringFactory,
 };
 use constants::{DEFINE, LABEL, REDUCTION};
 use context::traits::{
-    BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
-    StringCleaner, StringConcept,
+    BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
 };
 use std::fmt;
 use token::parse_line;
@@ -77,8 +76,7 @@ where
         + MaybeString
         + GetDefinitionOf
         + GetReduction
-        + FindWhatReducesToIt
-        + Refresh,
+        + FindWhatReducesToIt,
 {
     fn execute<
         U: MaybeConcept
@@ -115,8 +113,7 @@ where
         + MaybeString
         + GetDefinitionOf
         + GetReduction
-        + FindWhatReducesToIt
-        + Refresh,
+        + FindWhatReducesToIt,
     S: Call<T> + SyntaxConverter<T>,
 {
 }
@@ -203,8 +200,7 @@ where
         + GetReduction
         + GetDefinition
         + GetDefinitionOf
-        + MaybeString
-        + Refresh,
+        + MaybeString,
 {
     fn call<
         U: MaybeConcept
@@ -317,8 +313,7 @@ where
         + GetReduction
         + GetDefinition
         + GetDefinitionOf
-        + MaybeString
-        + Refresh,
+        + MaybeString,
 {
 }
 
@@ -334,8 +329,7 @@ where
         + GetDefinitionOf
         + GetDefinition
         + GetReduction
-        + FindWhatReducesToIt
-        + Refresh,
+        + FindWhatReducesToIt,
     Self: Definer<T> + ExecuteReduction<T> + Reduce<T>,
 {
     fn call_as_righthand<
@@ -403,8 +397,7 @@ where
         + GetDefinitionOf
         + GetDefinition
         + GetReduction
-        + FindWhatReducesToIt
-        + Refresh,
+        + FindWhatReducesToIt,
     S: Definer<T> + ExecuteReduction<T> + Reduce<T>,
 {
 }
@@ -468,8 +461,7 @@ where
         + GetReduction
         + GetDefinition
         + GetDefinitionOf
-        + MaybeString
-        + Refresh,
+        + MaybeString,
     Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
 {
     fn execute_definition<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
@@ -578,8 +570,7 @@ where
         + GetReduction
         + GetDefinition
         + GetDefinitionOf
-        + MaybeString
-        + Refresh,
+        + MaybeString,
     S: ConceptMaker<T> + GetLabel<T> + DefinitionDeleter<T>,
 {
 }
@@ -617,14 +608,13 @@ where
 
 pub trait DefinitionDeleter<T>
 where
-    Self: MaybeDisconnected<T> + ConceptCleaner<T> + DeleteDefinition<T> + Unlabeller<T>,
+    Self: MaybeDisconnected<T> + ConceptRemover + DeleteDefinition<T> + Unlabeller<T>,
     T: RemoveDefinition
         + RemoveReduction
         + GetDefinitionOf
         + GetDefinition
         + FindWhatReducesToIt
-        + GetReduction
-        + Refresh,
+        + GetReduction,
 {
     fn cleanly_delete_definition(&mut self, concept: usize) {
         let definition = self.read_concept(concept).get_definition();
@@ -638,21 +628,20 @@ where
     fn try_delete_concept(&mut self, concept: usize) {
         if self.is_disconnected(concept) {
             self.unlabel(concept);
-            self.cleanly_remove_concept(concept);
+            self.remove_concept(concept);
         }
     }
 }
 
 impl<S, T> DefinitionDeleter<T> for S
 where
-    S: MaybeDisconnected<T> + ConceptCleaner<T> + DeleteDefinition<T> + Unlabeller<T>,
+    S: MaybeDisconnected<T> + ConceptRemover + DeleteDefinition<T> + Unlabeller<T>,
     T: RemoveDefinition
         + RemoveReduction
         + GetDefinitionOf
         + GetDefinition
         + FindWhatReducesToIt
-        + GetReduction
-        + Refresh,
+        + GetReduction,
 {
 }
 
@@ -747,27 +736,6 @@ where
         + MaybeString
         + GetReduction,
     S: Labeller<T> + GetNormalForm<T>,
-{
-}
-
-pub trait ConceptCleaner<T>
-where
-    Self: ConceptRemover + ConceptNumber + ConceptWriter<T> + StringCleaner,
-    T: Refresh,
-{
-    fn cleanly_remove_concept(&mut self, concept: usize) {
-        self.remove_concept(concept);
-        for id in 0..self.number_of_concepts() {
-            self.write_concept(id).refresh(concept);
-        }
-        self.clean_strings(concept);
-    }
-}
-
-impl<S, T> ConceptCleaner<T> for S
-where
-    S: ConceptRemover + ConceptNumber + ConceptWriter<T> + StringCleaner,
-    T: Refresh,
 {
 }
 

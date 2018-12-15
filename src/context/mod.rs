@@ -19,13 +19,14 @@ pub mod traits;
 
 use self::traits::{
     BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
-    StringCleaner, StringConcept,
+	StringConcept,
 };
 use std::collections::HashMap;
 
 pub struct Context<T> {
     string_map: HashMap<String, usize>,
-    concepts: Vec<T>,
+    concepts: Vec<Option<T>>,
+	gaps: Vec<usize>,
 }
 
 impl<T> Default for Context<T> {
@@ -33,44 +34,43 @@ impl<T> Default for Context<T> {
         Context::<T> {
             string_map: HashMap::new(),
             concepts: Vec::new(),
-        }
-    }
-}
-
-impl<T> StringCleaner for Context<T> {
-    fn clean_strings(&mut self, removed_concept: usize) {
-        for value in self.string_map.values_mut() {
-            if *value > removed_concept {
-                *value -= 1;
-            }
+			gaps: Vec::new(),
         }
     }
 }
 
 impl<T> StringAdder for Context<T> {
-    fn add_string(&mut self, string_ref: usize, string: &str) {
-        self.string_map.insert(string.to_string(), string_ref);
+    fn add_string(&mut self, string_id: usize, string: &str) {
+        self.string_map.insert(string.to_string(), string_id);
     }
 }
 
 impl<T> ConceptWriter<T> for Context<T> {
     fn write_concept(&mut self, id: usize) -> &mut T {
-        &mut self.concepts[id]
+        match self.concepts[id] {
+			Some(ref mut c) => c,
+			None => panic!("No concept with id = {}", id),
+		}
     }
 }
 
 impl<T> ConceptReader<T> for Context<T> {
     fn read_concept(&self, id: usize) -> &T {
-        &self.concepts[id]
+         match self.concepts[id] {
+			Some(ref c) => c,
+			None => panic!("No concept with id = {}", id),
+		}
     }
 }
 
 impl<T> ConceptRemover for Context<T> {
     fn remove_concept(&mut self, id: usize) {
-        self.concepts.remove(id);
+		self.concepts[id] = None;
+        self.gaps.push(id);
     }
 }
 
+// Probably not needed
 impl<T> ConceptNumber for Context<T> {
     fn number_of_concepts(&self) -> usize {
         self.concepts.len()
@@ -79,7 +79,10 @@ impl<T> ConceptNumber for Context<T> {
 
 impl<T> BlindConceptAdder<T> for Context<T> {
     fn blindly_add_concept(&mut self, concept: T) {
-        self.concepts.push(concept)
+		match self.gaps.pop() {
+        	None => self.concepts.push(Some(concept)),
+			Some(index) => self.concepts[index] = Some(concept),
+		}
     }
 }
 

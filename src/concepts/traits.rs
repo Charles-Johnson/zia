@@ -65,7 +65,3 @@ pub trait AbstractFactory {
 pub trait StringFactory {
     fn new_string(&str) -> Self;
 }
-
-pub trait Refresh {
-    fn refresh(&mut self, usize);
-}

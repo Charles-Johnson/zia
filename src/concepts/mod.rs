@@ -22,7 +22,7 @@ use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
 use self::traits::{
     AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString, Refresh, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
     StringFactory,
 };
 
@@ -141,15 +141,6 @@ impl RemoveReduction for Concept {
         match *self {
             Concept::Abstract(ref mut c) => c.no_longer_reduces_from(concept),
             Concept::String(ref mut c) => c.no_longer_reduces_from(concept),
-        };
-    }
-}
-
-impl Refresh for Concept {
-    fn refresh(&mut self, removed_concept: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.refresh(removed_concept),
-            Concept::String(ref mut c) => c.refresh(removed_concept),
         };
     }
 }
