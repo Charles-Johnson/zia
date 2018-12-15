@@ -30,10 +30,14 @@ pub trait ConceptReader<T> {
 pub trait ConceptWriter<T> {
     fn write_concept(&mut self, usize) -> &mut T;
 }
-pub trait ConceptRemover {
-    fn remove_concept(&mut self, usize);
+pub trait BlindConceptRemover {
+    fn blindly_remove_concept(&mut self, usize);
 }
 
 pub trait StringConcept {
     fn get_string_concept(&self, &str) -> Option<usize>;
+}
+
+pub trait StringRemover {
+    fn remove_string(&mut self, &str);
 }

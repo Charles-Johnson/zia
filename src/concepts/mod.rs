@@ -22,8 +22,7 @@ use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
 use self::traits::{
     AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
-    StringFactory,
+    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction, StringFactory,
 };
 
 pub enum Concept {

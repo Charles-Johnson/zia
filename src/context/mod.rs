@@ -18,15 +18,15 @@
 pub mod traits;
 
 use self::traits::{
-    ConceptAdder, ConceptReader, ConceptRemover, ConceptWriter, StringAdder,
-	StringConcept,
+    BlindConceptRemover, ConceptAdder, ConceptReader, ConceptWriter, StringAdder, StringConcept,
+    StringRemover,
 };
 use std::collections::HashMap;
 
 pub struct Context<T> {
     string_map: HashMap<String, usize>,
     concepts: Vec<Option<T>>,
-	gaps: Vec<usize>,
+    gaps: Vec<usize>,
 }
 
 impl<T> Default for Context<T> {
@@ -34,7 +34,7 @@ impl<T> Default for Context<T> {
         Context::<T> {
             string_map: HashMap::new(),
             concepts: Vec::new(),
-			gaps: Vec::new(),
+            gaps: Vec::new(),
         }
     }
 }
@@ -48,41 +48,47 @@ impl<T> StringAdder for Context<T> {
 impl<T> ConceptWriter<T> for Context<T> {
     fn write_concept(&mut self, id: usize) -> &mut T {
         match self.concepts[id] {
-			Some(ref mut c) => c,
-			None => panic!("No concept with id = {}", id),
-		}
+            Some(ref mut c) => c,
+            None => panic!("No concept with id = {}", id),
+        }
     }
 }
 
 impl<T> ConceptReader<T> for Context<T> {
     fn read_concept(&self, id: usize) -> &T {
-         match self.concepts[id] {
-			Some(ref c) => c,
-			None => panic!("No concept with id = {}", id),
-		}
+        match self.concepts[id] {
+            Some(ref c) => c,
+            None => panic!("No concept with id = {}", id),
+        }
     }
 }
 
-impl<T> ConceptRemover for Context<T> {
-    fn remove_concept(&mut self, id: usize) {
-		self.concepts[id] = None;
+impl<T> BlindConceptRemover for Context<T> {
+    fn blindly_remove_concept(&mut self, id: usize) {
+        self.concepts[id] = None;
         self.gaps.push(id);
+    }
+}
+
+impl<T> StringRemover for Context<T> {
+    fn remove_string(&mut self, string: &str) {
+        self.string_map.remove(string);
     }
 }
 
 impl<T> ConceptAdder<T> for Context<T> {
     fn add_concept(&mut self, concept: T) -> usize {
-		match self.gaps.pop() {
-        	None => {
-				let index = self.concepts.len();
-				self.concepts.push(Some(concept));
-				index
-			},
-			Some(index) => {
-				self.concepts[index] = Some(concept);
-				index
-			},
-		}
+        match self.gaps.pop() {
+            None => {
+                let index = self.concepts.len();
+                self.concepts.push(Some(concept));
+                index
+            }
+            Some(index) => {
+                self.concepts[index] = Some(concept);
+                index
+            }
+        }
     }
 }
 
