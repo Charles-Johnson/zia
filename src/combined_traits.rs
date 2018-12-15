@@ -17,14 +17,15 @@
 use ast::traits::{
     Container as SyntaxContainer, DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory,
 };
+use self::concept_reader::{ConceptReader, GetReduction, GetDefinition, GetDefinitionOf,
+	FindWhatReducesToIt, FindDefinition, Container, MaybeDisconnected, GetConceptOfLabel, FindWhatItsANormalFormOf, GetNormalForm};
 use concepts::traits::{
-    AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+    AbstractFactory, MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
     StringFactory,
 };
 use constants::{DEFINE, LABEL, REDUCTION};
 use context::traits::{
-    BlindConceptAdder, ConceptReader, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
+    BlindConceptAdder, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
 };
 use std::fmt;
 use token::parse_line;
@@ -1006,180 +1007,6 @@ where
 {
 }
 
-pub trait GetNormalForm<T>
-where
-    T: GetReduction,
-    Self: ConceptReader<T>,
-{
-    fn get_normal_form(&self, concept: usize) -> Option<usize> {
-        match self.read_concept(concept).get_reduction() {
-            None => None,
-            Some(n) => match self.get_normal_form(n) {
-                None => Some(n),
-                Some(m) => Some(m),
-            },
-        }
-    }
-}
-
-impl<S, T> GetNormalForm<T> for S
-where
-    S: ConceptReader<T>,
-    T: GetReduction,
-{
-}
-
-pub trait GetConceptOfLabel<T>
-where
-    T: GetDefinition + GetDefinitionOf,
-    Self: ConceptReader<T>,
-{
-    fn get_concept_of_label(&self, concept: usize) -> Option<usize> {
-        for candidate in self.read_concept(concept).get_righthand_of() {
-            match self.read_concept(candidate).get_definition() {
-                None => panic!("Candidate should have a definition!"),
-                Some((left, _)) => {
-                    if left == LABEL {
-                        return Some(candidate);
-                    }
-                }
-            };
-        }
-        None
-    }
-}
-
-impl<S, T> GetConceptOfLabel<T> for S
-where
-    T: GetDefinition + GetDefinitionOf,
-    S: ConceptReader<T>,
-{
-}
-
-pub trait MaybeDisconnected<T>
-where
-    T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
-    Self: ConceptReader<T>,
-{
-    fn is_disconnected(&self, concept: usize) -> bool {
-        self.read_concept(concept).get_reduction().is_none()
-            && self.read_concept(concept).get_definition().is_none()
-            && self.read_concept(concept).get_lefthand_of().is_empty()
-            && self.righthand_of_without_label_is_empty(concept)
-            && self
-                .read_concept(concept)
-                .find_what_reduces_to_it()
-                .is_empty()
-    }
-    fn righthand_of_without_label_is_empty(&self, con: usize) -> bool {
-        for concept in self.read_concept(con).get_righthand_of() {
-            if let Some((left, _)) = self.read_concept(concept).get_definition() {
-                if left != LABEL {
-                    return false;
-                }
-            }
-        }
-        true
-    }
-}
-
-impl<S, T> MaybeDisconnected<T> for S
-where
-    T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
-    S: ConceptReader<T>,
-{
-}
-
-pub trait FindDefinition<T>
-where
-    T: GetDefinitionOf,
-    Self: ConceptReader<T>,
-{
-    fn find_definition(&self, lefthand: usize, righthand: usize) -> Option<usize> {
-        let mut candidates: Vec<usize> = Vec::new();
-        for candidate in self.read_concept(lefthand).get_lefthand_of() {
-            let has_righthand = self
-                .read_concept(righthand)
-                .get_righthand_of()
-                .contains(&candidate);
-            let new_candidate = !candidates.contains(&candidate);
-            if has_righthand && new_candidate {
-                candidates.push(candidate);
-            }
-        }
-        match candidates.len() {
-            0 => None,
-            1 => Some(candidates[0]),
-            _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
-        }
-    }
-}
-
-impl<S, T> FindDefinition<T> for S
-where
-    T: GetDefinitionOf,
-    S: ConceptReader<T>,
-{
-}
-
-pub trait Label<T>
-where
-    T: GetDefinition + FindWhatReducesToIt,
-    Self: ConceptReader<T> + FindWhatItsANormalFormOf<T>,
-{
-    fn get_labellee(&self, concept: usize) -> Option<usize> {
-        let mut candidates: Vec<usize> = Vec::new();
-        for label in self.find_what_its_a_normal_form_of(concept) {
-            match self.read_concept(label).get_definition() {
-                None => continue,
-                Some((r, x)) => {
-                    if r == LABEL {
-                        candidates.push(x)
-                    } else {
-                        continue;
-                    }
-                }
-            };
-        }
-        match candidates.len() {
-            0 => None,
-            1 => Some(candidates[0]),
-            _ => panic!("Multiple concepts are labelled with the same string"),
-        }
-    }
-}
-
-impl<S, T> Label<T> for S
-where
-    S: ConceptReader<T> + FindWhatItsANormalFormOf<T>,
-    T: GetDefinition + FindWhatReducesToIt,
-{
-}
-
-pub trait FindWhatItsANormalFormOf<T>
-where
-    T: FindWhatReducesToIt,
-    Self: ConceptReader<T>,
-{
-    fn find_what_its_a_normal_form_of(&self, con: usize) -> Vec<usize> {
-        let mut normal_form_of: Vec<usize> = Vec::new();
-        for concept in self.read_concept(con).find_what_reduces_to_it() {
-            normal_form_of.push(concept);
-            for concept2 in self.find_what_its_a_normal_form_of(concept) {
-                normal_form_of.push(concept2);
-            }
-        }
-        normal_form_of
-    }
-}
-
-impl<S, T> FindWhatItsANormalFormOf<T> for S
-where
-    S: ConceptReader<T>,
-    T: FindWhatReducesToIt,
-{
-}
-
 pub trait Display<T>
 where
     Self: GetLabel<T>,
@@ -1344,26 +1171,206 @@ where
 {
 }
 
-pub trait Container<T>
+
+pub trait Label<T>
 where
-    Self: ConceptReader<T>,
-    T: GetDefinition,
+    T: GetDefinition + FindWhatReducesToIt,
+    Self: FindWhatItsANormalFormOf<T>,
 {
-    fn contains(&self, outer: usize, inner: usize) -> bool {
-        if let Some((left, right)) = self.read_concept(outer).get_definition() {
-            left == inner
-                || right == inner
-                || self.contains(left, inner)
-                || self.contains(right, inner)
-        } else {
-            false
+    fn get_labellee(&self, concept: usize) -> Option<usize> {
+        let mut candidates: Vec<usize> = Vec::new();
+        for label in self.find_what_its_a_normal_form_of(concept) {
+            match self.read_concept(label).get_definition() {
+                None => continue,
+                Some((r, x)) => {
+                    if r == LABEL {
+                        candidates.push(x)
+                    } else {
+                        continue;
+                    }
+                }
+            };
+        }
+        match candidates.len() {
+            0 => None,
+            1 => Some(candidates[0]),
+            _ => panic!("Multiple concepts are labelled with the same string"),
         }
     }
 }
 
-impl<S, T> Container<T> for S
+impl<S, T> Label<T> for S
 where
-    S: ConceptReader<T>,
-    T: GetDefinition,
+    S: FindWhatItsANormalFormOf<T>,
+    T: GetDefinition + FindWhatReducesToIt,
 {
+}
+
+mod concept_reader {
+	pub use context::traits::ConceptReader;
+	pub use concepts::traits::{GetReduction, GetDefinition, GetDefinitionOf, FindWhatReducesToIt};
+	use constants::LABEL;
+	pub trait GetNormalForm<T>
+	where
+		T: GetReduction,
+		Self: ConceptReader<T>,
+	{
+		fn get_normal_form(&self, concept: usize) -> Option<usize> {
+		    match self.read_concept(concept).get_reduction() {
+		        None => None,
+		        Some(n) => match self.get_normal_form(n) {
+		            None => Some(n),
+		            Some(m) => Some(m),
+		        },
+		    }
+		}
+	}
+
+	impl<S, T> GetNormalForm<T> for S
+	where
+		S: ConceptReader<T>,
+		T: GetReduction,
+	{
+	}
+
+	pub trait GetConceptOfLabel<T>
+	where
+		T: GetDefinition + GetDefinitionOf,
+		Self: ConceptReader<T>,
+	{
+		fn get_concept_of_label(&self, concept: usize) -> Option<usize> {
+		    for candidate in self.read_concept(concept).get_righthand_of() {
+		        match self.read_concept(candidate).get_definition() {
+		            None => panic!("Candidate should have a definition!"),
+		            Some((left, _)) => {
+		                if left == LABEL {
+		                    return Some(candidate);
+		                }
+		            }
+		        };
+		    }
+		    None
+		}
+	}
+
+	impl<S, T> GetConceptOfLabel<T> for S
+	where
+		T: GetDefinition + GetDefinitionOf,
+		S: ConceptReader<T>,
+	{
+	}
+
+	pub trait MaybeDisconnected<T>
+	where
+		T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
+		Self: ConceptReader<T>,
+	{
+		fn is_disconnected(&self, concept: usize) -> bool {
+		    self.read_concept(concept).get_reduction().is_none()
+		        && self.read_concept(concept).get_definition().is_none()
+		        && self.read_concept(concept).get_lefthand_of().is_empty()
+		        && self.righthand_of_without_label_is_empty(concept)
+		        && self
+		            .read_concept(concept)
+		            .find_what_reduces_to_it()
+		            .is_empty()
+		}
+		fn righthand_of_without_label_is_empty(&self, con: usize) -> bool {
+		    for concept in self.read_concept(con).get_righthand_of() {
+		        if let Some((left, _)) = self.read_concept(concept).get_definition() {
+		            if left != LABEL {
+		                return false;
+		            }
+		        }
+		    }
+		    true
+		}
+	}
+
+	impl<S, T> MaybeDisconnected<T> for S
+	where
+		T: GetReduction + FindWhatReducesToIt + GetDefinition + GetDefinitionOf,
+		S: ConceptReader<T>,
+	{
+	}
+
+	pub trait FindDefinition<T>
+	where
+		T: GetDefinitionOf,
+		Self: ConceptReader<T>,
+	{
+		fn find_definition(&self, lefthand: usize, righthand: usize) -> Option<usize> {
+		    let mut candidates: Vec<usize> = Vec::new();
+		    for candidate in self.read_concept(lefthand).get_lefthand_of() {
+		        let has_righthand = self
+		            .read_concept(righthand)
+		            .get_righthand_of()
+		            .contains(&candidate);
+		        let new_candidate = !candidates.contains(&candidate);
+		        if has_righthand && new_candidate {
+		            candidates.push(candidate);
+		        }
+		    }
+		    match candidates.len() {
+		        0 => None,
+		        1 => Some(candidates[0]),
+		        _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
+		    }
+		}
+	}
+
+	impl<S, T> FindDefinition<T> for S
+	where
+		T: GetDefinitionOf,
+		S: ConceptReader<T>,
+	{
+	}
+
+	pub trait FindWhatItsANormalFormOf<T>
+	where
+		T: FindWhatReducesToIt,
+		Self: ConceptReader<T>,
+	{
+		fn find_what_its_a_normal_form_of(&self, con: usize) -> Vec<usize> {
+		    let mut normal_form_of: Vec<usize> = Vec::new();
+		    for concept in self.read_concept(con).find_what_reduces_to_it() {
+		        normal_form_of.push(concept);
+		        for concept2 in self.find_what_its_a_normal_form_of(concept) {
+		            normal_form_of.push(concept2);
+		        }
+		    }
+		    normal_form_of
+		}
+	}
+
+	impl<S, T> FindWhatItsANormalFormOf<T> for S
+	where
+		S: ConceptReader<T>,
+		T: FindWhatReducesToIt,
+	{
+	}
+
+	pub trait Container<T>
+	where
+		Self: ConceptReader<T>,
+		T: GetDefinition,
+	{
+		fn contains(&self, outer: usize, inner: usize) -> bool {
+		    if let Some((left, right)) = self.read_concept(outer).get_definition() {
+		        left == inner
+		            || right == inner
+		            || self.contains(left, inner)
+		            || self.contains(right, inner)
+		    } else {
+		        false
+		    }
+		}
+	}
+
+	impl<S, T> Container<T> for S
+	where
+		S: ConceptReader<T>,
+		T: GetDefinition,
+	{
+	}
 }
