@@ -24,7 +24,7 @@ use concepts::traits::{
 };
 use constants::{DEFINE, LABEL, REDUCTION};
 use context::traits::{
-    BlindConceptAdder, ConceptNumber, ConceptReader, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
+    BlindConceptAdder, ConceptReader, ConceptRemover, ConceptWriter, StringAdder, StringConcept,
 };
 use std::fmt;
 use token::parse_line;
@@ -685,7 +685,7 @@ where
 impl<S, T> DeleteDefinition<T> for S
 where
     T: GetDefinition + RemoveDefinition + Sized,
-    Self: ConceptReader<T> + ConceptWriter<T>,
+    S: ConceptReader<T> + ConceptWriter<T>,
 {
 }
 
@@ -818,20 +818,18 @@ where
 pub trait StringMaker<T>
 where
     T: StringFactory + MaybeString,
-    Self: ConceptAdder<T> + ConceptNumber,
+    Self: ConceptAdder<T>,
 {
     fn new_string(&mut self, string: &str) -> usize {
-        let new_id = self.number_of_concepts();
-        let string_ref = T::new_string(string);
-        self.add_concept(string_ref);
-        new_id
+        let string_concept = T::new_string(string);
+        self.add_concept(string_concept)
     }
 }
 
 impl<S, T> StringMaker<T> for S
 where
     T: StringFactory + MaybeString,
-    S: ConceptAdder<T> + ConceptNumber,
+    S: ConceptAdder<T>,
 {
 }
 
@@ -907,41 +905,39 @@ where
 pub trait AbstractMaker<T>
 where
     T: AbstractFactory,
-    Self: BlindConceptAdder<T> + ConceptNumber,
+    Self: BlindConceptAdder<T>,
 {
     fn new_abstract(&mut self) -> usize {
-        let new_id = self.number_of_concepts();
         let concept = T::new_abstract();
-        self.blindly_add_concept(concept);
-        new_id
+        self.blindly_add_concept(concept)
     }
 }
 
 impl<S, T> AbstractMaker<T> for S
 where
     T: AbstractFactory,
-    S: BlindConceptAdder<T> + ConceptNumber,
+    S: BlindConceptAdder<T>,
 {
 }
 
 pub trait ConceptAdder<T>
 where
-    Self: BlindConceptAdder<T> + StringAdder + ConceptNumber,
+    Self: BlindConceptAdder<T> + StringAdder,
     T: MaybeString,
 {
-    fn add_concept(&mut self, concept: T) {
+    fn add_concept(&mut self, concept: T) -> usize {
         let string = concept.get_string();
-        self.blindly_add_concept(concept);
+        let index = self.blindly_add_concept(concept);
         if let Some(sr) = string {
-            let nc = self.number_of_concepts();
-            self.add_string(nc - 1, &sr);
+            self.add_string(index, &sr);
         }
+		index
     }
 }
 
 impl<S, T> ConceptAdder<T> for S
 where
-    S: BlindConceptAdder<T> + StringAdder + ConceptNumber,
+    S: BlindConceptAdder<T> + StringAdder,
     T: MaybeString,
 {
 }

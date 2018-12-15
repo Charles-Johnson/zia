@@ -20,7 +20,7 @@ pub trait StringAdder {
 }
 
 pub trait BlindConceptAdder<T> {
-    fn blindly_add_concept(&mut self, T);
+    fn blindly_add_concept(&mut self, T) -> usize;
 }
 
 pub trait ConceptReader<T> {
@@ -36,8 +36,4 @@ pub trait ConceptRemover {
 
 pub trait StringConcept {
     fn get_string_concept(&self, &str) -> Option<usize>;
-}
-
-pub trait ConceptNumber {
-    fn number_of_concepts(&self) -> usize;
 }
