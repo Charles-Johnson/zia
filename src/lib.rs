@@ -136,7 +136,7 @@ where
     T: GetDefinitionOf + GetDefinition + FindWhatReducesToIt,
 {
     fn ast_from_expression<U: SyntaxFactory + Pair<U> + MaybeConcept + DisplayJoint>(
-        &mut self,
+        &self,
         s: &str,
     ) -> ZiaResult<U> {
         let tokens: Vec<String> = parse_line(s);
@@ -148,7 +148,7 @@ where
         }
     }
     fn ast_from_pair<U: SyntaxFactory + DisplayJoint + MaybeConcept + Pair<U>>(
-        &mut self,
+        &self,
         left: &str,
         right: &str,
     ) -> ZiaResult<U> {
@@ -157,7 +157,7 @@ where
         Ok(self.combine(&lefthand, &righthand))
     }
     fn ast_from_token<U: SyntaxFactory + MaybeConcept + DisplayJoint + Pair<U>>(
-        &mut self,
+        &self,
         t: &str,
     ) -> ZiaResult<U> {
         if t.contains(' ') {
@@ -186,7 +186,7 @@ where
             Some(c) => self.get_labellee(c),
         }
     }
-    fn ast_from_symbol<U: SyntaxFactory>(&mut self, s: &str) -> U {
+    fn ast_from_symbol<U: SyntaxFactory>(&self, s: &str) -> U {
         let concept_if_exists = self.concept_from_label(s);
         U::new(s, concept_if_exists)
     }
