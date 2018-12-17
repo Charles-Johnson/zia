@@ -19,7 +19,7 @@ pub mod traits;
 
 use adding::{ConceptAdder, StringAdder};
 use reading::ConceptReader;
-use self::traits::{
+pub use self::traits::{
     BlindConceptRemover, ConceptWriter, StringConcept,
     StringRemover,
 };

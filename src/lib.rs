@@ -32,10 +32,10 @@ use self::reading::{
 };
 use ast::traits::Container as SyntaxContainer;
 pub use ast::AbstractSyntaxTree;
-use concepts::traits::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use concepts::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 use concepts::Concept;
 use constants::{DEFINE, LABEL, REDUCTION};
-use context::traits::{BlindConceptRemover, ConceptWriter, StringConcept, StringRemover};
+use context::{BlindConceptRemover, ConceptWriter, StringConcept, StringRemover};
 use context::Context as GenericContext;
 use std::fmt;
 use token::parse_line;

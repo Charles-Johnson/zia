@@ -15,21 +15,21 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 mod abstract_concept;
-pub mod string_concept;
-pub mod traits;
+mod string_concept;
+mod traits;
 
 use self::abstract_concept::AbstractConcept;
-pub use self::string_concept::StringConcept;
+use self::string_concept::StringConcept;
 use reading::{
     FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
     MaybeString,
 };
-use {RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
+pub use self::traits::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
 };
 
 pub enum Concept {
     Abstract(AbstractConcept),
-    String(StringConcept),
+    String(StringConcept<AbstractConcept>),
 }
 
 impl GetDefinition for Concept {
