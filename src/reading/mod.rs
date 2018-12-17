@@ -15,49 +15,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-mod syntax {
-	pub trait DisplayJoint {
-		fn display_joint(&self) -> String;
-	}
-
-	pub trait MaybeConcept {
-		fn get_concept(&self) -> Option<usize>;
-	}
-
-	pub trait Pair<U> {
-		fn from_pair(&str, Option<usize>, &U, &U) -> Self;
-	}
-
-	pub trait SyntaxFactory {
-		fn new(&str, Option<usize>) -> Self;
-	}
-
-	pub trait MightExpand<T> {
-		fn get_expansion(&self) -> Option<(T, T)>;
-	}
-}
-mod concepts {
-	pub trait GetDefinition {
-		fn get_definition(&self) -> Option<(usize, usize)>;
-	}
-
-	pub trait GetReduction {
-		fn get_reduction(&self) -> Option<usize>;
-	}
-
-	pub trait FindWhatReducesToIt {
-		fn find_what_reduces_to_it(&self) -> Vec<usize>;
-	}
-
-	pub trait MaybeString {
-		fn get_string(&self) -> Option<String>;
-	}
-
-	pub trait GetDefinitionOf {
-		fn get_lefthand_of(&self) -> Vec<usize>;
-		fn get_righthand_of(&self) -> Vec<usize>;
-	}
-}
+mod syntax;
+mod concepts;
 
 pub use self::syntax::*;
 pub use self::concepts::{

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use concept_reading::{MaybeConcept, SyntaxFactory};
+use reading::{MaybeConcept, SyntaxFactory};
 use std::fmt;
 
 pub struct Symbol {

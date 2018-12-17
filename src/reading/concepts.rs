@@ -14,22 +14,24 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub use self::container::*;
 
-mod container {
-	pub use reading::MightExpand;
-    pub trait Container
-    where
-        Self: MightExpand<Self> + PartialEq + Sized,
-    {
-        fn contains(&self, other: &Self) -> bool {
-            if let Some((ref left, ref right)) = self.get_expansion() {
-                left == other || right == other || left.contains(other) || right.contains(other)
-            } else {
-                false
-            }
-        }
-    }
+pub trait GetDefinition {
+	fn get_definition(&self) -> Option<(usize, usize)>;
+}
 
-    impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
+pub trait GetReduction {
+	fn get_reduction(&self) -> Option<usize>;
+}
+
+pub trait FindWhatReducesToIt {
+	fn find_what_reduces_to_it(&self) -> Vec<usize>;
+}
+
+pub trait MaybeString {
+	fn get_string(&self) -> Option<String>;
+}
+
+pub trait GetDefinitionOf {
+	fn get_lefthand_of(&self) -> Vec<usize>;
+	fn get_righthand_of(&self) -> Vec<usize>;
 }

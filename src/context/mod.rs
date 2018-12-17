@@ -17,8 +17,8 @@
 
 pub mod traits;
 
-use concept_making::{ConceptAdder, StringAdder};
-use concept_reading::ConceptReader;
+use adding::{ConceptAdder, StringAdder};
+use reading::ConceptReader;
 use self::traits::{
     BlindConceptRemover, ConceptWriter, StringConcept,
     StringRemover,

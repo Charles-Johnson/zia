@@ -20,7 +20,7 @@ pub mod traits;
 
 use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
-use concept_reading::{
+use reading::{
     FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
     MaybeString,
 };

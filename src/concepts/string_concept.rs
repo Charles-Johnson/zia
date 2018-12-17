@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::abstract_concept::AbstractConcept;
-use concept_reading::{
+use reading::{
     FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
 };
 use {

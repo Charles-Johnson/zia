@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use super::symbol::Symbol;
-use concept_reading::{MaybeConcept, Pair, SyntaxFactory};
+use reading::{MaybeConcept, Pair, SyntaxFactory};
 use std::{borrow::Borrow, fmt};
 
 pub struct Expression<T> {

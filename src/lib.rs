@@ -16,16 +16,16 @@
 */
 
 mod ast;
-mod concept_making;
-mod concept_reading;
+mod adding;
+mod reading;
 mod concepts;
 mod constants;
 mod context;
 mod token;
 mod utils;
 
-use self::concept_making::{AbstractMaker, StringMaker};
-use self::concept_reading::{
+use self::adding::{AbstractMaker, StringMaker};
+use self::reading::{
     Combine, ConceptReader, Container, DisplayJoint, Expander, FindDefinition, FindWhatReducesToIt,
     GetConceptOfLabel, GetDefinition, GetDefinitionOf, GetLabel, GetNormalForm, GetReduction,
     Label, MaybeConcept, MaybeDisconnected, MaybeString, MightExpand, Pair, Reduce, SyntaxFactory,
