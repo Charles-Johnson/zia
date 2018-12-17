@@ -57,11 +57,3 @@ pub trait GetDefinitionOf {
     fn get_lefthand_of(&self) -> Vec<usize>;
     fn get_righthand_of(&self) -> Vec<usize>;
 }
-
-pub trait AbstractFactory {
-    fn new_abstract() -> Self;
-}
-
-pub trait StringFactory {
-    fn new_string(&str) -> Self;
-}

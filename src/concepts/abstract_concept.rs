@@ -28,8 +28,8 @@ pub struct AbstractConcept {
     reduces_from: Vec<usize>,
 }
 
-impl AbstractConcept {
-    pub fn new() -> AbstractConcept {
+impl Default for AbstractConcept {
+   	fn default() -> AbstractConcept {
         AbstractConcept {
             definition: None,
             lefthand_of: Vec::new(),

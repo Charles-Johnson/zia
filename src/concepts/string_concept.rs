@@ -25,11 +25,11 @@ pub struct StringConcept {
     string: String,
 }
 
-impl StringConcept {
-    pub fn new(string: &str) -> StringConcept {
+impl From<String> for StringConcept {
+    fn from(string: String) -> StringConcept {
         StringConcept {
-            string: string.to_string(),
-            abstract_concept: AbstractConcept::new(),
+            string,
+            abstract_concept: AbstractConcept::default(),
         }
     }
 }
@@ -102,7 +102,7 @@ impl SetReduction for StringConcept {
 
 impl RemoveReduction for StringConcept {
     fn make_reduce_to_none(&mut self) {
-        panic!("Concept number {} is a string so no need to remove reduction.")
+        panic!("Concept is a string so no need to remove reduction.")
     }
     fn no_longer_reduces_from(&mut self, concept: usize) {
         self.abstract_concept.no_longer_reduces_from(concept);

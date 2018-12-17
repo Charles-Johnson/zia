@@ -21,8 +21,8 @@ pub mod traits;
 use self::abstract_concept::AbstractConcept;
 pub use self::string_concept::StringConcept;
 use self::traits::{
-    AbstractFactory, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction, StringFactory,
+    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
+    MaybeString, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
 };
 
 pub enum Concept {
@@ -144,15 +144,15 @@ impl RemoveReduction for Concept {
     }
 }
 
-impl StringFactory for Concept {
-    fn new_string(string: &str) -> Concept {
-        Concept::String(StringConcept::new(string))
+impl From<String> for Concept {
+    fn from(string: String) -> Concept {
+        Concept::String(string.into())
     }
 }
 
-impl AbstractFactory for Concept {
-    fn new_abstract() -> Concept {
-        Concept::Abstract(AbstractConcept::new())
+impl Default for Concept {
+    fn default() -> Concept {
+        Concept::Abstract(AbstractConcept::default())
     }
 }
 

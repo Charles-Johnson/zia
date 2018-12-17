@@ -22,8 +22,8 @@ mod context;
 mod token;
 mod utils;
 
-use self::concept_maker::{AbstractFactory, AbstractMaker, StringFactory, StringMaker};
-use self::concept_reader::{
+use self::concept_making::{AbstractMaker, StringMaker};
+use self::concept_reading::{
     Combine, ConceptReader, Container, DisplayJoint, Expander, FindDefinition, FindWhatReducesToIt,
     GetConceptOfLabel, GetDefinition, GetDefinitionOf, GetLabel, GetNormalForm, GetReduction,
     Label, MaybeConcept, MaybeDisconnected, MaybeString, MightExpand, Pair, Reduce, SyntaxFactory,
@@ -46,8 +46,8 @@ pub trait ContextMaker<T>
 where
     Self: Labeller<T> + Default,
     T: GetDefinitionOf
-        + StringFactory
-        + AbstractFactory
+        + From<String>
+        + Default
         + SetReduction
         + GetDefinition
         + GetReduction
@@ -65,8 +65,8 @@ impl<S, T> ContextMaker<T> for S
 where
     S: Labeller<T> + Default,
     T: GetDefinitionOf
-        + StringFactory
-        + AbstractFactory
+        + From<String>
+        + Default
         + SetReduction
         + GetDefinition
         + GetReduction
@@ -78,8 +78,8 @@ where
 pub trait Execute<T>
 where
     Self: Call<T> + SyntaxConverter<T>,
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -115,8 +115,8 @@ where
 
 impl<S, T> Execute<T> for S
 where
-    T: AbstractFactory
-        + StringFactory
+    T: Default
+        + From<String>
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -202,8 +202,8 @@ where
 pub trait Call<T>
 where
     Self: RightHandCall<T> + Expander<T>,
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -315,8 +315,8 @@ where
 impl<S, T> Call<T> for S
 where
     S: RightHandCall<T> + Expander<T>,
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -331,8 +331,8 @@ where
 
 pub trait RightHandCall<T>
 where
-    T: AbstractFactory
-        + StringFactory
+    T: Default
+        + From<String>
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -399,8 +399,8 @@ where
 
 impl<S, T> RightHandCall<T> for S
 where
-    T: AbstractFactory
-        + StringFactory
+    T: Default
+        + From<String>
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -419,8 +419,8 @@ where
     Self: ConceptMaker<T> + DeleteReduction<T>,
     T: SetReduction
         + GetDefinitionOf
-        + AbstractFactory
-        + StringFactory
+        + Default
+        + From<String>
         + RemoveReduction
         + GetReduction
         + SetDefinition
@@ -451,8 +451,8 @@ where
     S: ConceptMaker<T> + DeleteReduction<T>,
     T: SetReduction
         + GetDefinitionOf
-        + AbstractFactory
-        + StringFactory
+        + Default
+        + From<String>
         + RemoveReduction
         + GetReduction
         + SetDefinition
@@ -463,8 +463,8 @@ where
 
 pub trait Definer<T>
 where
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -572,8 +572,8 @@ where
 
 impl<S, T> Definer<T> for S
 where
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
@@ -705,8 +705,8 @@ where
 
 pub trait ConceptMaker<T>
 where
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + SetReduction
         + GetDefinitionOf
         + GetDefinition
@@ -741,8 +741,8 @@ where
 
 impl<S, T> ConceptMaker<T> for S
 where
-    T: StringFactory
-        + AbstractFactory
+    T: From<String>
+        + Default
         + GetDefinitionOf
         + SetReduction
         + GetDefinition
@@ -756,8 +756,8 @@ where
 pub trait Labeller<T>
 where
     T: SetReduction
-        + StringFactory
-        + AbstractFactory
+        + From<String>
+        + Default
         + GetDefinitionOf
         + SetDefinition
         + GetReduction
@@ -788,8 +788,8 @@ where
 impl<S, T> Labeller<T> for S
 where
     T: SetReduction
-        + StringFactory
-        + AbstractFactory
+        + From<String>
+        + Default
         + GetDefinitionOf
         + SetDefinition
         + GetReduction
@@ -831,7 +831,7 @@ where
 
 pub trait FindOrInsertDefinition<T>
 where
-    T: AbstractFactory + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    T: Default + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
     Self: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
     fn find_or_insert_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<usize> {
@@ -849,7 +849,7 @@ where
 
 impl<S, T> FindOrInsertDefinition<T> for S
 where
-    T: AbstractFactory + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    T: Default + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
     S: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
 }
@@ -918,16 +918,15 @@ where
 {
 }
 
-mod concept_maker {
-    pub use concepts::traits::{AbstractFactory, StringFactory};
+mod concept_making {
     use context::traits::{ConceptAdder, StringAdder};
     pub trait StringMaker<T>
     where
-        T: StringFactory,
+        T: From<String>,
         Self: ConceptAdder<T> + StringAdder,
     {
         fn new_string(&mut self, string: &str) -> usize {
-            let string_concept = T::new_string(string);
+            let string_concept = string.to_string().into();
             let index = self.add_concept(string_concept);
             self.add_string(index, string);
             index
@@ -936,30 +935,30 @@ mod concept_maker {
 
     impl<S, T> StringMaker<T> for S
     where
-        T: StringFactory,
+        T: From<String>,
         S: ConceptAdder<T> + StringAdder,
     {
     }
     pub trait AbstractMaker<T>
     where
-        T: AbstractFactory,
+        T: Default,
         Self: ConceptAdder<T>,
     {
         fn new_abstract(&mut self) -> usize {
-            let concept = T::new_abstract();
+            let concept = T::default();
             self.add_concept(concept)
         }
     }
 
     impl<S, T> AbstractMaker<T> for S
     where
-        T: AbstractFactory,
+        T: Default,
         S: ConceptAdder<T>,
     {
     }
 }
 
-mod concept_reader {
+mod concept_reading {
     pub use ast::traits::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
     pub use concepts::traits::{
         FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
