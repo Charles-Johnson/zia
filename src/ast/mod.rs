@@ -20,7 +20,7 @@ pub mod traits;
 
 use self::expression::Expression;
 use self::symbol::Symbol;
-use self::traits::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
+use concept_reading::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
 use std::fmt;
 
 pub enum AbstractSyntaxTree {

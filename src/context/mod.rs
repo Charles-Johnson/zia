@@ -17,8 +17,10 @@
 
 pub mod traits;
 
+use concept_making::{ConceptAdder, StringAdder};
+use concept_reading::ConceptReader;
 use self::traits::{
-    BlindConceptRemover, ConceptAdder, ConceptReader, ConceptWriter, StringAdder, StringConcept,
+    BlindConceptRemover, ConceptWriter, StringConcept,
     StringRemover,
 };
 use std::collections::HashMap;

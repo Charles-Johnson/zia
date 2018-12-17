@@ -15,9 +15,11 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use super::traits::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, RemoveDefinition,
-    RemoveReduction, SetDefinition, SetReduction,
+use concept_reading::{
+    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
+};
+use {
+	RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
 };
 
 pub struct AbstractConcept {

@@ -15,12 +15,55 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pub use ast::traits::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
-pub use concepts::traits::{
+mod syntax {
+	pub trait DisplayJoint {
+		fn display_joint(&self) -> String;
+	}
+
+	pub trait MaybeConcept {
+		fn get_concept(&self) -> Option<usize>;
+	}
+
+	pub trait Pair<U> {
+		fn from_pair(&str, Option<usize>, &U, &U) -> Self;
+	}
+
+	pub trait SyntaxFactory {
+		fn new(&str, Option<usize>) -> Self;
+	}
+
+	pub trait MightExpand<T> {
+		fn get_expansion(&self) -> Option<(T, T)>;
+	}
+}
+mod concepts {
+	pub trait GetDefinition {
+		fn get_definition(&self) -> Option<(usize, usize)>;
+	}
+
+	pub trait GetReduction {
+		fn get_reduction(&self) -> Option<usize>;
+	}
+
+	pub trait FindWhatReducesToIt {
+		fn find_what_reduces_to_it(&self) -> Vec<usize>;
+	}
+
+	pub trait MaybeString {
+		fn get_string(&self) -> Option<String>;
+	}
+
+	pub trait GetDefinitionOf {
+		fn get_lefthand_of(&self) -> Vec<usize>;
+		fn get_righthand_of(&self) -> Vec<usize>;
+	}
+}
+
+pub use self::syntax::*;
+pub use self::concepts::{
     FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
 };
 use constants::LABEL;
-pub use context::traits::ConceptReader;
 use std::fmt;
 pub trait Expander<T>
 where
@@ -451,4 +494,8 @@ where
     S: ConceptReader<T>,
     T: GetDefinition,
 {
+}
+
+pub trait ConceptReader<T> {
+    fn read_concept(&self, usize) -> &T;
 }

@@ -15,18 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pub trait GetDefinition {
-    fn get_definition(&self) -> Option<(usize, usize)>;
-}
-
-pub trait GetReduction {
-    fn get_reduction(&self) -> Option<usize>;
-}
-
-pub trait FindWhatReducesToIt {
-    fn find_what_reduces_to_it(&self) -> Vec<usize>;
-}
-
 pub trait RemoveReduction {
     fn make_reduce_to_none(&mut self);
     fn no_longer_reduces_from(&mut self, usize);
@@ -47,13 +35,4 @@ pub trait RemoveDefinition {
     fn remove_definition(&mut self);
     fn remove_as_lefthand_of(&mut self, usize);
     fn remove_as_righthand_of(&mut self, usize);
-}
-
-pub trait MaybeString {
-    fn get_string(&self) -> Option<String>;
-}
-
-pub trait GetDefinitionOf {
-    fn get_lefthand_of(&self) -> Vec<usize>;
-    fn get_righthand_of(&self) -> Vec<usize>;
 }

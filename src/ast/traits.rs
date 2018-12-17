@@ -14,9 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-pub use self::container::{Container, MightExpand};
+pub use self::container::*;
 
 mod container {
+	pub use concept_reading::MightExpand;
     pub trait Container
     where
         Self: MightExpand<Self> + PartialEq + Sized,
@@ -31,24 +32,4 @@ mod container {
     }
 
     impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
-
-    pub trait MightExpand<T> {
-        fn get_expansion(&self) -> Option<(T, T)>;
-    }
-}
-
-pub trait DisplayJoint {
-    fn display_joint(&self) -> String;
-}
-
-pub trait MaybeConcept {
-    fn get_concept(&self) -> Option<usize>;
-}
-
-pub trait Pair<U> {
-    fn from_pair(&str, Option<usize>, &U, &U) -> Self;
-}
-
-pub trait SyntaxFactory {
-    fn new(&str, Option<usize>) -> Self;
 }

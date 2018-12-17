@@ -15,18 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pub trait StringAdder {
-    fn add_string(&mut self, usize, &str);
-}
-
-pub trait ConceptAdder<T> {
-    fn add_concept(&mut self, T) -> usize;
-}
-
-pub trait ConceptReader<T> {
-    fn read_concept(&self, usize) -> &T;
-}
-
 pub trait ConceptWriter<T> {
     fn write_concept(&mut self, usize) -> &mut T;
 }

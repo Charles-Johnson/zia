@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use context::traits::{ConceptAdder, StringAdder};
+
 pub trait StringMaker<T>
 where
     T: From<String>,
@@ -34,6 +34,7 @@ where
     S: ConceptAdder<T> + StringAdder,
 {
 }
+
 pub trait AbstractMaker<T>
 where
     T: Default,
@@ -50,4 +51,12 @@ where
     T: Default,
     S: ConceptAdder<T>,
 {
+}
+
+pub trait StringAdder {
+    fn add_string(&mut self, usize, &str);
+}
+
+pub trait ConceptAdder<T> {
+    fn add_concept(&mut self, T) -> usize;
 }
