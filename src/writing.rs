@@ -17,8 +17,10 @@
 
 pub use concepts::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 use context::ConceptWriter;
+pub use reading::{
+    ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
+};
 use reading::{Container, GetConceptOfLabel};
-pub use reading::{ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept};
 pub use utils::{ZiaError, ZiaResult};
 pub trait Unlabeller<T>
 where
