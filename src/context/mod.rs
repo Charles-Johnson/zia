@@ -17,12 +17,9 @@
 
 pub mod traits;
 
+pub use self::traits::{BlindConceptRemover, ConceptWriter, StringConcept, StringRemover};
 use adding::{ConceptAdder, StringAdder};
 use reading::ConceptReader;
-pub use self::traits::{
-    BlindConceptRemover, ConceptWriter, StringConcept,
-    StringRemover,
-};
 use std::collections::HashMap;
 
 pub struct Context<T> {

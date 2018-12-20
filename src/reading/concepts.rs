@@ -16,22 +16,22 @@
 */
 
 pub trait GetDefinition {
-	fn get_definition(&self) -> Option<(usize, usize)>;
+    fn get_definition(&self) -> Option<(usize, usize)>;
 }
 
 pub trait GetReduction {
-	fn get_reduction(&self) -> Option<usize>;
+    fn get_reduction(&self) -> Option<usize>;
 }
 
 pub trait FindWhatReducesToIt {
-	fn find_what_reduces_to_it(&self) -> Vec<usize>;
+    fn find_what_reduces_to_it(&self) -> Vec<usize>;
 }
 
 pub trait MaybeString {
-	fn get_string(&self) -> Option<String>;
+    fn get_string(&self) -> Option<String>;
 }
 
 pub trait GetDefinitionOf {
-	fn get_lefthand_of(&self) -> Vec<usize>;
-	fn get_righthand_of(&self) -> Vec<usize>;
+    fn get_lefthand_of(&self) -> Vec<usize>;
+    fn get_righthand_of(&self) -> Vec<usize>;
 }

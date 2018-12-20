@@ -16,21 +16,21 @@
 */
 
 pub trait DisplayJoint {
-	fn display_joint(&self) -> String;
+    fn display_joint(&self) -> String;
 }
 
 pub trait MaybeConcept {
-	fn get_concept(&self) -> Option<usize>;
+    fn get_concept(&self) -> Option<usize>;
 }
 
 pub trait Pair<U> {
-	fn from_pair(&str, Option<usize>, &U, &U) -> Self;
+    fn from_pair(&str, Option<usize>, &U, &U) -> Self;
 }
 
 pub trait SyntaxFactory {
-	fn new(&str, Option<usize>) -> Self;
+    fn new(&str, Option<usize>) -> Self;
 }
 
 pub trait MightExpand<T> {
-	fn get_expansion(&self) -> Option<(T, T)>;
+    fn get_expansion(&self) -> Option<(T, T)>;
 }

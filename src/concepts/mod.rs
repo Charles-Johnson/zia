@@ -20,12 +20,8 @@ mod traits;
 
 use self::abstract_concept::AbstractConcept;
 use self::string_concept::StringConcept;
-use reading::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-    MaybeString,
-};
-pub use self::traits::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
-};
+pub use self::traits::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
 
 pub enum Concept {
     Abstract(AbstractConcept),

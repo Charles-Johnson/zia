@@ -15,12 +15,8 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use reading::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction,
-};
-use {
-	RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
-};
+use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction};
+use {RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct AbstractConcept {
     definition: Option<(usize, usize)>,
@@ -31,7 +27,7 @@ pub struct AbstractConcept {
 }
 
 impl Default for AbstractConcept {
-   	fn default() -> AbstractConcept {
+    fn default() -> AbstractConcept {
         AbstractConcept {
             definition: None,
             lefthand_of: Vec::new(),

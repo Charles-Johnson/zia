@@ -15,13 +15,13 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-mod syntax;
 mod concepts;
+mod syntax;
 
-pub use self::syntax::*;
 pub use self::concepts::{
     FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
 };
+pub use self::syntax::*;
 use constants::LABEL;
 use std::fmt;
 pub trait Expander<T>
@@ -80,9 +80,7 @@ where
             None => ast.clone(),
         }
     }
-    fn reduce<
-        U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
-    >(
+    fn reduce<U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         ast: &U,
     ) -> Option<U> {
@@ -90,12 +88,9 @@ where
             Some(c) => self.reduce_concept::<U>(c),
             None => match ast.get_expansion() {
                 None => None,
-                Some((ref left, ref right)) => self.match_left_right::<U>(
-                    self.reduce(left),
-                    self.reduce(right),
-                    left,
-                    right,
-                ),
+                Some((ref left, ref right)) => {
+                    self.match_left_right::<U>(self.reduce(left), self.reduce(right), left, right)
+                }
             },
         }
     }
@@ -234,11 +229,7 @@ where
     Self: FindDefinition<T>,
     T: GetDefinitionOf,
 {
-    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(
-        &self,
-        ast: &U,
-        other: &U,
-    ) -> U {
+    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(&self, ast: &U, other: &U) -> U {
         let left_string = ast.display_joint();
         let right_string = other.display_joint();
         let definition = if let (Some(l), Some(r)) = (ast.get_concept(), other.get_concept()) {
@@ -393,9 +384,7 @@ where
         match candidates.len() {
             0 => None,
             1 => Some(candidates[0]),
-            _ => {
-                panic!("Multiple definitions with the same lefthand and righthand pair exist.")
-            }
+            _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
         }
     }
 }

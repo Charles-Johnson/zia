@@ -14,21 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use reading::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
-};
-use {
-    RemoveDefinition, RemoveReduction, SetDefinition, SetReduction,
-};
+use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
+use {RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct StringConcept<T> {
     abstract_concept: T,
     string: String,
 }
 
-impl<T> From<String> for StringConcept<T> 
+impl<T> From<String> for StringConcept<T>
 where
-	T: Default,
+    T: Default,
 {
     fn from(string: String) -> StringConcept<T> {
         StringConcept::<T> {
@@ -44,18 +40,18 @@ impl<T> MaybeString for StringConcept<T> {
     }
 }
 
-impl<T> FindWhatReducesToIt for StringConcept<T> 
+impl<T> FindWhatReducesToIt for StringConcept<T>
 where
-	T: FindWhatReducesToIt,
+    T: FindWhatReducesToIt,
 {
     fn find_what_reduces_to_it(&self) -> Vec<usize> {
         self.abstract_concept.find_what_reduces_to_it()
     }
 }
 
-impl<T> GetDefinitionOf for StringConcept<T> 
+impl<T> GetDefinitionOf for StringConcept<T>
 where
-	T: GetDefinitionOf,
+    T: GetDefinitionOf,
 {
     fn get_lefthand_of(&self) -> Vec<usize> {
         self.abstract_concept.get_lefthand_of()
@@ -65,18 +61,18 @@ where
     }
 }
 
-impl<T> GetDefinition for StringConcept<T> 
+impl<T> GetDefinition for StringConcept<T>
 where
-	T: GetDefinition,
+    T: GetDefinition,
 {
     fn get_definition(&self) -> Option<(usize, usize)> {
         self.abstract_concept.get_definition()
     }
 }
 
-impl<T> SetDefinition for StringConcept<T> 
+impl<T> SetDefinition for StringConcept<T>
 where
-	T: SetDefinition,
+    T: SetDefinition,
 {
     fn set_definition(&mut self, lefthand: usize, righthand: usize) {
         self.abstract_concept.set_definition(lefthand, righthand);
@@ -89,9 +85,9 @@ where
     }
 }
 
-impl<T> RemoveDefinition for StringConcept<T> 
+impl<T> RemoveDefinition for StringConcept<T>
 where
-	T: RemoveDefinition,
+    T: RemoveDefinition,
 {
     fn remove_definition(&mut self) {
         self.abstract_concept.remove_definition();
@@ -104,18 +100,18 @@ where
     }
 }
 
-impl<T> GetReduction for StringConcept<T> 
+impl<T> GetReduction for StringConcept<T>
 where
-	T: GetReduction,
+    T: GetReduction,
 {
     fn get_reduction(&self) -> Option<usize> {
         self.abstract_concept.get_reduction()
     }
 }
 
-impl<T> SetReduction for StringConcept<T> 
+impl<T> SetReduction for StringConcept<T>
 where
-	T: SetReduction,
+    T: SetReduction,
 {
     fn make_reduce_to(&mut self, _: usize) {
         panic!("Concept is a string so must be its own normal form",)
@@ -125,9 +121,9 @@ where
     }
 }
 
-impl<T> RemoveReduction for StringConcept<T> 
+impl<T> RemoveReduction for StringConcept<T>
 where
-	T: RemoveReduction,
+    T: RemoveReduction,
 {
     fn make_reduce_to_none(&mut self) {
         panic!("Concept is a string so no need to remove reduction.")
