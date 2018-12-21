@@ -15,12 +15,12 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pub mod traits;
-
-pub use self::traits::{BlindConceptRemover, ConceptWriter, StringConcept, StringRemover};
 use adding::{ConceptAdder, StringAdder};
 use reading::ConceptReader;
+use removing::{BlindConceptRemover, StringRemover};
 use std::collections::HashMap;
+use translating::StringConcept;
+use writing::ConceptWriter;
 
 pub struct Context<T> {
     string_map: HashMap<String, usize>,

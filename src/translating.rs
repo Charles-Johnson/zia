@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use context::StringConcept;
 use reading::{
     Combine, DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, Label,
     MaybeConcept, Pair, SyntaxFactory,
@@ -90,4 +89,8 @@ where
     S: StringConcept + Label<T>,
     T: FindWhatReducesToIt + GetDefinition,
 {
+}
+
+pub trait StringConcept {
+    fn get_string_concept(&self, &str) -> Option<usize>;
 }

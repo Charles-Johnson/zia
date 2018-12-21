@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use context::ConceptWriter;
 pub use reading::{
     ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
 };
@@ -167,6 +166,10 @@ where
     T: SetDefinition + Sized + GetDefinition + GetReduction,
     S: ConceptWriter<T> + Container<T>,
 {
+}
+
+pub trait ConceptWriter<T> {
+    fn write_concept(&mut self, usize) -> &mut T;
 }
 
 pub trait RemoveReduction {

@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use context::{BlindConceptRemover, StringRemover};
 use reading::{FindWhatReducesToIt, MaybeDisconnected, MaybeString};
 use writing::{
     ConceptReader, DeleteDefinition, GetDefinition, GetDefinitionOf, GetReduction,
@@ -81,4 +80,12 @@ where
     S: BlindConceptRemover + ConceptReader<T> + StringRemover,
     T: MaybeString,
 {
+}
+
+pub trait BlindConceptRemover {
+    fn blindly_remove_concept(&mut self, usize);
+}
+
+pub trait StringRemover {
+    fn remove_string(&mut self, &str);
 }
