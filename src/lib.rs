@@ -44,8 +44,10 @@ pub use utils::ZiaError;
 use utils::ZiaResult;
 use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
+/// A container for reading and writing `Concept`s. 
 pub type Context = GenericContext<Concept>;
 
+/// Executing a command based on a string to read or write contained concepts.  
 pub trait Execute<T>
 where
     Self: Call<T> + SyntaxConverter<T>,
@@ -95,9 +97,10 @@ where
 {
 }
 
+/// Calling a program expressed as abstract syntax to read or write contained concepts.  
 pub trait Call<T>
 where
-    Self: RightHandCall<T> + Expander<T>,
+    Self: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
     T: From<String>
         + Default
         + RemoveDefinition
@@ -117,7 +120,7 @@ where
         ast: &U,
     ) -> ZiaResult<String> {
         match ast.get_expansion() {
-            Some((ref mut left, ref right)) => self.call_pair(left, right),
+            Some((ref left, ref right)) => self.call_pair(left, right),
             None => {
                 match self.try_expanding_then_call(ast) {
                     Ok(s) => return Ok(s),
@@ -136,7 +139,7 @@ where
         U: MaybeConcept + Clone + DisplayJoint + SyntaxFactory + Pair<U> + Container + fmt::Display,
     >(
         &mut self,
-        left: &mut U,
+        left: &U,
         right: &U,
     ) -> ZiaResult<String> {
         match right.get_concept() {
@@ -182,49 +185,15 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-}
-
-impl<S, T> Call<T> for S
-where
-    S: RightHandCall<T> + Expander<T>,
-    T: From<String>
-        + Default
-        + RemoveDefinition
-        + SetReduction
-        + RemoveReduction
-        + SetDefinition
-        + FindWhatReducesToIt
-        + GetReduction
-        + GetDefinition
-        + GetDefinitionOf
-        + MaybeString,
-{
-}
-
-pub trait RightHandCall<T>
-where
-    T: Default
-        + From<String>
-        + RemoveDefinition
-        + SetReduction
-        + RemoveReduction
-        + SetDefinition
-        + MaybeString
-        + GetDefinitionOf
-        + GetDefinition
-        + GetReduction
-        + FindWhatReducesToIt,
-    Self: Definer<T> + ExecuteReduction<T> + Reduce<T>,
-{
-    fn call_as_righthand<
+	fn call_as_righthand<
         U: MaybeConcept + Container + Pair<U> + DisplayJoint + fmt::Display + Clone + SyntaxFactory,
     >(
         &mut self,
-        left: &mut U,
+        left: &U,
         right: &U,
     ) -> ZiaResult<String> {
         match right.get_expansion() {
-            Some((ref rightleft, ref mut rightright)) => {
+            Some((ref rightleft, ref rightright)) => {
                 self.match_righthand_pair::<U>(left, rightleft, rightright)
             }
             None => Err(ZiaError::NotAProgram),
@@ -234,9 +203,9 @@ where
         U: MaybeConcept + Container + Pair<U> + fmt::Display + Clone + DisplayJoint + SyntaxFactory,
     >(
         &mut self,
-        left: &mut U,
+        left: &U,
         rightleft: &U,
-        rightright: &mut U,
+        rightright: &U,
     ) -> ZiaResult<String> {
         match rightleft.get_concept() {
             Some(c) => match c {
@@ -257,23 +226,24 @@ where
     }
 }
 
-impl<S, T> RightHandCall<T> for S
+impl<S, T> Call<T> for S
 where
-    T: Default
-        + From<String>
+    S: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
+    T: From<String>
+        + Default
         + RemoveDefinition
         + SetReduction
         + RemoveReduction
         + SetDefinition
-        + MaybeString
-        + GetDefinitionOf
-        + GetDefinition
+        + FindWhatReducesToIt
         + GetReduction
-        + FindWhatReducesToIt,
-    S: Definer<T> + ExecuteReduction<T> + Reduce<T>,
+        + GetDefinition
+        + GetDefinitionOf
+        + MaybeString,
 {
 }
 
+/// Defining new syntax in terms of old syntax.
 pub trait Definer<T>
 where
     T: From<String>
@@ -292,7 +262,7 @@ where
     fn execute_definition<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         new: &U,
-        old: &mut U,
+        old: &U,
     ) -> ZiaResult<String> {
         if old.contains(new) {
             Err(ZiaError::InfiniteDefinition)
@@ -303,7 +273,7 @@ where
     }
     fn define<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
-        before: &mut U,
+        before: &U,
         after: &U,
     ) -> ZiaResult<()> {
         if after.get_expansion().is_some() {

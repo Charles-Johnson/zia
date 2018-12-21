@@ -136,6 +136,7 @@ where
 {
 }
 
+/// Preparing a context by labelling concrete concepts. 
 pub trait ContextMaker<T>
 where
     Self: Labeller<T> + Default,

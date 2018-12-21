@@ -18,6 +18,7 @@ use std::fmt;
 
 pub type ZiaResult<T> = Result<T, ZiaError>;
 
+/// All the expected ways a Zia command could be invalid. 
 #[derive(Debug)]
 pub enum ZiaError {
     RedundantReduction,
