@@ -14,17 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use super::symbol::Symbol;
 use reading::{MaybeConcept, Pair, SyntaxFactory};
 use std::{borrow::Borrow, fmt};
 
-pub struct Expression<T> {
-    symbol: Symbol,
+pub struct Expression<S, T> {
+    symbol: S,
     lefthand: Box<T>,
     righthand: Box<T>,
 }
 
-impl<T: Clone> Expression<T> {
+impl<S, T: Clone> Expression<S, T> {
     pub fn get_lefthand(&self) -> T {
         let borrowed_left: &T = self.lefthand.borrow();
         borrowed_left.clone()
@@ -35,36 +34,36 @@ impl<T: Clone> Expression<T> {
     }
 }
 
-impl<T: Clone> Pair<T> for Expression<T> {
+impl<S: SyntaxFactory, T: Clone> Pair<T> for Expression<S, T> {
     fn from_pair(
         syntax: &str,
         concept: Option<usize>,
         lefthand: &T,
         righthand: &T,
-    ) -> Expression<T> {
-        Expression::<T> {
-            symbol: Symbol::new(syntax, concept),
+    ) -> Expression<S, T> {
+        Expression::<S, T> {
+            symbol: S::new(syntax, concept),
             lefthand: Box::new(lefthand.clone()),
             righthand: Box::new(righthand.clone()),
         }
     }
 }
 
-impl<T> fmt::Display for Expression<T> {
+impl<S: fmt::Display, T> fmt::Display for Expression<S, T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.symbol.to_string())
     }
 }
 
-impl<T> MaybeConcept for Expression<T> {
+impl<S: MaybeConcept, T> MaybeConcept for Expression<S, T> {
     fn get_concept(&self) -> Option<usize> {
         self.symbol.get_concept()
     }
 }
 
-impl<T: Clone> Clone for Expression<T> {
-    fn clone(&self) -> Expression<T> {
-        Expression::<T> {
+impl<S: Clone, T: Clone> Clone for Expression<S, T> {
+    fn clone(&self) -> Expression<S, T> {
+        Expression::<S, T> {
             symbol: self.symbol.clone(),
             lefthand: Box::new(self.get_lefthand()),
             righthand: Box::new(self.get_righthand()),

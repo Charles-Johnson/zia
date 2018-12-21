@@ -62,13 +62,7 @@ where
         + FindWhatReducesToIt,
 {
     fn execute<
-        U: MaybeConcept
-            + Container
-            + SyntaxFactory
-            + Clone
-            + fmt::Display
-            + Pair<U>
-            + DisplayJoint,
+        U: MaybeConcept + Container + SyntaxFactory + Clone + fmt::Display + Pair<U> + DisplayJoint,
     >(
         &mut self,
         command: &str,
@@ -117,13 +111,7 @@ where
         + MaybeString,
 {
     fn call<
-        U: MaybeConcept
-            + SyntaxFactory
-            + Clone
-            + Container
-            + DisplayJoint
-            + Pair<U>
-            + fmt::Display,
+        U: MaybeConcept + SyntaxFactory + Clone + Container + DisplayJoint + Pair<U> + fmt::Display,
     >(
         &mut self,
         ast: &U,
@@ -145,13 +133,7 @@ where
         }
     }
     fn call_pair<
-        U: MaybeConcept
-            + Clone
-            + DisplayJoint
-            + SyntaxFactory
-            + Pair<U>
-            + Container
-            + fmt::Display,
+        U: MaybeConcept + Clone + DisplayJoint + SyntaxFactory + Pair<U> + Container + fmt::Display,
     >(
         &mut self,
         left: &mut U,
@@ -175,13 +157,7 @@ where
         }
     }
     fn try_expanding_then_call<
-        U: MaybeConcept
-            + DisplayJoint
-            + Pair<U>
-            + SyntaxFactory
-            + Clone
-            + Container
-            + fmt::Display,
+        U: MaybeConcept + DisplayJoint + Pair<U> + SyntaxFactory + Clone + Container + fmt::Display,
     >(
         &mut self,
         ast: &U,
@@ -194,13 +170,7 @@ where
         }
     }
     fn try_reducing_then_call<
-        U: MaybeConcept
-            + Clone
-            + SyntaxFactory
-            + Pair<U>
-            + DisplayJoint
-            + Container
-            + fmt::Display,
+        U: MaybeConcept + Clone + SyntaxFactory + Pair<U> + DisplayJoint + Container + fmt::Display,
     >(
         &mut self,
         ast: &U,
@@ -247,13 +217,7 @@ where
     Self: Definer<T> + ExecuteReduction<T> + Reduce<T>,
 {
     fn call_as_righthand<
-        U: MaybeConcept
-            + Container
-            + Pair<U>
-            + DisplayJoint
-            + fmt::Display
-            + Clone
-            + SyntaxFactory,
+        U: MaybeConcept + Container + Pair<U> + DisplayJoint + fmt::Display + Clone + SyntaxFactory,
     >(
         &mut self,
         left: &mut U,
@@ -267,13 +231,7 @@ where
         }
     }
     fn match_righthand_pair<
-        U: MaybeConcept
-            + Container
-            + Pair<U>
-            + fmt::Display
-            + Clone
-            + DisplayJoint
-            + SyntaxFactory,
+        U: MaybeConcept + Container + Pair<U> + fmt::Display + Clone + DisplayJoint + SyntaxFactory,
     >(
         &mut self,
         left: &mut U,

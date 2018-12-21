@@ -24,7 +24,7 @@ use std::fmt;
 
 pub enum AbstractSyntaxTree {
     Symbol(Symbol),
-    Expression(Expression<AbstractSyntaxTree>),
+    Expression(Expression<Symbol, AbstractSyntaxTree>),
 }
 
 impl MaybeConcept for AbstractSyntaxTree {
@@ -85,7 +85,7 @@ impl Pair<AbstractSyntaxTree> for AbstractSyntaxTree {
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
     ) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Expression(Expression::<AbstractSyntaxTree>::from_pair(
+        AbstractSyntaxTree::Expression(Expression::<Symbol, AbstractSyntaxTree>::from_pair(
             syntax, concept, lefthand, righthand,
         ))
     }
