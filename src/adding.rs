@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use ast::traits::Container as SyntaxContainer;
 use constants::LABEL;
 use reading::{FindDefinition, MaybeString, MightExpand};
 use std::fmt;
@@ -38,7 +37,7 @@ where
         + GetDefinition
         + MaybeString,
 {
-    fn execute_reduction<U: SyntaxContainer + MaybeConcept + fmt::Display>(
+    fn execute_reduction<U: Container + MaybeConcept + fmt::Display>(
         &mut self,
         syntax: &U,
         normal_form: &U,
@@ -71,6 +70,21 @@ where
         + MaybeString,
 {
 }
+
+pub trait Container
+where
+    Self: MightExpand<Self> + PartialEq + Sized,
+{
+    fn contains(&self, other: &Self) -> bool {
+        if let Some((ref left, ref right)) = self.get_expansion() {
+            left == other || right == other || left.contains(other) || right.contains(other)
+        } else {
+            false
+        }
+    }
+}
+
+impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
 
 pub trait ConceptMaker<T>
 where

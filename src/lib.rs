@@ -28,8 +28,7 @@ mod utils;
 mod writing;
 
 pub use adding::ContextMaker;
-use adding::{ConceptMaker, ExecuteReduction};
-use ast::traits::Container as SyntaxContainer;
+use adding::{ConceptMaker, Container, ExecuteReduction};
 pub use ast::AbstractSyntaxTree;
 use concepts::Concept;
 use constants::{DEFINE, REDUCTION};
@@ -64,7 +63,7 @@ where
 {
     fn execute<
         U: MaybeConcept
-            + SyntaxContainer
+            + Container
             + SyntaxFactory
             + Clone
             + fmt::Display
@@ -121,7 +120,7 @@ where
         U: MaybeConcept
             + SyntaxFactory
             + Clone
-            + SyntaxContainer
+            + Container
             + DisplayJoint
             + Pair<U>
             + fmt::Display,
@@ -151,7 +150,7 @@ where
             + DisplayJoint
             + SyntaxFactory
             + Pair<U>
-            + SyntaxContainer
+            + Container
             + fmt::Display,
     >(
         &mut self,
@@ -181,7 +180,7 @@ where
             + Pair<U>
             + SyntaxFactory
             + Clone
-            + SyntaxContainer
+            + Container
             + fmt::Display,
     >(
         &mut self,
@@ -200,7 +199,7 @@ where
             + SyntaxFactory
             + Pair<U>
             + DisplayJoint
-            + SyntaxContainer
+            + Container
             + fmt::Display,
     >(
         &mut self,
@@ -249,7 +248,7 @@ where
 {
     fn call_as_righthand<
         U: MaybeConcept
-            + SyntaxContainer
+            + Container
             + Pair<U>
             + DisplayJoint
             + fmt::Display
@@ -269,7 +268,7 @@ where
     }
     fn match_righthand_pair<
         U: MaybeConcept
-            + SyntaxContainer
+            + Container
             + Pair<U>
             + fmt::Display
             + Clone
@@ -332,7 +331,7 @@ where
         + MaybeString,
     Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
 {
-    fn execute_definition<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
+    fn execute_definition<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         new: &U,
         old: &mut U,
@@ -344,7 +343,7 @@ where
             Ok("".to_string())
         }
     }
-    fn define<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
+    fn define<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         before: &mut U,
         after: &U,
@@ -388,7 +387,7 @@ where
             }
         }
     }
-    fn redefine<U: SyntaxContainer + MaybeConcept + fmt::Display>(
+    fn redefine<U: Container + MaybeConcept + fmt::Display>(
         &mut self,
         concept: usize,
         left: &U,
@@ -408,7 +407,7 @@ where
         self.unlabel(concept);
         self.label(concept, new_label)
     }
-    fn define_new_syntax<U: SyntaxContainer + MaybeConcept + Pair<U> + fmt::Display>(
+    fn define_new_syntax<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
         &mut self,
         syntax: &str,
         left: &U,

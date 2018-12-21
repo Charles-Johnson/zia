@@ -16,7 +16,6 @@
 */
 mod expression;
 mod symbol;
-pub mod traits;
 
 use self::expression::Expression;
 use self::symbol::Symbol;
