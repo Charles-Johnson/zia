@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
-use {RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct StringConcept<T> {
     abstract_concept: T,

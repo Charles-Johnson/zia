@@ -15,7 +15,6 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pub use concepts::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 use context::ConceptWriter;
 pub use reading::{
     ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
@@ -168,4 +167,26 @@ where
     T: SetDefinition + Sized + GetDefinition + GetReduction,
     S: ConceptWriter<T> + Container<T>,
 {
+}
+
+pub trait RemoveReduction {
+    fn make_reduce_to_none(&mut self);
+    fn no_longer_reduces_from(&mut self, usize);
+}
+
+pub trait SetDefinition {
+    fn set_definition(&mut self, usize, usize);
+    fn add_as_lefthand_of(&mut self, usize);
+    fn add_as_righthand_of(&mut self, usize);
+}
+
+pub trait SetReduction {
+    fn make_reduce_to(&mut self, usize);
+    fn make_reduce_from(&mut self, usize);
+}
+
+pub trait RemoveDefinition {
+    fn remove_definition(&mut self);
+    fn remove_as_lefthand_of(&mut self, usize);
+    fn remove_as_righthand_of(&mut self, usize);
 }

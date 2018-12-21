@@ -16,12 +16,11 @@
 */
 mod abstract_concept;
 mod string_concept;
-mod traits;
 
 use self::abstract_concept::AbstractConcept;
 use self::string_concept::StringConcept;
-pub use self::traits::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
+use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub enum Concept {
     Abstract(AbstractConcept),

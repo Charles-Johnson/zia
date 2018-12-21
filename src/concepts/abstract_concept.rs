@@ -16,7 +16,7 @@
 */
 
 use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction};
-use {RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct AbstractConcept {
     definition: Option<(usize, usize)>,
