@@ -1,13 +1,10 @@
 # `zia`: Interpreter for the Zia programming language.
 
-The Zia project aims to allow programs to be easily adaptable to changing requirements with as much
-user-defined syntax as possible. In contrast to functional programmers, which avoid changing 
-state wherever possible, Zia programmers seek to change the state of their program wherever 
-possible without crashing. In contrast to traditional interpreted languages, Zia source code plays 
-a role similar to database query languages. In contrast to traditional databases, Zia further 
-abstracts away data representation details (such as tables and columns) and allows programs to be stored. 
+The Zia project aims to develop a programming language that can be used to program itself. Each 
+expression of Zia syntax either represents a unit of knowledge that the user provides to the system
+or a request for knowledge that the system may have.
 
-The Zia syntax represents a binary tree where parentheses group a pair of expressions and a space 
+Expressions represent a binary tree where parentheses group a pair of expressions and a space 
 separates a pair of expressions.
 
 e.g.
@@ -68,18 +65,21 @@ are commands like `i (-> (i j))`.
 
 API  
 
-The current implementation exposes the `Context` type that can be used in an interface such as 
-[IZia](https://github.com/Charles-Johnson/izia). 
+The current implementation exposes the `Context` and `AbstractSyntaxTree` type that can be used in an interface such as 
+[IZia](https://github.com/Charles-Johnson/izia). Importing the following traits allows the corresponding methods to be called with `Context` (use `execute<AbstractSyntaxTree>`).
 
 ```
-impl Context {
-	pub fn new() -> Context { 
+trait ContextMaker<T> {
+	fn new() -> Self { 
 		// Constructs a new Context with 3 built-in concepts: one to encode the labels of concepts
     	// (id=LABEL), one to encode commands to define or print the definitions of concepts (id = 
     	// DEFINE) and one to encode commands to define reduction rules or print the normal forms 
 		// of concepts (id = REDUCTION).
     }
-    pub fn execute(&mut self, command: &str) -> String { 
+}
+
+trait Execute<T> {
+    fn execute<U>(&mut self, command: &str) -> String { 
 		// Executes the commands given by the user. The command is converted into an abstract 
 		// syntax tree using the labels of built-in concepts. This abstract syntax tree is then 
 		// parsed and appropriate operations are performed.
