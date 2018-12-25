@@ -23,7 +23,7 @@ pub use self::concepts::{
 };
 pub use self::syntax::*;
 use constants::LABEL;
-use std::fmt;
+use std::{collections::HashSet, fmt};
 pub trait Expander<T>
 where
     Self: Reduce<T>,
@@ -309,12 +309,12 @@ where
     Self: ConceptReader<T>,
 {
     fn get_concept_of_label(&self, concept: usize) -> Option<usize> {
-        for candidate in self.read_concept(concept).get_righthand_of() {
-            match self.read_concept(candidate).get_definition() {
+        for candidate in self.read_concept(concept).get_righthand_of().iter() {
+            match self.read_concept(*candidate).get_definition() {
                 None => panic!("Candidate should have a definition!"),
                 Some((left, _)) => {
                     if left == LABEL {
-                        return Some(candidate);
+                        return Some(*candidate);
                     }
                 }
             };
@@ -346,8 +346,8 @@ where
                 .is_empty()
     }
     fn righthand_of_without_label_is_empty(&self, con: usize) -> bool {
-        for concept in self.read_concept(con).get_righthand_of() {
-            if let Some((left, _)) = self.read_concept(concept).get_definition() {
+        for concept in self.read_concept(con).get_righthand_of().iter() {
+            if let Some((left, _)) = self.read_concept(*concept).get_definition() {
                 if left != LABEL {
                     return false;
                 }
@@ -370,21 +370,17 @@ where
     Self: ConceptReader<T>,
 {
     fn find_definition(&self, lefthand: usize, righthand: usize) -> Option<usize> {
-        let mut candidates: Vec<usize> = Vec::new();
-        for candidate in self.read_concept(lefthand).get_lefthand_of() {
-            let has_righthand = self
-                .read_concept(righthand)
-                .get_righthand_of()
-                .contains(&candidate);
-            let new_candidate = !candidates.contains(&candidate);
-            if has_righthand && new_candidate {
-                candidates.push(candidate);
-            }
-        }
-        match candidates.len() {
-            0 => None,
-            1 => Some(candidates[0]),
-            _ => panic!("Multiple definitions with the same lefthand and righthand pair exist."),
+        let has_lefthand = self.read_concept(lefthand).get_lefthand_of();
+        let has_righthand = self.read_concept(righthand).get_righthand_of();
+        let mut candidates = has_lefthand.intersection(&has_righthand);
+        match candidates.next() {
+            None => None,
+            Some(index) => match candidates.next() {
+                None => Some(*index),
+                Some(_) => {
+                    panic!("Multiple definitions with the same lefthand and righthand pair exist.")
+                }
+            },
         }
     }
 }
@@ -401,12 +397,11 @@ where
     T: FindWhatReducesToIt,
     Self: ConceptReader<T>,
 {
-    fn find_what_its_a_normal_form_of(&self, con: usize) -> Vec<usize> {
-        let mut normal_form_of: Vec<usize> = Vec::new();
-        for concept in self.read_concept(con).find_what_reduces_to_it() {
-            normal_form_of.push(concept);
-            for concept2 in self.find_what_its_a_normal_form_of(concept) {
-                normal_form_of.push(concept2);
+    fn find_what_its_a_normal_form_of(&self, con: usize) -> HashSet<usize> {
+        let mut normal_form_of = self.read_concept(con).find_what_reduces_to_it();
+        for concept in normal_form_of.clone().iter() {
+            for concept2 in self.find_what_its_a_normal_form_of(*concept).iter() {
+                normal_form_of.insert(*concept2);
             }
         }
         normal_form_of

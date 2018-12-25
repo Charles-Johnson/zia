@@ -14,11 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
-use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use reading::{FindWhatReducesToIt, GetDefinitionOf, MaybeString};
+use std::collections::HashSet;
+use writing::{MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, SetAsDefinitionOf};
 
 pub struct StringConcept<T> {
-    abstract_concept: T,
+    concrete_concept: T,
     string: String,
 }
 
@@ -29,7 +30,7 @@ where
     fn from(string: String) -> StringConcept<T> {
         StringConcept::<T> {
             string,
-            abstract_concept: T::default(),
+            concrete_concept: T::default(),
         }
     }
 }
@@ -44,8 +45,8 @@ impl<T> FindWhatReducesToIt for StringConcept<T>
 where
     T: FindWhatReducesToIt,
 {
-    fn find_what_reduces_to_it(&self) -> Vec<usize> {
-        self.abstract_concept.find_what_reduces_to_it()
+    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
+        self.concrete_concept.find_what_reduces_to_it()
     }
 }
 
@@ -53,82 +54,52 @@ impl<T> GetDefinitionOf for StringConcept<T>
 where
     T: GetDefinitionOf,
 {
-    fn get_lefthand_of(&self) -> Vec<usize> {
-        self.abstract_concept.get_lefthand_of()
+    fn get_lefthand_of(&self) -> HashSet<usize> {
+        self.concrete_concept.get_lefthand_of()
     }
-    fn get_righthand_of(&self) -> Vec<usize> {
-        self.abstract_concept.get_righthand_of()
-    }
-}
-
-impl<T> GetDefinition for StringConcept<T>
-where
-    T: GetDefinition,
-{
-    fn get_definition(&self) -> Option<(usize, usize)> {
-        self.abstract_concept.get_definition()
+    fn get_righthand_of(&self) -> HashSet<usize> {
+        self.concrete_concept.get_righthand_of()
     }
 }
 
-impl<T> SetDefinition for StringConcept<T>
+impl<T> SetAsDefinitionOf for StringConcept<T>
 where
-    T: SetDefinition,
+    T: SetAsDefinitionOf,
 {
-    fn set_definition(&mut self, lefthand: usize, righthand: usize) {
-        self.abstract_concept.set_definition(lefthand, righthand);
-    }
     fn add_as_lefthand_of(&mut self, lefthand: usize) {
-        self.abstract_concept.add_as_lefthand_of(lefthand);
+        self.concrete_concept.add_as_lefthand_of(lefthand);
     }
     fn add_as_righthand_of(&mut self, righthand: usize) {
-        self.abstract_concept.add_as_righthand_of(righthand);
+        self.concrete_concept.add_as_righthand_of(righthand);
     }
 }
 
-impl<T> RemoveDefinition for StringConcept<T>
+impl<T> RemoveAsDefinitionOf for StringConcept<T>
 where
-    T: RemoveDefinition,
+    T: RemoveAsDefinitionOf,
 {
-    fn remove_definition(&mut self) {
-        self.abstract_concept.remove_definition();
-    }
     fn remove_as_lefthand_of(&mut self, definition: usize) {
-        self.abstract_concept.remove_as_lefthand_of(definition)
+        self.concrete_concept.remove_as_lefthand_of(definition)
     }
     fn remove_as_righthand_of(&mut self, definition: usize) {
-        self.abstract_concept.remove_as_righthand_of(definition)
+        self.concrete_concept.remove_as_righthand_of(definition)
     }
 }
 
-impl<T> GetReduction for StringConcept<T>
+impl<T> MakeReduceFrom for StringConcept<T>
 where
-    T: GetReduction,
+    T: MakeReduceFrom,
 {
-    fn get_reduction(&self) -> Option<usize> {
-        self.abstract_concept.get_reduction()
-    }
-}
-
-impl<T> SetReduction for StringConcept<T>
-where
-    T: SetReduction,
-{
-    fn make_reduce_to(&mut self, _: usize) {
-        panic!("Concept is a string so must be its own normal form",)
-    }
     fn make_reduce_from(&mut self, concept: usize) {
-        self.abstract_concept.make_reduce_from(concept);
+        self.concrete_concept.make_reduce_from(concept);
     }
 }
 
-impl<T> RemoveReduction for StringConcept<T>
+impl<T> NoLongerReducesFrom for StringConcept<T>
 where
-    T: RemoveReduction,
+    T: NoLongerReducesFrom,
 {
-    fn make_reduce_to_none(&mut self) {
-        panic!("Concept is a string so no need to remove reduction.")
-    }
     fn no_longer_reduces_from(&mut self, concept: usize) {
-        self.abstract_concept.no_longer_reduces_from(concept);
+        self.concrete_concept.no_longer_reduces_from(concept);
     }
 }

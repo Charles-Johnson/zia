@@ -18,25 +18,25 @@ use std::fmt;
 
 pub type ZiaResult<T> = Result<T, ZiaError>;
 
-/// All the expected ways a Zia command could be invalid. 
+/// All the expected ways a Zia command could be invalid.
 #[derive(Debug)]
 pub enum ZiaError {
-	RedundantReduction,
-	RedundantDefinition,
-	RedundantRefactor,
-	NotAProgram,
-	BadDefinition,
-	CyclicReduction,
-	ExpandingReduction,
-	InfiniteDefinition,
-	EmptyParentheses,
-	AmbiguousExpression,
-	DefinitionCollision,
+    RedundantReduction,
+    RedundantDefinition,
+    RedundantRefactor,
+    NotAProgram,
+    BadDefinition,
+    CyclicReduction,
+    ExpandingReduction,
+    InfiniteDefinition,
+    EmptyParentheses,
+    AmbiguousExpression,
+    DefinitionCollision,
 }
 
 impl fmt::Display for ZiaError {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	    match *self {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
 	        ZiaError::RedundantReduction => write!(f, "That reduction rule already exists."),
 			ZiaError::RedundantDefinition => write!(f, "That definition already exists."),
 			ZiaError::RedundantRefactor => write!(f, "Relabelling something that doesn't yet exist has no effect."),
@@ -49,5 +49,5 @@ impl fmt::Display for ZiaError {
 			ZiaError::AmbiguousExpression => write!(f, "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression."),
 			ZiaError::DefinitionCollision => write!(f, "Cannot define a used symbol as another used symbol or expression."),
 	    }
-	}
+    }
 }

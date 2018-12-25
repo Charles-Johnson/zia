@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use std::collections::HashSet;
 
 pub trait GetDefinition {
     fn get_definition(&self) -> Option<(usize, usize)>;
@@ -24,7 +25,7 @@ pub trait GetReduction {
 }
 
 pub trait FindWhatReducesToIt {
-    fn find_what_reduces_to_it(&self) -> Vec<usize>;
+    fn find_what_reduces_to_it(&self) -> HashSet<usize>;
 }
 
 pub trait MaybeString {
@@ -32,6 +33,6 @@ pub trait MaybeString {
 }
 
 pub trait GetDefinitionOf {
-    fn get_lefthand_of(&self) -> Vec<usize>;
-    fn get_righthand_of(&self) -> Vec<usize>;
+    fn get_lefthand_of(&self) -> HashSet<usize>;
+    fn get_righthand_of(&self) -> HashSet<usize>;
 }

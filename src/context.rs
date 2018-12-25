@@ -22,9 +22,15 @@ use std::collections::HashMap;
 use translating::StringConcept;
 use writing::ConceptWriter;
 
+/// A container for adding, reading, writing and removing concepts of generic type `T`.
 pub struct Context<T> {
+    /// Relates a String value to the index where the concept corresponding to the String is stored
+    /// in the `concepts` field.
     string_map: HashMap<String, usize>,
+    /// Concepts may be stored at an index of this vector as `Some(T)`. If that concept is removed
+    /// from the context, `None` will be left at its index.
     concepts: Vec<Option<T>>,
+    /// Keeps track of indices of the `concepts` field that have `None`.
     gaps: Vec<usize>,
 }
 

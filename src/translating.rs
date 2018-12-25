@@ -18,7 +18,7 @@
 use errors::{ZiaError, ZiaResult};
 use reading::{
     Combine, DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, Label,
-    MaybeConcept, Pair, SyntaxFactory
+    MaybeConcept, Pair, SyntaxFactory,
 };
 
 pub trait SyntaxConverter<T>

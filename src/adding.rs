@@ -21,19 +21,23 @@ use reading::{FindDefinition, MaybeString, MightExpand};
 use std::fmt;
 use writing::{
     DeleteReduction, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, InsertDefinition,
-    MaybeConcept, RemoveReduction, SetDefinition, SetReduction, UpdateNormalForm
+    MakeReduceFrom, MaybeConcept, NoLongerReducesFrom, RemoveReduction, SetAsDefinitionOf,
+    SetDefinition, SetReduction, UpdateNormalForm,
 };
 
 pub trait ExecuteReduction<T>
 where
     Self: ConceptMaker<T> + DeleteReduction<T>,
     T: SetReduction
+        + MakeReduceFrom
         + GetDefinitionOf
         + Default
         + From<String>
         + RemoveReduction
+        + NoLongerReducesFrom
         + GetReduction
         + SetDefinition
+        + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
 {
@@ -60,12 +64,15 @@ impl<S, T> ExecuteReduction<T> for S
 where
     S: ConceptMaker<T> + DeleteReduction<T>,
     T: SetReduction
+        + MakeReduceFrom
         + GetDefinitionOf
         + Default
         + From<String>
         + RemoveReduction
+        + NoLongerReducesFrom
         + GetReduction
         + SetDefinition
+        + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
 {
@@ -91,9 +98,11 @@ where
     T: From<String>
         + Default
         + SetReduction
+        + MakeReduceFrom
         + GetDefinitionOf
         + GetDefinition
         + SetDefinition
+        + SetAsDefinitionOf
         + MaybeString
         + GetReduction,
     Self: Labeller<T> + GetNormalForm<T>,
@@ -128,15 +137,17 @@ where
         + Default
         + GetDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + GetDefinition
         + SetDefinition
+        + SetAsDefinitionOf
         + MaybeString
         + GetReduction,
     S: Labeller<T> + GetNormalForm<T>,
 {
 }
 
-/// Preparing a context by labelling concrete concepts. 
+/// Preparing a context by labelling concrete concepts.
 pub trait ContextMaker<T>
 where
     Self: Labeller<T> + Default,
@@ -144,9 +155,11 @@ where
         + From<String>
         + Default
         + SetReduction
+        + MakeReduceFrom
         + GetDefinition
         + GetReduction
         + SetDefinition
+        + SetAsDefinitionOf
         + MaybeString,
 {
     fn new() -> Self {
@@ -163,9 +176,11 @@ where
         + From<String>
         + Default
         + SetReduction
+        + MakeReduceFrom
         + GetDefinition
         + GetReduction
         + SetDefinition
+        + SetAsDefinitionOf
         + MaybeString,
 {
 }
@@ -173,10 +188,12 @@ where
 pub trait Labeller<T>
 where
     T: SetReduction
+        + MakeReduceFrom
         + From<String>
         + Default
         + GetDefinitionOf
         + SetDefinition
+        + SetAsDefinitionOf
         + GetReduction
         + GetDefinition
         + GetReduction
@@ -205,10 +222,12 @@ where
 impl<S, T> Labeller<T> for S
 where
     T: SetReduction
+        + MakeReduceFrom
         + From<String>
         + Default
         + GetDefinitionOf
         + SetDefinition
+        + SetAsDefinitionOf
         + GetReduction
         + GetDefinition
         + GetReduction
@@ -219,7 +238,7 @@ where
 
 pub trait FindOrInsertDefinition<T>
 where
-    T: Default + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    T: Default + GetDefinition + GetReduction + SetDefinition + SetAsDefinitionOf + GetDefinitionOf,
     Self: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
     fn find_or_insert_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<usize> {
@@ -237,7 +256,7 @@ where
 
 impl<S, T> FindOrInsertDefinition<T> for S
 where
-    T: Default + GetDefinition + GetReduction + SetDefinition + GetDefinitionOf,
+    T: Default + GetDefinition + GetReduction + SetDefinition + SetAsDefinitionOf + GetDefinitionOf,
     S: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
 }

@@ -15,14 +15,14 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+pub use errors::{ZiaError, ZiaResult};
 pub use reading::{
     ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
 };
 use reading::{Container, GetConceptOfLabel};
-pub use errors::{ZiaError, ZiaResult};
 pub trait Unlabeller<T>
 where
-    T: GetReduction + RemoveReduction + GetDefinition + GetDefinitionOf,
+    T: GetReduction + RemoveReduction + NoLongerReducesFrom + GetDefinition + GetDefinitionOf,
     Self: DeleteReduction<T> + GetConceptOfLabel<T>,
 {
     fn unlabel(&mut self, concept: usize) {
@@ -35,14 +35,14 @@ where
 
 impl<S, T> Unlabeller<T> for S
 where
-    T: GetReduction + RemoveReduction + GetDefinitionOf + GetDefinition,
+    T: GetReduction + RemoveReduction + NoLongerReducesFrom + GetDefinitionOf + GetDefinition,
     S: DeleteReduction<T> + GetConceptOfLabel<T>,
 {
 }
 
 pub trait DeleteReduction<T>
 where
-    T: GetReduction + RemoveReduction,
+    T: GetReduction + RemoveReduction + NoLongerReducesFrom,
     Self: ConceptWriter<T> + ConceptReader<T>,
 {
     fn try_removing_reduction<U: MaybeConcept>(&mut self, syntax: &U) -> ZiaResult<()> {
@@ -67,13 +67,13 @@ where
 impl<S, T> DeleteReduction<T> for S
 where
     S: ConceptWriter<T> + ConceptReader<T>,
-    T: GetReduction + RemoveReduction,
+    T: GetReduction + RemoveReduction + NoLongerReducesFrom,
 {
 }
 
 pub trait DeleteDefinition<T>
 where
-    T: GetDefinition + RemoveDefinition + Sized,
+    T: GetDefinition + RemoveDefinition + RemoveAsDefinitionOf + Sized,
     Self: ConceptReader<T> + ConceptWriter<T>,
 {
     fn delete_definition(&mut self, concept: usize) {
@@ -90,14 +90,14 @@ where
 
 impl<S, T> DeleteDefinition<T> for S
 where
-    T: GetDefinition + RemoveDefinition + Sized,
+    T: GetDefinition + RemoveDefinition + RemoveAsDefinitionOf + Sized,
     S: ConceptReader<T> + ConceptWriter<T>,
 {
 }
 
 pub trait UpdateNormalForm<T>
 where
-    T: SetReduction + GetReduction,
+    T: SetReduction + MakeReduceFrom + GetReduction,
     Self: ConceptWriter<T> + GetNormalForm<T>,
 {
     fn update_normal_form(&mut self, concept: usize, normal_form: usize) -> ZiaResult<()> {
@@ -119,14 +119,14 @@ where
 
 impl<S, T> UpdateNormalForm<T> for S
 where
-    T: SetReduction + GetReduction,
+    T: SetReduction + MakeReduceFrom + GetReduction,
     S: ConceptWriter<T> + GetNormalForm<T>,
 {
 }
 
 pub trait InsertDefinition<T>
 where
-    T: SetDefinition + Sized + GetDefinition + GetReduction,
+    T: SetDefinition + SetAsDefinitionOf + Sized + GetDefinition + GetReduction,
     Self: ConceptWriter<T> + Container<T>,
 {
     fn insert_definition(
@@ -163,7 +163,7 @@ where
 
 impl<S, T> InsertDefinition<T> for S
 where
-    T: SetDefinition + Sized + GetDefinition + GetReduction,
+    T: SetDefinition + SetAsDefinitionOf + Sized + GetDefinition + GetReduction,
     S: ConceptWriter<T> + Container<T>,
 {
 }
@@ -174,22 +174,34 @@ pub trait ConceptWriter<T> {
 
 pub trait RemoveReduction {
     fn make_reduce_to_none(&mut self);
+}
+
+pub trait NoLongerReducesFrom {
     fn no_longer_reduces_from(&mut self, usize);
 }
 
 pub trait SetDefinition {
     fn set_definition(&mut self, usize, usize);
+}
+
+pub trait SetAsDefinitionOf {
     fn add_as_lefthand_of(&mut self, usize);
     fn add_as_righthand_of(&mut self, usize);
 }
 
 pub trait SetReduction {
     fn make_reduce_to(&mut self, usize);
+}
+
+pub trait MakeReduceFrom {
     fn make_reduce_from(&mut self, usize);
 }
 
 pub trait RemoveDefinition {
     fn remove_definition(&mut self);
+}
+
+pub trait RemoveAsDefinitionOf {
     fn remove_as_lefthand_of(&mut self, usize);
     fn remove_as_righthand_of(&mut self, usize);
 }

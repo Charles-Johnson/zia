@@ -22,7 +22,7 @@ use self::symbol::Symbol;
 use reading::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
 use std::fmt;
 
-/// Syntax is represented as a full binary tree. 
+/// Syntax is represented as a full binary tree.
 pub enum AbstractSyntaxTree {
     Symbol(Symbol),
     Expression(Expression<Symbol, AbstractSyntaxTree>),

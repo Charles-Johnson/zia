@@ -18,14 +18,16 @@
 use reading::{FindWhatReducesToIt, MaybeDisconnected, MaybeString};
 use writing::{
     ConceptReader, DeleteDefinition, GetDefinition, GetDefinitionOf, GetReduction,
-    RemoveDefinition, RemoveReduction, Unlabeller,
+    NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction, Unlabeller,
 };
 
 pub trait DefinitionDeleter<T>
 where
     Self: MaybeDisconnected<T> + ConceptRemover<T> + DeleteDefinition<T> + Unlabeller<T>,
     T: RemoveDefinition
+        + RemoveAsDefinitionOf
         + RemoveReduction
+        + NoLongerReducesFrom
         + GetDefinitionOf
         + GetDefinition
         + FindWhatReducesToIt
@@ -53,7 +55,9 @@ impl<S, T> DefinitionDeleter<T> for S
 where
     S: MaybeDisconnected<T> + ConceptRemover<T> + DeleteDefinition<T> + Unlabeller<T>,
     T: RemoveDefinition
+        + RemoveAsDefinitionOf
         + RemoveReduction
+        + NoLongerReducesFrom
         + GetDefinitionOf
         + GetDefinition
         + FindWhatReducesToIt

@@ -51,8 +51,8 @@ pub use ast::AbstractSyntaxTree;
 use concepts::Concept;
 use constants::{DEFINE, REDUCTION};
 use context::Context as GenericContext;
-use errors::ZiaResult;
 pub use errors::ZiaError;
+use errors::ZiaResult;
 use reading::{
     DisplayJoint, Expander, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
     GetReduction, MaybeConcept, MaybeString, Pair, Reduce, SyntaxFactory,
@@ -60,9 +60,12 @@ use reading::{
 use removing::DefinitionDeleter;
 use std::fmt;
 use translating::SyntaxConverter;
-use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use writing::{
+    MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
+    SetAsDefinitionOf, SetDefinition, SetReduction,
+};
 
-/// A container for reading and writing `Concept`s. 
+/// A container for reading and writing `Concept`s.
 pub type Context = GenericContext<Concept>;
 
 /// Executing a command based on a string to read or write contained concepts.  
@@ -72,9 +75,13 @@ where
     T: From<String>
         + Default
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + GetDefinition
         + MaybeString
         + GetDefinitionOf
@@ -103,9 +110,13 @@ where
     T: Default
         + From<String>
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + GetDefinition
         + MaybeString
         + GetDefinitionOf
@@ -122,9 +133,13 @@ where
     T: From<String>
         + Default
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + FindWhatReducesToIt
         + GetReduction
         + GetDefinition
@@ -203,7 +218,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-	fn call_as_righthand<
+    fn call_as_righthand<
         U: MaybeConcept + Container + Pair<U> + DisplayJoint + fmt::Display + Clone + SyntaxFactory,
     >(
         &mut self,
@@ -250,9 +265,13 @@ where
     T: From<String>
         + Default
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + FindWhatReducesToIt
         + GetReduction
         + GetDefinition
@@ -267,9 +286,13 @@ where
     T: From<String>
         + Default
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + FindWhatReducesToIt
         + GetReduction
         + GetDefinition
@@ -376,9 +399,13 @@ where
     T: From<String>
         + Default
         + RemoveDefinition
+        + RemoveAsDefinitionOf
         + SetReduction
+        + MakeReduceFrom
         + RemoveReduction
+        + NoLongerReducesFrom
         + SetDefinition
+        + SetAsDefinitionOf
         + FindWhatReducesToIt
         + GetReduction
         + GetDefinition

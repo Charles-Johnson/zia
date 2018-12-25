@@ -16,114 +16,126 @@
 */
 
 use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction};
-use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use std::collections::HashSet;
+use writing::{
+    MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
+    SetAsDefinitionOf, SetDefinition, SetReduction,
+};
 
-pub struct AbstractConcept {
+pub struct AbstractConcept<T> {
+    concrete_concept: T,
     definition: Option<(usize, usize)>,
-    lefthand_of: Vec<usize>,
-    righthand_of: Vec<usize>,
     reduces_to: Option<usize>,
-    reduces_from: Vec<usize>,
 }
 
-impl Default for AbstractConcept {
-    fn default() -> AbstractConcept {
-        AbstractConcept {
+impl<T> Default for AbstractConcept<T>
+where
+    T: Default,
+{
+    fn default() -> AbstractConcept<T> {
+        AbstractConcept::<T> {
+            concrete_concept: T::default(),
             definition: None,
-            lefthand_of: Vec::new(),
-            righthand_of: Vec::new(),
             reduces_to: None,
-            reduces_from: Vec::new(),
         }
     }
 }
 
-impl GetDefinitionOf for AbstractConcept {
-    fn get_lefthand_of(&self) -> Vec<usize> {
-        self.lefthand_of.clone()
+impl<T> GetDefinitionOf for AbstractConcept<T>
+where
+    T: GetDefinitionOf,
+{
+    fn get_lefthand_of(&self) -> HashSet<usize> {
+        self.concrete_concept.get_lefthand_of()
     }
-    fn get_righthand_of(&self) -> Vec<usize> {
-        self.righthand_of.clone()
+    fn get_righthand_of(&self) -> HashSet<usize> {
+        self.concrete_concept.get_righthand_of()
     }
 }
 
-impl GetDefinition for AbstractConcept {
+impl<T> GetDefinition for AbstractConcept<T> {
     fn get_definition(&self) -> Option<(usize, usize)> {
         self.definition
     }
 }
 
-impl SetDefinition for AbstractConcept {
+impl<T> SetDefinition for AbstractConcept<T> {
     fn set_definition(&mut self, lefthand: usize, righthand: usize) {
         self.definition = Some((lefthand, righthand));
     }
+}
+
+impl<T> SetAsDefinitionOf for AbstractConcept<T>
+where
+    T: SetAsDefinitionOf,
+{
     fn add_as_lefthand_of(&mut self, lefthand: usize) {
-        self.lefthand_of.push(lefthand);
+        self.concrete_concept.add_as_lefthand_of(lefthand);
     }
     fn add_as_righthand_of(&mut self, righthand: usize) {
-        self.righthand_of.push(righthand);
+        self.concrete_concept.add_as_righthand_of(righthand);
     }
 }
 
-impl RemoveDefinition for AbstractConcept {
+impl<T> RemoveDefinition for AbstractConcept<T> {
     fn remove_definition(&mut self) {
         self.definition = None
     }
+}
+
+impl<T> RemoveAsDefinitionOf for AbstractConcept<T>
+where
+    T: RemoveAsDefinitionOf,
+{
     fn remove_as_lefthand_of(&mut self, definition: usize) {
-        if let Some(pos) = self.lefthand_of.iter().position(|x| *x == definition) {
-            self.lefthand_of.remove(pos);
-        } else {
-            panic!(
-                "Concept does not exist in lefthand_of concept number {}",
-                definition
-            );
-        }
+        self.concrete_concept.remove_as_lefthand_of(definition);
     }
     fn remove_as_righthand_of(&mut self, definition: usize) {
-        if let Some(pos) = self.righthand_of.iter().position(|x| *x == definition) {
-            self.righthand_of.remove(pos);
-        } else {
-            panic!(
-                "Concept number does not exist in righthand_of concept number {}",
-                definition
-            );
-        }
+        self.concrete_concept.remove_as_righthand_of(definition);
     }
 }
 
-impl GetReduction for AbstractConcept {
+impl<T> GetReduction for AbstractConcept<T> {
     fn get_reduction(&self) -> Option<usize> {
         self.reduces_to
     }
 }
 
-impl FindWhatReducesToIt for AbstractConcept {
-    fn find_what_reduces_to_it(&self) -> Vec<usize> {
-        self.reduces_from.clone()
+impl<T> FindWhatReducesToIt for AbstractConcept<T>
+where
+    T: FindWhatReducesToIt,
+{
+    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
+        self.concrete_concept.find_what_reduces_to_it()
     }
 }
 
-impl SetReduction for AbstractConcept {
+impl<T> SetReduction for AbstractConcept<T> {
     fn make_reduce_to(&mut self, concept: usize) {
         self.reduces_to = Some(concept);
     }
+}
+
+impl<T> MakeReduceFrom for AbstractConcept<T>
+where
+    T: MakeReduceFrom,
+{
     fn make_reduce_from(&mut self, concept: usize) {
-        self.reduces_from.push(concept);
+        self.concrete_concept.make_reduce_from(concept);
     }
 }
 
-impl RemoveReduction for AbstractConcept {
+impl<T> RemoveReduction for AbstractConcept<T> {
     fn make_reduce_to_none(&mut self) {
         self.reduces_to = None;
     }
+}
+
+impl<T> NoLongerReducesFrom for AbstractConcept<T>
+where
+    T: NoLongerReducesFrom,
+{
     fn no_longer_reduces_from(&mut self, concept: usize) {
-        if let Some(pos) = self.reduces_from.iter().position(|x| *x == concept) {
-            self.reduces_from.remove(pos);
-        } else {
-            panic!(
-                "Concept number does not think it reduces from concept number {}",
-                concept
-            );
-        }
+        self.concrete_concept.no_longer_reduces_from(concept);
     }
 }
