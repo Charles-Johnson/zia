@@ -15,7 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 use reading::{ConcreteReader, MaybeString};
-use writing::{MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, SetAsDefinitionOf};
+use writing::ConcreteWriter;
 
 pub struct StringConcept<T> {
     concrete_concept: T,
@@ -26,6 +26,13 @@ impl<T> ConcreteReader for StringConcept<T> {
     type C = T;
     fn read_concrete(&self) -> &T {
         &self.concrete_concept
+    }
+}
+
+impl<T> ConcreteWriter for StringConcept<T> {
+    type C = T;
+    fn write_concrete(&mut self) -> &mut T {
+        &mut self.concrete_concept
     }
 }
 
@@ -44,47 +51,5 @@ where
 impl<T> MaybeString for StringConcept<T> {
     fn get_string(&self) -> Option<String> {
         Some(self.string.clone())
-    }
-}
-
-impl<T> SetAsDefinitionOf for StringConcept<T>
-where
-    T: SetAsDefinitionOf,
-{
-    fn add_as_lefthand_of(&mut self, lefthand: usize) {
-        self.concrete_concept.add_as_lefthand_of(lefthand);
-    }
-    fn add_as_righthand_of(&mut self, righthand: usize) {
-        self.concrete_concept.add_as_righthand_of(righthand);
-    }
-}
-
-impl<T> RemoveAsDefinitionOf for StringConcept<T>
-where
-    T: RemoveAsDefinitionOf,
-{
-    fn remove_as_lefthand_of(&mut self, definition: usize) {
-        self.concrete_concept.remove_as_lefthand_of(definition)
-    }
-    fn remove_as_righthand_of(&mut self, definition: usize) {
-        self.concrete_concept.remove_as_righthand_of(definition)
-    }
-}
-
-impl<T> MakeReduceFrom for StringConcept<T>
-where
-    T: MakeReduceFrom,
-{
-    fn make_reduce_from(&mut self, concept: usize) {
-        self.concrete_concept.make_reduce_from(concept);
-    }
-}
-
-impl<T> NoLongerReducesFrom for StringConcept<T>
-where
-    T: NoLongerReducesFrom,
-{
-    fn no_longer_reduces_from(&mut self, concept: usize) {
-        self.concrete_concept.no_longer_reduces_from(concept);
     }
 }

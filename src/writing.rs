@@ -180,6 +180,16 @@ pub trait NoLongerReducesFrom {
     fn no_longer_reduces_from(&mut self, usize);
 }
 
+impl<T> NoLongerReducesFrom for T
+where
+    T: ConcreteWriter,
+    T::C: NoLongerReducesFrom,
+{
+    fn no_longer_reduces_from(&mut self, index: usize) {
+        self.write_concrete().no_longer_reduces_from(index);
+    }
+}
+
 pub trait SetDefinition {
     fn set_definition(&mut self, usize, usize);
 }
@@ -187,6 +197,19 @@ pub trait SetDefinition {
 pub trait SetAsDefinitionOf {
     fn add_as_lefthand_of(&mut self, usize);
     fn add_as_righthand_of(&mut self, usize);
+}
+
+impl<T> SetAsDefinitionOf for T
+where
+    T: ConcreteWriter,
+    T::C: SetAsDefinitionOf,
+{
+    fn add_as_lefthand_of(&mut self, index: usize) {
+        self.write_concrete().add_as_lefthand_of(index);
+    }
+    fn add_as_righthand_of(&mut self, index: usize) {
+        self.write_concrete().add_as_righthand_of(index);
+    }
 }
 
 pub trait SetReduction {
@@ -197,6 +220,16 @@ pub trait MakeReduceFrom {
     fn make_reduce_from(&mut self, usize);
 }
 
+impl<T> MakeReduceFrom for T
+where
+    T: ConcreteWriter,
+    T::C: MakeReduceFrom,
+{
+    fn make_reduce_from(&mut self, index: usize) {
+        self.write_concrete().make_reduce_from(index);
+    }
+}
+
 pub trait RemoveDefinition {
     fn remove_definition(&mut self);
 }
@@ -204,4 +237,22 @@ pub trait RemoveDefinition {
 pub trait RemoveAsDefinitionOf {
     fn remove_as_lefthand_of(&mut self, usize);
     fn remove_as_righthand_of(&mut self, usize);
+}
+
+impl<T> RemoveAsDefinitionOf for T
+where
+    T: ConcreteWriter,
+    T::C: RemoveAsDefinitionOf,
+{
+    fn remove_as_lefthand_of(&mut self, index: usize) {
+        self.write_concrete().remove_as_lefthand_of(index);
+    }
+    fn remove_as_righthand_of(&mut self, index: usize) {
+        self.write_concrete().remove_as_righthand_of(index);
+    }
+}
+
+pub trait ConcreteWriter {
+    type C;
+    fn write_concrete(&mut self) -> &mut Self::C;
 }

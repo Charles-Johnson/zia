@@ -16,10 +16,7 @@
 */
 
 use reading::{ConcreteReader, GetDefinition, GetReduction};
-use writing::{
-    MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
-    SetAsDefinitionOf, SetDefinition, SetReduction,
-};
+use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct AbstractConcept<T> {
     concrete_concept: T,
@@ -47,6 +44,13 @@ impl<T> ConcreteReader for AbstractConcept<T> {
     }
 }
 
+impl<T> ConcreteWriter for AbstractConcept<T> {
+    type C = T;
+    fn write_concrete(&mut self) -> &mut T {
+        &mut self.concrete_concept
+    }
+}
+
 impl<T> GetDefinition for AbstractConcept<T> {
     fn get_definition(&self) -> Option<(usize, usize)> {
         self.definition
@@ -59,33 +63,9 @@ impl<T> SetDefinition for AbstractConcept<T> {
     }
 }
 
-impl<T> SetAsDefinitionOf for AbstractConcept<T>
-where
-    T: SetAsDefinitionOf,
-{
-    fn add_as_lefthand_of(&mut self, lefthand: usize) {
-        self.concrete_concept.add_as_lefthand_of(lefthand);
-    }
-    fn add_as_righthand_of(&mut self, righthand: usize) {
-        self.concrete_concept.add_as_righthand_of(righthand);
-    }
-}
-
 impl<T> RemoveDefinition for AbstractConcept<T> {
     fn remove_definition(&mut self) {
         self.definition = None
-    }
-}
-
-impl<T> RemoveAsDefinitionOf for AbstractConcept<T>
-where
-    T: RemoveAsDefinitionOf,
-{
-    fn remove_as_lefthand_of(&mut self, definition: usize) {
-        self.concrete_concept.remove_as_lefthand_of(definition);
-    }
-    fn remove_as_righthand_of(&mut self, definition: usize) {
-        self.concrete_concept.remove_as_righthand_of(definition);
     }
 }
 
@@ -101,26 +81,8 @@ impl<T> SetReduction for AbstractConcept<T> {
     }
 }
 
-impl<T> MakeReduceFrom for AbstractConcept<T>
-where
-    T: MakeReduceFrom,
-{
-    fn make_reduce_from(&mut self, concept: usize) {
-        self.concrete_concept.make_reduce_from(concept);
-    }
-}
-
 impl<T> RemoveReduction for AbstractConcept<T> {
     fn make_reduce_to_none(&mut self) {
         self.reduces_to = None;
-    }
-}
-
-impl<T> NoLongerReducesFrom for AbstractConcept<T>
-where
-    T: NoLongerReducesFrom,
-{
-    fn no_longer_reduces_from(&mut self, concept: usize) {
-        self.concrete_concept.no_longer_reduces_from(concept);
     }
 }

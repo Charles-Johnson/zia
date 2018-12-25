@@ -22,10 +22,7 @@ use self::abstract_concept::AbstractConcept;
 use self::concrete_concept::ConcreteConcept;
 use self::string_concept::StringConcept;
 use reading::{ConcreteReader, GetDefinition, GetReduction, MaybeString};
-use writing::{
-    MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
-    SetAsDefinitionOf, SetDefinition, SetReduction,
-};
+use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 /// All the different types of concepts.
 pub enum Concept {
@@ -50,6 +47,17 @@ impl ConcreteReader for Concept {
     }
 }
 
+impl ConcreteWriter for Concept {
+    type C = ConcreteConcept;
+    fn write_concrete(&mut self) -> &mut ConcreteConcept {
+        match *self {
+            Concept::Abstract(ref mut c) => c.write_concrete(),
+            Concept::Concrete(ref mut c) => c,
+            Concept::String(ref mut c) => c.write_concrete(),
+        }
+    }
+}
+
 impl GetDefinition for Concept {
     fn get_definition(&self) -> Option<(usize, usize)> {
         match *self {
@@ -70,46 +78,12 @@ impl SetDefinition for Concept {
     }
 }
 
-impl SetAsDefinitionOf for Concept {
-    fn add_as_lefthand_of(&mut self, lefthand: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.add_as_lefthand_of(lefthand),
-            Concept::String(ref mut c) => c.add_as_lefthand_of(lefthand),
-            Concept::Concrete(ref mut c) => c.add_as_lefthand_of(lefthand),
-        }
-    }
-    fn add_as_righthand_of(&mut self, righthand: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.add_as_righthand_of(righthand),
-            Concept::String(ref mut c) => c.add_as_righthand_of(righthand),
-            Concept::Concrete(ref mut c) => c.add_as_righthand_of(righthand),
-        }
-    }
-}
-
 impl RemoveDefinition for Concept {
     fn remove_definition(&mut self) {
         match *self {
             Concept::Abstract(ref mut c) => c.remove_definition(),
             Concept::String(_) => panic!("String concepts do not have a definition to remove"),
             Concept::Concrete(_) => panic!("Concrete concepts do not have a definition to remove"),
-        }
-    }
-}
-
-impl RemoveAsDefinitionOf for Concept {
-    fn remove_as_lefthand_of(&mut self, definition: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.remove_as_lefthand_of(definition),
-            Concept::String(ref mut c) => c.remove_as_lefthand_of(definition),
-            Concept::Concrete(ref mut c) => c.remove_as_lefthand_of(definition),
-        }
-    }
-    fn remove_as_righthand_of(&mut self, definition: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.remove_as_righthand_of(definition),
-            Concept::String(ref mut c) => c.remove_as_righthand_of(definition),
-            Concept::Concrete(ref mut c) => c.remove_as_righthand_of(definition),
         }
     }
 }
@@ -134,32 +108,12 @@ impl SetReduction for Concept {
     }
 }
 
-impl MakeReduceFrom for Concept {
-    fn make_reduce_from(&mut self, concept: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.make_reduce_from(concept),
-            Concept::String(ref mut c) => c.make_reduce_from(concept),
-            Concept::Concrete(ref mut c) => c.make_reduce_from(concept),
-        }
-    }
-}
-
 impl RemoveReduction for Concept {
     fn make_reduce_to_none(&mut self) {
         match *self {
             Concept::Abstract(ref mut c) => c.make_reduce_to_none(),
             Concept::String(_) => panic!("String concepts have no reduction rule to remove"),
             Concept::Concrete(_) => panic!("Concrete concepts have no reduction rule to remove"),
-        };
-    }
-}
-
-impl NoLongerReducesFrom for Concept {
-    fn no_longer_reduces_from(&mut self, concept: usize) {
-        match *self {
-            Concept::Abstract(ref mut c) => c.no_longer_reduces_from(concept),
-            Concept::String(ref mut c) => c.no_longer_reduces_from(concept),
-            Concept::Concrete(ref mut c) => c.no_longer_reduces_from(concept),
         };
     }
 }
