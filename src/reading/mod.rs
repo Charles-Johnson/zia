@@ -18,9 +18,7 @@
 mod concepts;
 mod syntax;
 
-pub use self::concepts::{
-    FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString,
-};
+pub use self::concepts::*;
 pub use self::syntax::*;
 use constants::LABEL;
 use std::{collections::HashSet, fmt};

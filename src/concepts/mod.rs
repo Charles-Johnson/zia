@@ -21,8 +21,7 @@ mod string_concept;
 use self::abstract_concept::AbstractConcept;
 use self::concrete_concept::ConcreteConcept;
 use self::string_concept::StringConcept;
-use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction, MaybeString};
-use std::collections::HashSet;
+use reading::{ConcreteReader, GetDefinition, GetReduction, MaybeString};
 use writing::{
     MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
     SetAsDefinitionOf, SetDefinition, SetReduction,
@@ -40,29 +39,23 @@ pub enum Concept {
     String(StringConcept<ConcreteConcept>),
 }
 
+impl ConcreteReader for Concept {
+    type C = ConcreteConcept;
+    fn read_concrete(&self) -> &ConcreteConcept {
+        match *self {
+            Concept::Abstract(ref c) => c.read_concrete(),
+            Concept::Concrete(ref c) => c,
+            Concept::String(ref c) => c.read_concrete(),
+        }
+    }
+}
+
 impl GetDefinition for Concept {
     fn get_definition(&self) -> Option<(usize, usize)> {
         match *self {
             Concept::Abstract(ref c) => c.get_definition(),
             Concept::String(_) => None,
             Concept::Concrete(_) => None,
-        }
-    }
-}
-
-impl GetDefinitionOf for Concept {
-    fn get_righthand_of(&self) -> HashSet<usize> {
-        match *self {
-            Concept::Abstract(ref c) => c.get_righthand_of(),
-            Concept::String(ref c) => c.get_righthand_of(),
-            Concept::Concrete(ref c) => c.get_righthand_of(),
-        }
-    }
-    fn get_lefthand_of(&self) -> HashSet<usize> {
-        match *self {
-            Concept::Abstract(ref c) => c.get_lefthand_of(),
-            Concept::String(ref c) => c.get_lefthand_of(),
-            Concept::Concrete(ref c) => c.get_lefthand_of(),
         }
     }
 }
@@ -127,16 +120,6 @@ impl GetReduction for Concept {
             Concept::Abstract(ref c) => c.get_reduction(),
             Concept::String(_) => None,
             Concept::Concrete(_) => None,
-        }
-    }
-}
-
-impl FindWhatReducesToIt for Concept {
-    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
-        match *self {
-            Concept::Abstract(ref c) => c.find_what_reduces_to_it(),
-            Concept::String(ref c) => c.find_what_reduces_to_it(),
-            Concept::Concrete(ref c) => c.find_what_reduces_to_it(),
         }
     }
 }

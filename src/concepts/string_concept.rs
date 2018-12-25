@@ -14,13 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use reading::{FindWhatReducesToIt, GetDefinitionOf, MaybeString};
-use std::collections::HashSet;
+use reading::{ConcreteReader, MaybeString};
 use writing::{MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, SetAsDefinitionOf};
 
 pub struct StringConcept<T> {
     concrete_concept: T,
     string: String,
+}
+
+impl<T> ConcreteReader for StringConcept<T> {
+    type C = T;
+    fn read_concrete(&self) -> &T {
+        &self.concrete_concept
+    }
 }
 
 impl<T> From<String> for StringConcept<T>
@@ -38,27 +44,6 @@ where
 impl<T> MaybeString for StringConcept<T> {
     fn get_string(&self) -> Option<String> {
         Some(self.string.clone())
-    }
-}
-
-impl<T> FindWhatReducesToIt for StringConcept<T>
-where
-    T: FindWhatReducesToIt,
-{
-    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
-        self.concrete_concept.find_what_reduces_to_it()
-    }
-}
-
-impl<T> GetDefinitionOf for StringConcept<T>
-where
-    T: GetDefinitionOf,
-{
-    fn get_lefthand_of(&self) -> HashSet<usize> {
-        self.concrete_concept.get_lefthand_of()
-    }
-    fn get_righthand_of(&self) -> HashSet<usize> {
-        self.concrete_concept.get_righthand_of()
     }
 }
 

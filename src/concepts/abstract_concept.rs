@@ -15,8 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-use reading::{FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetReduction};
-use std::collections::HashSet;
+use reading::{ConcreteReader, GetDefinition, GetReduction};
 use writing::{
     MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
     SetAsDefinitionOf, SetDefinition, SetReduction,
@@ -41,15 +40,10 @@ where
     }
 }
 
-impl<T> GetDefinitionOf for AbstractConcept<T>
-where
-    T: GetDefinitionOf,
-{
-    fn get_lefthand_of(&self) -> HashSet<usize> {
-        self.concrete_concept.get_lefthand_of()
-    }
-    fn get_righthand_of(&self) -> HashSet<usize> {
-        self.concrete_concept.get_righthand_of()
+impl<T> ConcreteReader for AbstractConcept<T> {
+    type C = T;
+    fn read_concrete(&self) -> &T {
+        &self.concrete_concept
     }
 }
 
@@ -98,15 +92,6 @@ where
 impl<T> GetReduction for AbstractConcept<T> {
     fn get_reduction(&self) -> Option<usize> {
         self.reduces_to
-    }
-}
-
-impl<T> FindWhatReducesToIt for AbstractConcept<T>
-where
-    T: FindWhatReducesToIt,
-{
-    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
-        self.concrete_concept.find_what_reduces_to_it()
     }
 }
 
