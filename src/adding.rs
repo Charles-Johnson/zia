@@ -16,12 +16,12 @@
 */
 
 use constants::LABEL;
+use errors::{ZiaError, ZiaResult};
 use reading::{FindDefinition, MaybeString, MightExpand};
 use std::fmt;
 use writing::{
     DeleteReduction, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, InsertDefinition,
-    MaybeConcept, RemoveReduction, SetDefinition, SetReduction, UpdateNormalForm, ZiaError,
-    ZiaResult,
+    MaybeConcept, RemoveReduction, SetDefinition, SetReduction, UpdateNormalForm
 };
 
 pub trait ExecuteReduction<T>

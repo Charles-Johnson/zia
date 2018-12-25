@@ -19,7 +19,7 @@ pub use reading::{
     ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
 };
 use reading::{Container, GetConceptOfLabel};
-pub use utils::{ZiaError, ZiaResult};
+pub use errors::{ZiaError, ZiaResult};
 pub trait Unlabeller<T>
 where
     T: GetReduction + RemoveReduction + GetDefinition + GetDefinitionOf,

@@ -15,16 +15,34 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+/// Traits for adding concepts to the context.
 mod adding;
+
+/// Abstract syntax tree. Relates syntax to concepts.
 mod ast;
+
+/// The units that make up the context. Defined in terms of their relationship with other concepts.
 mod concepts;
+
+/// Integers that represent concrete concepts.
 mod constants;
+
+/// The container of concepts that coordinates adding, reading, writing and removing of concepts.
 mod context;
+
+/// The errors that the users could make when making commands.
+mod errors;
+
+/// Traits for reading concepts within the context.
 mod reading;
+
+/// Traits for removing concepts from the context.
 mod removing;
-mod token;
+
+/// Traits for the context to translate strings into abstract syntax trees.
 mod translating;
-mod utils;
+
+/// Traits for writing concepts within the context.
 mod writing;
 
 pub use adding::ContextMaker;
@@ -33,6 +51,8 @@ pub use ast::AbstractSyntaxTree;
 use concepts::Concept;
 use constants::{DEFINE, REDUCTION};
 use context::Context as GenericContext;
+use errors::ZiaResult;
+pub use errors::ZiaError;
 use reading::{
     DisplayJoint, Expander, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
     GetReduction, MaybeConcept, MaybeString, Pair, Reduce, SyntaxFactory,
@@ -40,8 +60,6 @@ use reading::{
 use removing::DefinitionDeleter;
 use std::fmt;
 use translating::SyntaxConverter;
-pub use utils::ZiaError;
-use utils::ZiaResult;
 use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 /// A container for reading and writing `Concept`s. 
