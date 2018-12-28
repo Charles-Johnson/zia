@@ -65,8 +65,8 @@ are commands like `i (-> (i j))`.
 
 API  
 
-The current implementation exposes the `Context` and `AbstractSyntaxTree` type that can be used in an interface such as 
-[IZia](https://github.com/Charles-Johnson/izia). Importing the following traits allows the corresponding methods to be called with `Context` (use `execute<AbstractSyntaxTree>`).
+The current implementation exposes the `Context` type that can be used in an interface such as 
+[IZia](https://github.com/Charles-Johnson/izia). Importing the following traits allows the corresponding methods to be called with `Context`.
 
 ```
 trait ContextMaker<T> {
@@ -79,7 +79,7 @@ trait ContextMaker<T> {
 }
 
 trait Execute<T> {
-    fn execute<U>(&mut self, command: &str) -> String { 
+    fn execute(&mut self, command: &str) -> String { 
 		// Executes the commands given by the user. The command is converted into an abstract 
 		// syntax tree using the labels of built-in concepts. This abstract syntax tree is then 
 		// parsed and appropriate operations are performed.
