@@ -18,8 +18,8 @@ mod abstract_concept;
 mod concrete_concept;
 mod string_concept;
 
-use self::abstract_concept::AbstractConcept;
-use self::concrete_concept::ConcreteConcept;
+pub use self::abstract_concept::AbstractConcept;
+pub use self::concrete_concept::ConcreteConcept;
 use self::string_concept::StringConcept;
 use reading::{ConcreteReader, GetDefinition, GetReduction, MaybeString};
 use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
@@ -34,6 +34,18 @@ pub enum Concept {
     /// A string concept cannot be further reduced or defined as a composition. It is associated
     /// with a `String` value by the `MaybeString` trait.
     String(StringConcept<ConcreteConcept>),
+}
+
+impl From<AbstractConcept<ConcreteConcept>> for Concept {
+    fn from(ac: AbstractConcept<ConcreteConcept>) -> Concept {
+        Concept::Abstract(ac)
+    }
+}
+
+impl From<ConcreteConcept> for Concept {
+    fn from(cc: ConcreteConcept) -> Concept {
+        Concept::Concrete(cc)
+    }
 }
 
 impl ConcreteReader for Concept {
@@ -121,12 +133,6 @@ impl RemoveReduction for Concept {
 impl From<String> for Concept {
     fn from(string: String) -> Concept {
         Concept::String(string.into())
-    }
-}
-
-impl Default for Concept {
-    fn default() -> Concept {
-        Concept::Abstract(AbstractConcept::default())
     }
 }
 

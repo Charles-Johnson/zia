@@ -46,19 +46,18 @@ mod translating;
 mod writing;
 
 pub use adding::ContextMaker;
-use adding::{ConceptMaker, Container, ExecuteReduction};
+use adding::{ConceptMaker, Container, ExecuteReduction, FindOrInsertDefinition, Labeller};
 pub use ast::AbstractSyntaxTree;
-use concepts::Concept;
+use concepts::{AbstractConcept, Concept, ConcreteConcept};
 use constants::{DEFINE, REDUCTION};
 use context::Context as GenericContext;
 pub use errors::ZiaError;
 use errors::ZiaResult;
 use reading::{
     DisplayJoint, Expander, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
-    GetReduction, MaybeConcept, MaybeString, Pair, Reduce, SyntaxFactory,
+    GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, Reduce, SyntaxFactory,
 };
 use removing::DefinitionDeleter;
-use std::fmt;
 use translating::SyntaxConverter;
 use writing::{
     MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
@@ -73,7 +72,8 @@ pub trait Execute<T>
 where
     Self: Call<T> + SyntaxConverter<T>,
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -87,14 +87,10 @@ where
         + GetDefinitionOf
         + GetReduction
         + FindWhatReducesToIt,
+    Self::S: Container + Pair<Self::S> + Clone + SyntaxFactory + DisplayJoint,
 {
-    fn execute<
-        U: MaybeConcept + Container + SyntaxFactory + Clone + fmt::Display + Pair<U> + DisplayJoint,
-    >(
-        &mut self,
-        command: &str,
-    ) -> String {
-        let ast = match self.ast_from_expression::<U>(command) {
+    fn execute(&mut self, command: &str) -> String {
+        let ast = match self.ast_from_expression(command) {
             Ok(a) => a,
             Err(e) => return e.to_string(),
         };
@@ -107,8 +103,9 @@ where
 
 impl<S, T> Execute<T> for S
 where
-    T: Default
-        + From<String>
+    T: From<String>
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -123,7 +120,20 @@ where
         + GetReduction
         + FindWhatReducesToIt,
     S: Call<T> + SyntaxConverter<T>,
+    S::S: Container + Pair<S::S> + Clone + SyntaxFactory + DisplayJoint,
 {
+}
+
+impl FindOrInsertDefinition<Concept> for Context {
+    type A = AbstractConcept<ConcreteConcept>;
+}
+
+impl Labeller<Concept> for Context {
+    type C = ConcreteConcept;
+}
+
+impl ConceptMaker<Concept> for Context {
+    type S = AbstractSyntaxTree;
 }
 
 /// Calling a program expressed as abstract syntax to read or write contained concepts.  
@@ -131,7 +141,8 @@ pub trait Call<T>
 where
     Self: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -145,13 +156,9 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
+    Self::S: Container + Pair<Self::S> + Clone + SyntaxFactory + DisplayJoint,
 {
-    fn call<
-        U: MaybeConcept + SyntaxFactory + Clone + Container + DisplayJoint + Pair<U> + fmt::Display,
-    >(
-        &mut self,
-        ast: &U,
-    ) -> ZiaResult<String> {
+    fn call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         match ast.get_expansion() {
             Some((ref left, ref right)) => self.call_pair(left, right),
             None => {
@@ -168,13 +175,7 @@ where
             }
         }
     }
-    fn call_pair<
-        U: MaybeConcept + Clone + DisplayJoint + SyntaxFactory + Pair<U> + Container + fmt::Display,
-    >(
-        &mut self,
-        left: &U,
-        right: &U,
-    ) -> ZiaResult<String> {
+    fn call_pair(&mut self, left: &Self::S, right: &Self::S) -> ZiaResult<String> {
         match right.get_concept() {
             Some(c) => match c {
                 REDUCTION => Ok(self.recursively_reduce(left).to_string()),
@@ -182,7 +183,7 @@ where
                 _ => {
                     let right_reduction = self.read_concept(c).get_reduction();
                     if let Some(r) = right_reduction {
-                        let ast = self.to_ast::<U>(r);
+                        let ast = self.to_ast(r);
                         self.call_pair(left, &ast)
                     } else {
                         self.call_as_righthand(left, right)
@@ -192,12 +193,7 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
-    fn try_expanding_then_call<
-        U: MaybeConcept + DisplayJoint + Pair<U> + SyntaxFactory + Clone + Container + fmt::Display,
-    >(
-        &mut self,
-        ast: &U,
-    ) -> ZiaResult<String> {
+    fn try_expanding_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         let expansion = &self.expand(ast);
         if expansion != ast {
             self.call(expansion)
@@ -205,12 +201,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-    fn try_reducing_then_call<
-        U: MaybeConcept + Clone + SyntaxFactory + Pair<U> + DisplayJoint + Container + fmt::Display,
-    >(
-        &mut self,
-        ast: &U,
-    ) -> ZiaResult<String> {
+    fn try_reducing_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         let normal_form = &self.recursively_reduce(ast);
         if normal_form != ast {
             self.call(normal_form)
@@ -218,37 +209,29 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
-    fn call_as_righthand<
-        U: MaybeConcept + Container + Pair<U> + DisplayJoint + fmt::Display + Clone + SyntaxFactory,
-    >(
-        &mut self,
-        left: &U,
-        right: &U,
-    ) -> ZiaResult<String> {
+    fn call_as_righthand(&mut self, left: &Self::S, right: &Self::S) -> ZiaResult<String> {
         match right.get_expansion() {
             Some((ref rightleft, ref rightright)) => {
-                self.match_righthand_pair::<U>(left, rightleft, rightright)
+                self.match_righthand_pair(left, rightleft, rightright)
             }
             None => Err(ZiaError::NotAProgram),
         }
     }
-    fn match_righthand_pair<
-        U: MaybeConcept + Container + Pair<U> + fmt::Display + Clone + DisplayJoint + SyntaxFactory,
-    >(
+    fn match_righthand_pair(
         &mut self,
-        left: &U,
-        rightleft: &U,
-        rightright: &U,
+        left: &Self::S,
+        rightleft: &Self::S,
+        rightright: &Self::S,
     ) -> ZiaResult<String> {
         match rightleft.get_concept() {
             Some(c) => match c {
-                REDUCTION => self.execute_reduction::<U>(left, rightright),
-                DEFINE => self.execute_definition::<U>(left, rightright),
+                REDUCTION => self.execute_reduction(left, rightright),
+                DEFINE => self.execute_definition(left, rightright),
                 _ => {
                     let rightleft_reduction = self.read_concept(c).get_reduction();
                     if let Some(r) = rightleft_reduction {
-                        let ast = self.to_ast::<U>(r);
-                        self.match_righthand_pair::<U>(left, &ast, rightright)
+                        let ast = self.to_ast::<Self::S>(r);
+                        self.match_righthand_pair(left, &ast, rightright)
                     } else {
                         Err(ZiaError::NotAProgram)
                     }
@@ -263,7 +246,8 @@ impl<S, T> Call<T> for S
 where
     S: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -277,6 +261,7 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
+    S::S: Container + Pair<S::S> + Clone + SyntaxFactory + DisplayJoint,
 {
 }
 
@@ -284,7 +269,8 @@ where
 pub trait Definer<T>
 where
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -299,24 +285,17 @@ where
         + GetDefinitionOf
         + MaybeString,
     Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
+    Self::S: Pair<Self::S> + Container + MightExpand<Self::S>,
 {
-    fn execute_definition<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
-        &mut self,
-        new: &U,
-        old: &U,
-    ) -> ZiaResult<String> {
+    fn execute_definition(&mut self, new: &Self::S, old: &Self::S) -> ZiaResult<String> {
         if old.contains(new) {
             Err(ZiaError::InfiniteDefinition)
         } else {
-            try!(self.define::<U>(old, new));
+            try!(self.define(old, new));
             Ok("".to_string())
         }
     }
-    fn define<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
-        &mut self,
-        before: &U,
-        after: &U,
-    ) -> ZiaResult<()> {
+    fn define(&mut self, before: &Self::S, after: &Self::S) -> ZiaResult<()> {
         if after.get_expansion().is_some() {
             Err(ZiaError::BadDefinition)
         } else {
@@ -356,12 +335,7 @@ where
             }
         }
     }
-    fn redefine<U: Container + MaybeConcept + fmt::Display>(
-        &mut self,
-        concept: usize,
-        left: &U,
-        right: &U,
-    ) -> ZiaResult<()> {
+    fn redefine(&mut self, concept: usize, left: &Self::S, right: &Self::S) -> ZiaResult<()> {
         if let Some((left_concept, right_concept)) = self.read_concept(concept).get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
             self.relabel(right_concept, &right.to_string())
@@ -376,11 +350,11 @@ where
         self.unlabel(concept);
         self.label(concept, new_label)
     }
-    fn define_new_syntax<U: Container + MaybeConcept + Pair<U> + fmt::Display>(
+    fn define_new_syntax(
         &mut self,
         syntax: &str,
-        left: &U,
-        right: &U,
+        left: &Self::S,
+        right: &Self::S,
     ) -> ZiaResult<()> {
         let definition_concept =
             if let (Some(l), Some(r)) = (left.get_concept(), right.get_concept()) {
@@ -388,7 +362,7 @@ where
             } else {
                 None
             };
-        let new_syntax_tree = U::from_pair(syntax, definition_concept, left, right);
+        let new_syntax_tree = Self::S::from_pair(syntax, definition_concept, left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
     }
@@ -397,7 +371,8 @@ where
 impl<S, T> Definer<T> for S
 where
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + RemoveDefinition
         + RemoveAsDefinitionOf
         + SetReduction
@@ -412,5 +387,6 @@ where
         + GetDefinitionOf
         + MaybeString,
     S: ConceptMaker<T> + GetLabel<T> + DefinitionDeleter<T>,
+    S::S: Pair<S::S> + Container,
 {
 }

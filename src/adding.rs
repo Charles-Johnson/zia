@@ -29,9 +29,10 @@ pub trait ExecuteReduction<T>
 where
     Self: ConceptMaker<T> + DeleteReduction<T>,
     T: SetReduction
+        + From<Self::C>
+        + From<Self::A>
         + MakeReduceFrom
         + GetDefinitionOf
-        + Default
         + From<String>
         + RemoveReduction
         + NoLongerReducesFrom
@@ -40,20 +41,17 @@ where
         + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
+    Self::S: Container,
 {
-    fn execute_reduction<U: Container + MaybeConcept + fmt::Display>(
-        &mut self,
-        syntax: &U,
-        normal_form: &U,
-    ) -> ZiaResult<String> {
+    fn execute_reduction(&mut self, syntax: &Self::S, normal_form: &Self::S) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
             Err(ZiaError::ExpandingReduction)
         } else if syntax == normal_form {
-            try!(self.try_removing_reduction::<U>(syntax));
+            try!(self.try_removing_reduction::<Self::S>(syntax));
             Ok("".to_string())
         } else {
-            let syntax_concept = try!(self.concept_from_ast::<U>(syntax));
-            let normal_form_concept = try!(self.concept_from_ast::<U>(normal_form));
+            let syntax_concept = try!(self.concept_from_ast(syntax));
+            let normal_form_concept = try!(self.concept_from_ast(normal_form));
             try!(self.update_normal_form(syntax_concept, normal_form_concept));
             Ok("".to_string())
         }
@@ -66,7 +64,8 @@ where
     T: SetReduction
         + MakeReduceFrom
         + GetDefinitionOf
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + From<String>
         + RemoveReduction
         + NoLongerReducesFrom
@@ -75,6 +74,7 @@ where
         + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
+    Self::S: Container,
 {
 }
 
@@ -96,7 +96,8 @@ impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
 pub trait ConceptMaker<T>
 where
     T: From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + SetReduction
         + MakeReduceFrom
         + GetDefinitionOf
@@ -106,17 +107,16 @@ where
         + MaybeString
         + GetReduction,
     Self: Labeller<T> + GetNormalForm<T>,
+    Self::S: MightExpand<Self::S> + MaybeConcept + fmt::Display,
 {
-    fn concept_from_ast<U: MaybeConcept + MightExpand<U> + fmt::Display>(
-        &mut self,
-        ast: &U,
-    ) -> ZiaResult<usize> {
+    type S: MightExpand<Self::S> + MaybeConcept + fmt::Display;
+    fn concept_from_ast(&mut self, ast: &Self::S) -> ZiaResult<usize> {
         if let Some(c) = ast.get_concept() {
             Ok(c)
         } else {
             let string = &ast.to_string();
             match ast.get_expansion() {
-                None => self.new_labelled_abstract(string),
+                None => self.new_labelled_default(string),
                 Some((ref left, ref right)) => {
                     let mut leftc = try!(self.concept_from_ast(left));
                     let mut rightc = try!(self.concept_from_ast(right));
@@ -131,29 +131,14 @@ where
     }
 }
 
-impl<S, T> ConceptMaker<T> for S
-where
-    T: From<String>
-        + Default
-        + GetDefinitionOf
-        + SetReduction
-        + MakeReduceFrom
-        + GetDefinition
-        + SetDefinition
-        + SetAsDefinitionOf
-        + MaybeString
-        + GetReduction,
-    S: Labeller<T> + GetNormalForm<T>,
-{
-}
-
 /// Preparing a context by labelling concrete concepts.
 pub trait ContextMaker<T>
 where
     Self: Labeller<T> + Default,
     T: GetDefinitionOf
         + From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + SetReduction
         + MakeReduceFrom
         + GetDefinition
@@ -174,7 +159,8 @@ where
     S: Labeller<T> + Default,
     T: GetDefinitionOf
         + From<String>
-        + Default
+        + From<Self::C>
+        + From<Self::A>
         + SetReduction
         + MakeReduceFrom
         + GetDefinition
@@ -190,75 +176,59 @@ where
     T: SetReduction
         + MakeReduceFrom
         + From<String>
-        + Default
         + GetDefinitionOf
         + SetDefinition
         + SetAsDefinitionOf
         + GetReduction
         + GetDefinition
         + GetReduction
-        + MaybeString,
+        + MaybeString
+        + From<Self::C>
+        + From<Self::A>,
     Self: StringMaker<T> + FindOrInsertDefinition<T> + UpdateNormalForm<T>,
 {
+    type C: Default;
     fn label(&mut self, concept: usize, string: &str) -> ZiaResult<()> {
         let definition = try!(self.find_or_insert_definition(LABEL, concept));
         let string_id = self.new_string(string);
         self.update_normal_form(definition, string_id)
     }
-    fn new_labelled_abstract(&mut self, string: &str) -> ZiaResult<usize> {
-        let new_abstract = self.new_abstract();
-        try!(self.label(new_abstract, string));
-        Ok(new_abstract)
+    fn new_labelled_default(&mut self, string: &str) -> ZiaResult<usize> {
+        let new_default = self.new_default::<Self::A>();
+        try!(self.label(new_default, string));
+        Ok(new_default)
     }
     fn setup(&mut self) -> ZiaResult<()> {
-        self.new_abstract(); // for LABEL
-        let define_concept = self.new_abstract(); // for DEFINE;
-        let reduction_concept = self.new_abstract(); // for REDUCTION
+        self.new_default::<Self::C>(); // for LABEL
+        let define_concept = self.new_default::<Self::C>(); // for DEFINE;
+        let reduction_concept = self.new_default::<Self::C>(); // for REDUCTION
         try!(self.label(define_concept, ":=")); //two more ids occupied
         self.label(reduction_concept, "->") //two more ids occupied
     }
 }
 
-impl<S, T> Labeller<T> for S
-where
-    T: SetReduction
-        + MakeReduceFrom
-        + From<String>
-        + Default
-        + GetDefinitionOf
-        + SetDefinition
-        + SetAsDefinitionOf
-        + GetReduction
-        + GetDefinition
-        + GetReduction
-        + MaybeString,
-    S: StringMaker<T> + FindOrInsertDefinition<T> + UpdateNormalForm<T>,
-{
-}
-
 pub trait FindOrInsertDefinition<T>
 where
-    T: Default + GetDefinition + GetReduction + SetDefinition + SetAsDefinitionOf + GetDefinitionOf,
-    Self: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
+    T: From<Self::A>
+        + GetDefinition
+        + GetReduction
+        + SetDefinition
+        + SetAsDefinitionOf
+        + GetDefinitionOf,
+    Self: DefaultMaker<T> + InsertDefinition<T> + FindDefinition<T>,
 {
+    type A: Default;
     fn find_or_insert_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<usize> {
         let pair = self.find_definition(lefthand, righthand);
         match pair {
             None => {
-                let definition = self.new_abstract();
+                let definition = self.new_default::<Self::A>();
                 try!(self.insert_definition(definition, lefthand, righthand));
                 Ok(definition)
             }
             Some(def) => Ok(def),
         }
     }
-}
-
-impl<S, T> FindOrInsertDefinition<T> for S
-where
-    T: Default + GetDefinition + GetReduction + SetDefinition + SetAsDefinitionOf + GetDefinitionOf,
-    S: AbstractMaker<T> + InsertDefinition<T> + FindDefinition<T>,
-{
 }
 
 pub trait StringMaker<T>
@@ -281,23 +251,17 @@ where
 {
 }
 
-pub trait AbstractMaker<T>
+pub trait DefaultMaker<T>
 where
-    T: Default,
     Self: ConceptAdder<T>,
 {
-    fn new_abstract(&mut self) -> usize {
-        let concept = T::default();
+    fn new_default<V: Default + Into<T>>(&mut self) -> usize {
+        let concept: T = V::default().into();
         self.add_concept(concept)
     }
 }
 
-impl<S, T> AbstractMaker<T> for S
-where
-    T: Default,
-    S: ConceptAdder<T>,
-{
-}
+impl<S, T> DefaultMaker<T> for S where S: ConceptAdder<T> {}
 
 pub trait StringAdder {
     fn add_string(&mut self, usize, &str);
