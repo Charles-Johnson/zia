@@ -106,7 +106,7 @@ where
                 return Err(ZiaError::RedundantReduction);
             }
         }
-        self.write_concept(concept).make_reduce_to(normal_form);
+        try!(self.write_concept(concept).make_reduce_to(normal_form));
         self.write_concept(normal_form).make_reduce_from(concept);
         Ok(())
     }
@@ -208,7 +208,7 @@ where
 }
 
 pub trait SetReduction {
-    fn make_reduce_to(&mut self, usize);
+    fn make_reduce_to(&mut self, usize) -> ZiaResult<()>;
 }
 
 pub trait MakeReduceFrom {

@@ -78,8 +78,9 @@ impl<T> GetReduction for AbstractConcept<T> {
 }
 
 impl<T> SetReduction for AbstractConcept<T> {
-    fn make_reduce_to(&mut self, concept: usize) {
+    fn make_reduce_to(&mut self, concept: usize) -> ZiaResult<()> {
         self.reduces_to = Some(concept);
+		Ok(())
     }
 }
 

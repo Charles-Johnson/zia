@@ -111,11 +111,10 @@ impl GetReduction for Concept {
 }
 
 impl SetReduction for Concept {
-    fn make_reduce_to(&mut self, concept: usize) {
+    fn make_reduce_to(&mut self, concept: usize) -> ZiaResult<()> {
         match *self {
             Concept::Abstract(ref mut c) => c.make_reduce_to(concept),
-            Concept::String(_) => panic!("String concepts cannot have reduction rules"),
-            Concept::Concrete(_) => panic!("Concrete concepts cannot have reduction rules"),
+            _ => Err(ZiaError::ConcreteReduction),
         }
     }
 }
