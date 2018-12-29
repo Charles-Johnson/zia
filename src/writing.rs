@@ -25,7 +25,7 @@ where
     T: GetReduction + RemoveReduction + NoLongerReducesFrom + GetDefinition + GetDefinitionOf,
     Self: DeleteReduction<T> + GetConceptOfLabel<T>,
 {
-    fn unlabel(&mut self, concept: usize) {
+    fn unlabel(&mut self, concept: usize) -> ZiaResult<()>{
         match self.get_concept_of_label(concept) {
             None => panic!("No label to remove"),
             Some(d) => self.delete_reduction(d),
@@ -47,20 +47,20 @@ where
 {
     fn try_removing_reduction<U: MaybeConcept>(&mut self, syntax: &U) -> ZiaResult<()> {
         if let Some(c) = syntax.get_concept() {
-            self.delete_reduction(c);
-            Ok(())
+            self.delete_reduction(c)
         } else {
             Err(ZiaError::RedundantReduction)
         }
     }
-    fn delete_reduction(&mut self, concept: usize) {
+    fn delete_reduction(&mut self, concept: usize) -> ZiaResult<()> {
         match self.read_concept(concept).get_reduction() {
-            None => panic!("No normal form to delete"),
+            None => Err(ZiaError::RedundantReduction),
             Some(n) => {
                 self.write_concept(n).no_longer_reduces_from(concept);
                 self.write_concept(concept).make_reduce_to_none();
+				Ok(())
             }
-        };
+        }
     }
 }
 

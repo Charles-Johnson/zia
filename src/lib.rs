@@ -346,7 +346,7 @@ where
         }
     }
     fn relabel(&mut self, concept: usize, new_label: &str) -> ZiaResult<()> {
-        self.unlabel(concept);
+        try!(self.unlabel(concept));
         self.label(concept, new_label)
     }
     fn define_new_syntax(

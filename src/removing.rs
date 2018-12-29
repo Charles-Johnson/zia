@@ -40,18 +40,18 @@ where
 			None => Err(ZiaError::RedundantDefinitionRemoval),
 			Some((left, right)) => {
 				self.delete_definition(concept, left, right);
-				self.try_delete_concept(concept);
-	            self.try_delete_concept(left);
-            	self.try_delete_concept(right);
-				Ok(())
+				try!(self.try_delete_concept(concept));
+	            try!(self.try_delete_concept(left));
+            	self.try_delete_concept(right)
 			},
 		}
     }
-    fn try_delete_concept(&mut self, concept: usize) {
+    fn try_delete_concept(&mut self, concept: usize) -> ZiaResult<()> {
         if self.is_disconnected(concept) {
-            self.unlabel(concept);
+            try!(self.unlabel(concept));
             self.remove_concept(concept);
         }
+		Ok(())
     }
 }
 
