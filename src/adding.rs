@@ -107,7 +107,6 @@ where
         + MaybeString
         + GetReduction,
     Self: Labeller<T> + GetNormalForm<T>,
-    Self::S: MightExpand<Self::S> + MaybeConcept + fmt::Display,
 {
     type S: MightExpand<Self::S> + MaybeConcept + fmt::Display;
     fn concept_from_ast(&mut self, ast: &Self::S) -> ZiaResult<usize> {

@@ -140,8 +140,8 @@ where
         } else {
             try!(self.check_reductions(definition, lefthand));
             try!(self.check_reductions(definition, righthand));
-            self.write_concept(definition)
-                .set_definition(lefthand, righthand);
+            try!(self.write_concept(definition)
+                .set_definition(lefthand, righthand));
             self.write_concept(lefthand).add_as_lefthand_of(definition);
             self.write_concept(righthand)
                 .add_as_righthand_of(definition);
@@ -191,7 +191,7 @@ where
 }
 
 pub trait SetDefinition {
-    fn set_definition(&mut self, usize, usize);
+    fn set_definition(&mut self, usize, usize) -> ZiaResult<()>;
 }
 
 pub trait SetAsDefinitionOf {

@@ -18,6 +18,7 @@ mod abstract_concept;
 mod concrete_concept;
 mod string_concept;
 
+use errors::{ZiaError, ZiaResult};
 pub use self::abstract_concept::AbstractConcept;
 pub use self::concrete_concept::ConcreteConcept;
 use self::string_concept::StringConcept;
@@ -81,11 +82,10 @@ impl GetDefinition for Concept {
 }
 
 impl SetDefinition for Concept {
-    fn set_definition(&mut self, lefthand: usize, righthand: usize) {
+    fn set_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<()> {
         match *self {
             Concept::Abstract(ref mut c) => c.set_definition(lefthand, righthand),
-            Concept::String(_) => panic!("String concepts do not have a definition to set"),
-            Concept::Concrete(_) => panic!("Concrete concepts do not have a definition to set"),
+            _ => Err(ZiaError::SettingDefinitionOfConcrete),
         }
     }
 }

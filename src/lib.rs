@@ -285,7 +285,7 @@ where
         + GetDefinitionOf
         + MaybeString,
     Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
-    Self::S: Pair<Self::S> + Container + MightExpand<Self::S>,
+    Self::S: Pair<Self::S> + Container,
 {
     fn execute_definition(&mut self, new: &Self::S, old: &Self::S) -> ZiaResult<String> {
         if old.contains(new) {

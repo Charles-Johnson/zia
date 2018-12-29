@@ -84,10 +84,3 @@ fn lazy_reduction_evaluation() {
     assert_eq!(cont.execute("c (b d)"), "");
     assert_eq!(cont.execute("c b"), "d");
 }
-#[test]
-fn builtin_concept_definition() {
-    let mut cont = Context::new();
-    assert_eq!(cont.execute(":= (:= (a b))"), "");
-    assert_eq!(cont.execute("c (:= (d :=))"), "");
-    assert_eq!(cont.execute("c"), "d");
-}

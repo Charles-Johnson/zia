@@ -15,6 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use errors::ZiaResult;
 use reading::{ConcreteReader, GetDefinition, GetReduction};
 use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
@@ -58,8 +59,9 @@ impl<T> GetDefinition for AbstractConcept<T> {
 }
 
 impl<T> SetDefinition for AbstractConcept<T> {
-    fn set_definition(&mut self, lefthand: usize, righthand: usize) {
+    fn set_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<()> {
         self.definition = Some((lefthand, righthand));
+		Ok(())
     }
 }
 

@@ -143,3 +143,8 @@ fn redundancy() {
         ZiaError::RedundantDefinition.to_string()
     );
 }
+#[test]
+fn setting_definition_of_concrete() {
+    let mut cont = Context::new();
+    assert_eq!(cont.execute(":= (:= (a b))"), ZiaError::SettingDefinitionOfConcrete.to_string());
+}

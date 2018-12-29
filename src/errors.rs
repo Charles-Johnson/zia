@@ -32,22 +32,24 @@ pub enum ZiaError {
     EmptyParentheses,
     AmbiguousExpression,
     DefinitionCollision,
+	SettingDefinitionOfConcrete,
 }
 
 impl fmt::Display for ZiaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-	        ZiaError::RedundantReduction => write!(f, "That reduction rule already exists."),
-			ZiaError::RedundantDefinition => write!(f, "That definition already exists."),
-			ZiaError::RedundantRefactor => write!(f, "Relabelling something that doesn't yet exist has no effect."),
-	        ZiaError::NotAProgram => write!(f, "No program exists for this syntax."),
-	        ZiaError::BadDefinition => write!(f, "Cannot define expressions."),
-	        ZiaError::CyclicReduction => write!(f, "Cannot allow a chain of reduction rules to loop."),
-	        ZiaError::ExpandingReduction => write!(f, "Cannot reduce a concept to an expression containing itself."),
-	        ZiaError::InfiniteDefinition => write!(f, "Cannot define a concept as an expression containing itself."),
-			ZiaError::EmptyParentheses => write!(f, "Parentheses need to contain a symbol or expression."),
-			ZiaError::AmbiguousExpression => write!(f, "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression."),
-			ZiaError::DefinitionCollision => write!(f, "Cannot define a used symbol as another used symbol or expression."),
-	    }
+        write!(f, "{}", match *self {
+	        ZiaError::RedundantReduction => "That reduction rule already exists.",
+			ZiaError::RedundantDefinition => "That definition already exists.",
+			ZiaError::RedundantRefactor => "Relabelling something that doesn't yet exist has no effect.",
+	        ZiaError::NotAProgram => "No program exists for this syntax.",
+	        ZiaError::BadDefinition => "Cannot define expressions.",
+	        ZiaError::CyclicReduction => "Cannot allow a chain of reduction rules to loop.",
+	        ZiaError::ExpandingReduction => "Cannot reduce a concept to an expression containing itself.",
+	        ZiaError::InfiniteDefinition => "Cannot define a concept as an expression containing itself.",
+			ZiaError::EmptyParentheses => "Parentheses need to contain a symbol or expression.",
+			ZiaError::AmbiguousExpression => "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression.",
+			ZiaError::DefinitionCollision => "Cannot define a used symbol as another used symbol or expression.",
+			ZiaError::SettingDefinitionOfConcrete => "Cannot set a definition of a concrete concept" 
+	    })
     }
 }
