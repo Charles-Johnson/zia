@@ -113,4 +113,8 @@ fn redundancy() {
         cont.execute("a (-> b)"),
         ZiaError::RedundantReduction.to_string()
     );
+    assert_eq!(
+        cont.execute("b (-> b)"),
+        ZiaError::RedundantReduction.to_string()
+    );
 }
