@@ -15,6 +15,7 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+use errors::{ZiaError, ZiaResult};
 use reading::{FindWhatReducesToIt, MaybeDisconnected, MaybeString};
 use writing::{
     ConceptReader, DeleteDefinition, GetDefinition, GetDefinitionOf, GetReduction,
@@ -34,14 +35,17 @@ where
         + GetReduction
         + MaybeString,
 {
-    fn cleanly_delete_definition(&mut self, concept: usize) {
-        let definition = self.read_concept(concept).get_definition();
-        self.delete_definition(concept);
-        self.try_delete_concept(concept);
-        if let Some((left, right)) = definition {
-            self.try_delete_concept(left);
-            self.try_delete_concept(right);
-        }
+    fn cleanly_delete_definition(&mut self, concept: usize) -> ZiaResult<()> {
+        match self.read_concept(concept).get_definition() {
+			None => Err(ZiaError::RedundantDefinitionRemoval),
+			Some((left, right)) => {
+				self.delete_definition(concept, left, right);
+				self.try_delete_concept(concept);
+	            self.try_delete_concept(left);
+            	self.try_delete_concept(right);
+				Ok(())
+			},
+		}
     }
     fn try_delete_concept(&mut self, concept: usize) {
         if self.is_disconnected(concept) {

@@ -135,6 +135,12 @@ fn remove_definition() {
     );
 }
 #[test]
+fn redundantly_remove_definition() {
+	let mut cont = Context::new();
+	assert_eq!(cont.execute("a (:= (b c))"), "");
+	assert_eq!(cont.execute("b (:= b)"), ZiaError::RedundantDefinitionRemoval.to_string());
+}
+#[test]
 fn redundancy() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("a (:= (b c))"), "");
