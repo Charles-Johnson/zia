@@ -18,7 +18,9 @@ use reading::{ConcreteReader, MaybeString};
 use writing::ConcreteWriter;
 
 pub struct StringConcept<T> {
+	/// The concrete part of the concept. Records which concepts reduces to it and which concepts it composes.
     concrete_concept: T,
+	/// The `String` value associated with this concept.
     string: String,
 }
 
@@ -49,6 +51,7 @@ where
 }
 
 impl<T> MaybeString for StringConcept<T> {
+	/// Because this is definitely a string concept, this always return `Some(string)`
     fn get_string(&self) -> Option<String> {
         Some(self.string.clone())
     }

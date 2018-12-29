@@ -20,8 +20,11 @@ use reading::{ConcreteReader, GetDefinition, GetReduction};
 use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 pub struct AbstractConcept<T> {
+	/// The concrete part of the concept. Records which concepts reduces to it and which concepts it composes.
     concrete_concept: T,
+	/// The concept may be defined as a composition of two other concepts.
     definition: Option<(usize, usize)>,
+	/// The concept may reduce to another concept.
     reduces_to: Option<usize>,
 }
 
@@ -29,6 +32,7 @@ impl<T> Default for AbstractConcept<T>
 where
     T: Default,
 {
+	/// The default concept doesn't have a definition and doesn't further reduce.
     fn default() -> AbstractConcept<T> {
         AbstractConcept::<T> {
             concrete_concept: T::default(),
