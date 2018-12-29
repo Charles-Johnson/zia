@@ -118,3 +118,8 @@ fn redundancy() {
         ZiaError::RedundantReduction.to_string()
     );
 }
+#[test]
+fn reducing_concrete() {
+	let mut cont = Context::new();
+	assert_eq!(cont.execute("-> (-> a)"), ZiaError::ConcreteReduction.to_string());
+}

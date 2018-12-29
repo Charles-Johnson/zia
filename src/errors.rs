@@ -34,6 +34,7 @@ pub enum ZiaError {
     AmbiguousExpression,
     DefinitionCollision,
 	SettingDefinitionOfConcrete,
+	ConcreteReduction,
 }
 
 impl fmt::Display for ZiaError {
@@ -51,7 +52,8 @@ impl fmt::Display for ZiaError {
 			ZiaError::EmptyParentheses => "Parentheses need to contain a symbol or expression.",
 			ZiaError::AmbiguousExpression => "Ambiguity due to lack of precedence or associativity defined for the symbols in that expression.",
 			ZiaError::DefinitionCollision => "Cannot define a used symbol as another used symbol or expression.",
-			ZiaError::SettingDefinitionOfConcrete => "Cannot set a definition of a concrete concept" 
+			ZiaError::SettingDefinitionOfConcrete => "Cannot set a definition of a concrete concept",
+			ZiaError::ConcreteReduction => "Cannot reduce a concrete concept", 
 	    })
     }
 }
