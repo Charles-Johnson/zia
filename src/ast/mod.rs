@@ -15,20 +15,23 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 mod expression;
-mod symbol;
+mod syntax;
 
 use self::expression::Expression;
-use self::symbol::Symbol;
-use reading::{DisplayJoint, MaybeConcept, MightExpand, Pair, SyntaxFactory};
+use self::syntax::Syntax;
+use reading::{DisplayJoint, MaybeConcept, MightExpand, Pair};
 use std::fmt;
 
-/// Syntax is represented as a full binary tree.
+/// Syntax is represented as a full binary tree and linked to concepts where possible.
 pub enum AbstractSyntaxTree {
-    Symbol(Symbol),
-    Expression(Expression<Symbol, AbstractSyntaxTree>),
+	/// Leaf of the tree which represents a string containing no spaces. 
+    Symbol(Syntax),
+	/// Branch of the tree which represents a string with containing one space outside of any parethenses.
+    Expression(Expression<Syntax, AbstractSyntaxTree>),
 }
 
 impl MaybeConcept for AbstractSyntaxTree {
+	/// Gets the possible concept from the inside type of the variant.
     fn get_concept(&self) -> Option<usize> {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => a.get_concept(),
@@ -38,6 +41,7 @@ impl MaybeConcept for AbstractSyntaxTree {
 }
 
 impl PartialEq for AbstractSyntaxTree {
+	/// `AbstractSyntaxTree`s are equal if the syntax they represent is the same.
     fn eq(&self, other: &Self) -> bool {
         self.to_string() == other.to_string()
     }
@@ -53,6 +57,7 @@ impl Clone for AbstractSyntaxTree {
 }
 
 impl MightExpand<AbstractSyntaxTree> for AbstractSyntaxTree {
+	/// An expression does have an expansion while a symbol does not.
     fn get_expansion(&self) -> Option<(AbstractSyntaxTree, AbstractSyntaxTree)> {
         match *self {
             AbstractSyntaxTree::Symbol(_) => None,
@@ -62,6 +67,7 @@ impl MightExpand<AbstractSyntaxTree> for AbstractSyntaxTree {
 }
 
 impl DisplayJoint for AbstractSyntaxTree {
+	/// An expression's syntax is encapsulated in parentheses when joined with other syntax whereas a symbol's syntax is not. 
     fn display_joint(&self) -> String {
         match *self {
             AbstractSyntaxTree::Expression(ref e) => "(".to_string() + &e.to_string() + ")",
@@ -71,6 +77,7 @@ impl DisplayJoint for AbstractSyntaxTree {
 }
 
 impl fmt::Display for AbstractSyntaxTree {
+	/// Displays the same as the inside of an `AbstractSyntaxTree` variant.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             AbstractSyntaxTree::Symbol(ref a) => write!(f, "{}", a.to_string()),
@@ -80,20 +87,21 @@ impl fmt::Display for AbstractSyntaxTree {
 }
 
 impl Pair<AbstractSyntaxTree> for AbstractSyntaxTree {
+    /// Combines a pair of syntax trees and details of an overal syntax into an `AbstractSyntaxTree`
     fn from_pair(
-        syntax: &str,
-        concept: Option<usize>,
+        syntax: (String, Option<usize>),
         lefthand: &AbstractSyntaxTree,
         righthand: &AbstractSyntaxTree,
     ) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Expression(Expression::<Symbol, AbstractSyntaxTree>::from_pair(
-            syntax, concept, lefthand, righthand,
+        AbstractSyntaxTree::Expression(Expression::<Syntax, AbstractSyntaxTree>::from_pair(
+            syntax, lefthand, righthand,
         ))
     }
 }
 
-impl SyntaxFactory for AbstractSyntaxTree {
-    fn new(s: &str, concept: Option<usize>) -> AbstractSyntaxTree {
-        AbstractSyntaxTree::Symbol(Symbol::new(s, concept))
+impl From<(String, Option<usize>)> for AbstractSyntaxTree {
+	/// Constructs a `Symbol` variant from the syntax string and a possible associated concept.  
+    fn from(syntax: (String, Option<usize>)) -> AbstractSyntaxTree {
+        AbstractSyntaxTree::Symbol(Syntax::from(syntax))
     }
 }

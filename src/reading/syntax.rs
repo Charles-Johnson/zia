@@ -24,11 +24,7 @@ pub trait MaybeConcept {
 }
 
 pub trait Pair<U> {
-    fn from_pair(&str, Option<usize>, &U, &U) -> Self;
-}
-
-pub trait SyntaxFactory {
-    fn new(&str, Option<usize>) -> Self;
+    fn from_pair((String, Option<usize>), &U, &U) -> Self;
 }
 
 pub trait MightExpand<T> {

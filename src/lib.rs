@@ -55,7 +55,7 @@ pub use errors::ZiaError;
 use errors::ZiaResult;
 use reading::{
     DisplayJoint, Expander, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
-    GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, Reduce, SyntaxFactory,
+    GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, Reduce,
 };
 use removing::DefinitionDeleter;
 use translating::SyntaxConverter;
@@ -87,7 +87,7 @@ where
         + GetDefinitionOf
         + GetReduction
         + FindWhatReducesToIt,
-    Self::S: Container + Pair<Self::S> + Clone + SyntaxFactory + DisplayJoint,
+    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
 {
     fn execute(&mut self, command: &str) -> String {
         let ast = match self.ast_from_expression(command) {
@@ -120,7 +120,7 @@ where
         + GetReduction
         + FindWhatReducesToIt,
     S: Call<T> + SyntaxConverter<T>,
-    S::S: Container + Pair<S::S> + Clone + SyntaxFactory + DisplayJoint,
+    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
 {
 }
 
@@ -156,7 +156,7 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
-    Self::S: Container + Pair<Self::S> + Clone + SyntaxFactory + DisplayJoint,
+    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
 {
     fn call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         match ast.get_expansion() {
@@ -261,7 +261,7 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
-    S::S: Container + Pair<S::S> + Clone + SyntaxFactory + DisplayJoint,
+    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
 {
 }
 
@@ -314,7 +314,7 @@ where
                     }
                 }
                 (None, None, Some((ref left, ref right))) => {
-                    self.define_new_syntax(&after.to_string(), left, right)
+                    self.define_new_syntax(after.to_string(), left, right)
                 }
                 (Some(a), Some(b), None) => {
                     if a == b {
@@ -351,7 +351,7 @@ where
     }
     fn define_new_syntax(
         &mut self,
-        syntax: &str,
+        syntax: String,
         left: &Self::S,
         right: &Self::S,
     ) -> ZiaResult<()> {
@@ -361,7 +361,7 @@ where
             } else {
                 None
             };
-        let new_syntax_tree = Self::S::from_pair(syntax, definition_concept, left, right);
+        let new_syntax_tree = Self::S::from_pair((syntax, definition_concept), left, right);
         try!(self.concept_from_ast(&new_syntax_tree));
         Ok(())
     }

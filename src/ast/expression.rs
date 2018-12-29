@@ -14,35 +14,41 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-use reading::{MaybeConcept, Pair, SyntaxFactory};
+use reading::{MaybeConcept, Pair};
 use std::{borrow::Borrow, fmt};
 
+/// Represents syntax separated by a space outside of any parentheses.
 pub struct Expression<S, T> {
-    symbol: S,
+    /// Overall syntax.
+    syntax: S,
+    /// Syntax on the lefthand side of the space.
     lefthand: Box<T>,
+	/// Syntax on the righthand side of the space.
     righthand: Box<T>,
 }
 
 impl<S, T: Clone> Expression<S, T> {
+    /// Returns a clone from inside of the `Box` of the `lefthand` field. 
     pub fn get_lefthand(&self) -> T {
         let borrowed_left: &T = self.lefthand.borrow();
         borrowed_left.clone()
     }
+    /// Returns a clone from inside of the `Box` of the `righthand` field. 
     pub fn get_righthand(&self) -> T {
         let borrowed_right: &T = self.righthand.borrow();
         borrowed_right.clone()
     }
 }
 
-impl<S: SyntaxFactory, T: Clone> Pair<T> for Expression<S, T> {
+impl<S: From<(String, Option<usize>)>, T: Clone> Pair<T> for Expression<S, T> {
+	/// Combines two syntax trees and details of an overall syntax into an expression.
     fn from_pair(
-        syntax: &str,
-        concept: Option<usize>,
+        syntax: (String, Option<usize>),
         lefthand: &T,
         righthand: &T,
     ) -> Expression<S, T> {
         Expression::<S, T> {
-            symbol: S::new(syntax, concept),
+            syntax: S::from(syntax),
             lefthand: Box::new(lefthand.clone()),
             righthand: Box::new(righthand.clone()),
         }
@@ -50,21 +56,24 @@ impl<S: SyntaxFactory, T: Clone> Pair<T> for Expression<S, T> {
 }
 
 impl<S: fmt::Display, T> fmt::Display for Expression<S, T> {
+    /// Displays the same as the overall syntax.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.symbol.to_string())
+        write!(f, "{}", self.syntax.to_string())
     }
 }
 
 impl<S: MaybeConcept, T> MaybeConcept for Expression<S, T> {
+	/// Get the possible concept corresponding to the overall syntax.
     fn get_concept(&self) -> Option<usize> {
-        self.symbol.get_concept()
+        self.syntax.get_concept()
     }
 }
 
 impl<S: Clone, T: Clone> Clone for Expression<S, T> {
+	/// Clones the syntax field and Boxes a clone of the inside of the lefthand and righthand fields to initialise a new Expression.
     fn clone(&self) -> Expression<S, T> {
         Expression::<S, T> {
-            symbol: self.symbol.clone(),
+            syntax: self.syntax.clone(),
             lefthand: Box::new(self.get_lefthand()),
             righthand: Box::new(self.get_righthand()),
         }

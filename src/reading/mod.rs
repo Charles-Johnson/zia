@@ -34,7 +34,7 @@ where
             + Clone
             + Pair<U>
             + DisplayJoint
-            + SyntaxFactory,
+            + From<(String, Option<usize>)>,
     >(
         &self,
         ast: &U,
@@ -68,7 +68,7 @@ where
     T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
 {
     fn recursively_reduce<
-        U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
+        U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
     >(
         &self,
         ast: &U,
@@ -78,7 +78,7 @@ where
             None => ast.clone(),
         }
     }
-    fn reduce<U: SyntaxFactory + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+    fn reduce<U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         ast: &U,
     ) -> Option<U> {
@@ -92,7 +92,7 @@ where
             },
         }
     }
-    fn reduce_concept<U: SyntaxFactory + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+    fn reduce_concept<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         concept: usize,
     ) -> Option<U> {
@@ -113,12 +113,12 @@ where
             Some(n) => Some(self.to_ast::<U>(n)),
         }
     }
-    fn to_ast<U: SyntaxFactory + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+    fn to_ast<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         concept: usize,
     ) -> U {
         match self.get_label(concept) {
-            Some(ref s) => U::new(s, Some(concept)),
+            Some(s) => U::from((s, Some(concept))),
             None => match self.read_concept(concept).get_definition() {
                 Some((left, right)) => {
                     self.combine(&self.to_ast::<U>(left), &self.to_ast::<U>(right))
@@ -150,8 +150,8 @@ where
     ) -> U {
         if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
             if let Some(def) = self.find_definition(lc, rc) {
-                if let Some(ref a) = self.get_label(def) {
-                    return U::from_pair(a, Some(def), lefthand, righthand);
+                if let Some(a) = self.get_label(def) {
+                    return U::from_pair((a, Some(def)), lefthand, righthand);
                 }
             }
         }
@@ -235,7 +235,7 @@ where
         } else {
             None
         };
-        U::from_pair(&(left_string + " " + &right_string), definition, ast, other)
+        U::from_pair((left_string + " " + &right_string, definition), ast, other)
     }
 }
 

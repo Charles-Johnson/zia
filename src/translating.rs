@@ -18,7 +18,7 @@
 use errors::{ZiaError, ZiaResult};
 use reading::{
     Combine, DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, Label,
-    MaybeConcept, Pair, SyntaxFactory,
+    MaybeConcept, Pair
 };
 
 pub trait SyntaxConverter<T>
@@ -26,7 +26,7 @@ where
     Self: SyntaxFinder<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + FindWhatReducesToIt,
 {
-    fn ast_from_expression<U: SyntaxFactory + Pair<U> + MaybeConcept + DisplayJoint>(
+    fn ast_from_expression<U: From<(String, Option<usize>)> + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         s: &str,
     ) -> ZiaResult<U> {
@@ -38,7 +38,7 @@ where
             _ => Err(ZiaError::AmbiguousExpression),
         }
     }
-    fn ast_from_pair<U: SyntaxFactory + DisplayJoint + MaybeConcept + Pair<U>>(
+    fn ast_from_pair<U: From<(String, Option<usize>)> + DisplayJoint + MaybeConcept + Pair<U>>(
         &self,
         left: &str,
         right: &str,
@@ -47,7 +47,7 @@ where
         let righthand = try!(self.ast_from_token::<U>(right));
         Ok(self.combine(&lefthand, &righthand))
     }
-    fn ast_from_token<U: SyntaxFactory + MaybeConcept + DisplayJoint + Pair<U>>(
+    fn ast_from_token<U: From<(String, Option<usize>)> + MaybeConcept + DisplayJoint + Pair<U>>(
         &self,
         t: &str,
     ) -> ZiaResult<U> {
@@ -142,9 +142,9 @@ where
             Some(c) => self.get_labellee(c),
         }
     }
-    fn ast_from_symbol<U: SyntaxFactory>(&self, s: &str) -> U {
+    fn ast_from_symbol<U: From<(String, Option<usize>)>>(&self, s: &str) -> U {
         let concept_if_exists = self.concept_from_label(s);
-        U::new(s, concept_if_exists)
+        U::from((s.to_string(), concept_if_exists))
     }
 }
 
