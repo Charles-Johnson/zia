@@ -21,19 +21,33 @@ pub type ZiaResult<T> = Result<T, ZiaError>;
 /// All the expected ways a Zia command could be invalid.
 #[derive(Debug)]
 pub enum ZiaError {
+	/// When specifying a reduction rule that already exists. 
     RedundantReduction,
+	/// When specifying a definition that already exists.
     RedundantDefinition,
+	/// When refactoring a symbol that hasn't been used.
     RedundantRefactor,
+	/// When removing a definition from a concept with no definition.
 	RedundantDefinitionRemoval,
+	/// When the command cannot be interpreted as a routine.
     NotAProgram,
+	/// When defining an expanded expression.
     BadDefinition,
+	/// When the command would complete a cycle of chained reduction rules.
     CyclicReduction,
+	/// When a concept is contained within the concept that it reduces to.  
     ExpandingReduction,
+	/// When a concept is contained within its definition.
     InfiniteDefinition,
+	/// When a command contains a pair of parentheses with no syntax inside.
     EmptyParentheses,
+	/// When the interpreter cannot determine the tree structure of an expression. 
     AmbiguousExpression,
+	/// When trying to refactor a used symbol as another used symbol or expression.
     DefinitionCollision,
+	/// When trying to define the composition of a concrete concept.
 	SettingDefinitionOfConcrete,
+	/// When trying to specify a reduction rule for a concrete concept.
 	ConcreteReduction,
 }
 
