@@ -22,12 +22,14 @@ pub use self::concepts::*;
 pub use self::syntax::*;
 use constants::LABEL;
 use std::{collections::HashSet, fmt};
-pub trait Expander<T>
+
+pub trait SyntaxReader<T>
 where
-    Self: Reduce<T>,
-    T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
+    Self: GetLabel<T> + Combine<T>,
+    T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
 {
-    fn expand<
+	/// Expands syntax by definition of its associated concept.
+	fn expand<
         U: MaybeConcept
             + MightExpand<U>
             + fmt::Display
@@ -54,19 +56,7 @@ where
             ast.clone()
         }
     }
-}
-
-impl<S, T> Expander<T> for S
-where
-    S: Reduce<T>,
-    T: GetReduction + GetDefinition + GetDefinitionOf + MaybeString,
-{
-}
-pub trait Reduce<T>
-where
-    Self: GetLabel<T> + Combine<T>,
-    T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
-{
+	/// Reduces the syntax as much as possible (returns the normal form syntax).
     fn recursively_reduce<
         U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
     >(
@@ -78,6 +68,7 @@ where
             None => ast.clone(),
         }
     }
+	/// Reduces the syntax by using the reduction rules of associated concepts.
     fn reduce<U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         ast: &U,
@@ -92,6 +83,7 @@ where
             },
         }
     }
+	/// Returns the syntax for the reduction of a concept.
     fn reduce_concept<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         concept: usize,
@@ -113,6 +105,7 @@ where
             Some(n) => Some(self.to_ast::<U>(n)),
         }
     }
+	/// Returns the syntax for a concept.
     fn to_ast<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         concept: usize,
@@ -127,6 +120,7 @@ where
             },
         }
     }
+	/// Returns the updated branch of abstract syntax tree that may have had the left or right parts updated.
     fn match_left_right<U: Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         left: Option<U>,
@@ -143,23 +137,30 @@ where
             }
         }
     }
+	/// Returns the abstract syntax from two syntax parts, using the label and concept of the composition of associated concepts if it exists. 
     fn contract_pair<U: MaybeConcept + Pair<U> + DisplayJoint>(
         &self,
         lefthand: &U,
         righthand: &U,
     ) -> U {
-        if let (Some(lc), Some(rc)) = (lefthand.get_concept(), righthand.get_concept()) {
-            if let Some(def) = self.find_definition(lc, rc) {
-                if let Some(a) = self.get_label(def) {
-                    return U::from_pair((a, Some(def)), lefthand, righthand);
-                }
-            }
-        }
-        self.combine(lefthand, righthand)
+		let syntax = match (lefthand.get_concept(), righthand.get_concept()) {
+			(Some(lc), Some(rc)) => {
+				let maydef = self.find_definition(lc, rc);
+				(match maydef {
+					Some(def) => match self.get_label(def) {
+						Some(a) => a,
+						None => lefthand.display_joint() + " " + &righthand.display_joint()
+					},
+					None => lefthand.display_joint() + " " + &righthand.display_joint(),
+				}, maydef)
+			},
+			_ => (lefthand.display_joint() + " " + &righthand.display_joint(), None),
+		};
+		return U::from_pair(syntax, lefthand, righthand);
     }
 }
 
-impl<S, T> Reduce<T> for S
+impl<S, T> SyntaxReader<T> for S
 where
     S: GetLabel<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + MaybeString + GetReduction,

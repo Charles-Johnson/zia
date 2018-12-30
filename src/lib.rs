@@ -54,8 +54,8 @@ use context::Context as GenericContext;
 pub use errors::ZiaError;
 use errors::ZiaResult;
 use reading::{
-    DisplayJoint, Expander, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
-    GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, Reduce,
+    DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, GetLabel,
+    GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, SyntaxReader,
 };
 use removing::DefinitionDeleter;
 use translating::SyntaxConverter;
@@ -142,7 +142,7 @@ impl ConceptMaker<Concept> for Context {
 /// Calling a program expressed as abstract syntax to read or write contained concepts.  
 pub trait Call<T>
 where
-    Self: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
+    Self: Definer<T> + ExecuteReduction<T> + SyntaxReader<T>,
     T: From<String>
         + From<Self::C>
         + From<Self::A>
@@ -253,7 +253,7 @@ where
 
 impl<S, T> Call<T> for S
 where
-    S: Definer<T> + ExecuteReduction<T> + Reduce<T> + Expander<T>,
+    S: Definer<T> + ExecuteReduction<T> + SyntaxReader<T>,
     T: From<String>
         + From<Self::C>
         + From<Self::A>
