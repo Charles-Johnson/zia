@@ -19,6 +19,7 @@ use errors::ZiaResult;
 use reading::{ConcreteReader, GetDefinition, GetReduction};
 use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
+/// An abstract concept can reduce to other concepts and be defined as a composition of two other concepts. 
 pub struct AbstractConcept<T> {
 	/// The concrete part of the concept. Records which concepts reduces to it and which concepts it composes.
     concrete_concept: T,

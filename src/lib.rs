@@ -64,10 +64,10 @@ use writing::{
     SetAsDefinitionOf, SetDefinition, SetReduction,
 };
 
-/// A container for reading and writing `Concept`s.
+/// A container for adding, writing, reading and removing `Concept`s.
 pub type Context = GenericContext<Concept>;
 
-/// Executing a command based on a string to read or write contained concepts.  
+/// Executing a command based on a string to add, write, read, or remove contained concepts.  
 pub trait Execute<T>
 where
     Self: Call<T> + SyntaxConverter<T>,
@@ -125,14 +125,17 @@ where
 }
 
 impl FindOrInsertDefinition<Concept> for Context {
+	/// When a specific composition of concepts does not exist as its own concept, a new abstract concept is defined as that composition.
     type A = AbstractConcept<ConcreteConcept>;
 }
 
 impl Labeller<Concept> for Context {
+    /// The `setup` method labels concrete concepts.
     type C = ConcreteConcept;
 }
 
 impl ConceptMaker<Concept> for Context {
+	/// New concepts are made from abstract syntax trees.
     type S = AbstractSyntaxTree;
 }
 
@@ -158,6 +161,7 @@ where
         + MaybeString,
     Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
 {
+	/// Tries to expand the abstract syntax tree. If that's possible, `call_pair` is called with the lefthand and righthand syntax parts. If not `try_expanding_then_call` is called on the tree. If a program cannot be found this way, 'try_reducing_then_call' is called on the tree.
     fn call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         match ast.get_expansion() {
             Some((ref left, ref right)) => self.call_pair(left, right),
@@ -175,6 +179,7 @@ where
             }
         }
     }
+    /// Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the normal form of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax. If the associated concept can't be reduced, `call_as_righthand` is called with the left and right syntax. 
     fn call_pair(&mut self, left: &Self::S, right: &Self::S) -> ZiaResult<String> {
         match right.get_concept() {
             Some(c) => match c {
@@ -193,6 +198,7 @@ where
             None => self.call_as_righthand(left, right),
         }
     }
+	/// If the abstract syntax tree can be expanded, then `call` is called with this expansion. If not then an `Err(ZiaError::NotAProgram)` is returned
     fn try_expanding_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         let expansion = &self.expand(ast);
         if expansion != ast {
@@ -201,6 +207,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
+	/// If the abstract syntax tree can be reduced, then `call` is called with this reduction. If not then an `Err(ZiaError::NotAProgram)` is returned
     fn try_reducing_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
         let normal_form = &self.recursively_reduce(ast);
         if normal_form != ast {
@@ -209,6 +216,7 @@ where
             Err(ZiaError::NotAProgram)
         }
     }
+	/// If the righthand part of the syntax can be expanded, then `match_righthand_pair` is called. If not, `Err(ZiaError::NotAProgram)` is returned.
     fn call_as_righthand(&mut self, left: &Self::S, right: &Self::S) -> ZiaResult<String> {
         match right.get_expansion() {
             Some((ref rightleft, ref rightright)) => {
@@ -217,6 +225,7 @@ where
             None => Err(ZiaError::NotAProgram),
         }
     }
+	/// If the lefthand of the righthand part of the syntax is `->` then `execute_reduction` is called with the lefthand part and the righthand of the righthand part of the syntax. Similarly for `:=`, `execute_definition` is called. If the lefthand of the righthand part of the syntax is associated with a concept which isn't `->` or `:=` then if this concept reduces, `match_righthand_pair` is called with this reduced concept as an abstract syntax tree.
     fn match_righthand_pair(
         &mut self,
         left: &Self::S,
@@ -287,34 +296,37 @@ where
     Self: GetLabel<T> + ConceptMaker<T> + DefinitionDeleter<T>,
     Self::S: Pair<Self::S> + Container,
 {
+	/// If the new syntax is contained within the old syntax then this returns `Err(ZiaError::InfiniteDefinition)`. Otherwise `define` is called.
     fn execute_definition(&mut self, new: &Self::S, old: &Self::S) -> ZiaResult<String> {
         if old.contains(new) {
             Err(ZiaError::InfiniteDefinition)
         } else {
-            try!(self.define(old, new));
+            try!(self.define(new, old));
             Ok("".to_string())
         }
     }
-    fn define(&mut self, before: &Self::S, after: &Self::S) -> ZiaResult<()> {
-        if after.get_expansion().is_some() {
+	/// If the new syntax is an expanded expression then this returns `Err(ZiaError::BadDefinition)`. Otherwise the result depends on whether the new or old syntax is associated with a concept and whether the old syntax is an expanded expression. 
+    fn define(&mut self, new: &Self::S, old: &Self::S) -> ZiaResult<()> {
+        if new.get_expansion().is_some() {
             Err(ZiaError::BadDefinition)
         } else {
             match (
-                after.get_concept(),
-                before.get_concept(),
-                before.get_expansion(),
+                new.get_concept(),
+                old.get_concept(),
+                old.get_expansion(),
             ) {
                 (_, None, None) => Err(ZiaError::RedundantRefactor),
-                (None, Some(b), None) => self.relabel(b, &after.to_string()),
+                (None, Some(b), None) => self.relabel(b, &new.to_string()),
                 (None, Some(b), Some(_)) => {
                     if self.get_label(b).is_none() {
-                        self.label(b, &after.to_string())
+                        self.label(b, &new.to_string())
                     } else {
-                        self.relabel(b, &after.to_string())
+                        self.relabel(b, &new.to_string())
                     }
                 }
                 (None, None, Some((ref left, ref right))) => {
-                    self.define_new_syntax(after.to_string(), left, right)
+                    try!(self.define_new_syntax(new.to_string(), left, right));
+					Ok(())
                 }
                 (Some(a), Some(b), None) => {
                     if a == b {
@@ -334,6 +346,7 @@ where
             }
         }
     }
+	/// Defining a concept as a composition whose syntax is given by `left` and `right`. If the concept already has a definition, then the concepts of this composition are relabelled with `left` and `right`. Otherwise new concepts are made from `left` and `right` to define the concept.
     fn redefine(&mut self, concept: usize, left: &Self::S, right: &Self::S) -> ZiaResult<()> {
         if let Some((left_concept, right_concept)) = self.read_concept(concept).get_definition() {
             try!(self.relabel(left_concept, &left.to_string()));
@@ -345,16 +358,18 @@ where
             Ok(())
         }
     }
+	/// Unlabels a concept and gives it a new label.
     fn relabel(&mut self, concept: usize, new_label: &str) -> ZiaResult<()> {
         try!(self.unlabel(concept));
         self.label(concept, new_label)
     }
+	/// Returns the index of a concept labelled by `syntax` and composed of concepts from `left` and `right`.
     fn define_new_syntax(
         &mut self,
         syntax: String,
         left: &Self::S,
         right: &Self::S,
-    ) -> ZiaResult<()> {
+    ) -> ZiaResult<usize> {
         let definition_concept =
             if let (Some(l), Some(r)) = (left.get_concept(), right.get_concept()) {
                 self.find_definition(l, r)
@@ -362,8 +377,7 @@ where
                 None
             };
         let new_syntax_tree = Self::S::from_pair((syntax, definition_concept), left, right);
-        try!(self.concept_from_ast(&new_syntax_tree));
-        Ok(())
+        self.concept_from_ast(&new_syntax_tree)
     }
 }
 
