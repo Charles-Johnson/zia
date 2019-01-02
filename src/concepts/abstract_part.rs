@@ -16,80 +16,61 @@
 */
 
 use errors::ZiaResult;
-use reading::{ConcreteReader, GetDefinition, GetReduction};
-use writing::{ConcreteWriter, RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
+use reading::{GetDefinition, GetReduction};
+use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
 /// An abstract concept can reduce to other concepts and be defined as a composition of two other concepts. 
-pub struct AbstractConcept<T> {
-	/// The concrete part of the concept. Records which concepts reduces to it and which concepts it composes.
-    concrete_concept: T,
+pub struct AbstractPart {
 	/// The concept may be defined as a composition of two other concepts.
     definition: Option<(usize, usize)>,
 	/// The concept may reduce to another concept.
     reduces_to: Option<usize>,
 }
 
-impl<T> Default for AbstractConcept<T>
-where
-    T: Default,
+impl Default for AbstractPart
 {
 	/// The default concept doesn't have a definition and doesn't further reduce.
-    fn default() -> AbstractConcept<T> {
-        AbstractConcept::<T> {
-            concrete_concept: T::default(),
+    fn default() -> AbstractPart {
+        AbstractPart {
             definition: None,
             reduces_to: None,
         }
     }
 }
 
-impl<T> ConcreteReader for AbstractConcept<T> {
-    type C = T;
-    fn read_concrete(&self) -> &T {
-        &self.concrete_concept
-    }
-}
-
-impl<T> ConcreteWriter for AbstractConcept<T> {
-    type C = T;
-    fn write_concrete(&mut self) -> &mut T {
-        &mut self.concrete_concept
-    }
-}
-
-impl<T> GetDefinition for AbstractConcept<T> {
+impl GetDefinition for AbstractPart {
     fn get_definition(&self) -> Option<(usize, usize)> {
         self.definition
     }
 }
 
-impl<T> SetDefinition for AbstractConcept<T> {
+impl SetDefinition for AbstractPart {
     fn set_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<()> {
         self.definition = Some((lefthand, righthand));
 		Ok(())
     }
 }
 
-impl<T> RemoveDefinition for AbstractConcept<T> {
+impl RemoveDefinition for AbstractPart {
     fn remove_definition(&mut self) {
         self.definition = None
     }
 }
 
-impl<T> GetReduction for AbstractConcept<T> {
+impl GetReduction for AbstractPart {
     fn get_reduction(&self) -> Option<usize> {
         self.reduces_to
     }
 }
 
-impl<T> SetReduction for AbstractConcept<T> {
+impl SetReduction for AbstractPart {
     fn make_reduce_to(&mut self, concept: usize) -> ZiaResult<()> {
         self.reduces_to = Some(concept);
 		Ok(())
     }
 }
 
-impl<T> RemoveReduction for AbstractConcept<T> {
+impl RemoveReduction for AbstractPart {
     fn make_reduce_to_none(&mut self) {
         self.reduces_to = None;
     }

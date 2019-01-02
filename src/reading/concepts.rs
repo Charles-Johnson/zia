@@ -28,16 +28,6 @@ pub trait FindWhatReducesToIt {
     fn find_what_reduces_to_it(&self) -> HashSet<usize>;
 }
 
-impl<T> FindWhatReducesToIt for T
-where
-    T: ConcreteReader,
-    T::C: FindWhatReducesToIt,
-{
-    fn find_what_reduces_to_it(&self) -> HashSet<usize> {
-        self.read_concrete().find_what_reduces_to_it()
-    }
-}
-
 pub trait MaybeString {
     fn get_string(&self) -> Option<String>;
 }
@@ -45,22 +35,4 @@ pub trait MaybeString {
 pub trait GetDefinitionOf {
     fn get_lefthand_of(&self) -> HashSet<usize>;
     fn get_righthand_of(&self) -> HashSet<usize>;
-}
-
-impl<T> GetDefinitionOf for T
-where
-    T: ConcreteReader,
-    T::C: GetDefinitionOf,
-{
-    fn get_lefthand_of(&self) -> HashSet<usize> {
-        self.read_concrete().get_lefthand_of()
-    }
-    fn get_righthand_of(&self) -> HashSet<usize> {
-        self.read_concrete().get_righthand_of()
-    }
-}
-
-pub trait ConcreteReader {
-    type C;
-    fn read_concrete(&self) -> &Self::C;
 }

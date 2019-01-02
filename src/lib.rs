@@ -48,7 +48,7 @@ mod writing;
 pub use adding::ContextMaker;
 use adding::{ConceptMaker, Container, ExecuteReduction, FindOrInsertDefinition, Labeller};
 pub use ast::AbstractSyntaxTree;
-use concepts::{AbstractConcept, Concept, ConcreteConcept};
+use concepts::{AbstractPart, Concept, CommonPart};
 use constants::{DEFINE, REDUCTION};
 use context::Context as GenericContext;
 pub use errors::ZiaError;
@@ -126,12 +126,12 @@ where
 
 impl FindOrInsertDefinition<Concept> for Context {
 	/// When a specific composition of concepts does not exist as its own concept, a new abstract concept is defined as that composition.
-    type A = AbstractConcept<ConcreteConcept>;
+    type A = AbstractPart;
 }
 
 impl Labeller<Concept> for Context {
     /// The `setup` method labels concrete concepts.
-    type C = ConcreteConcept;
+    type C = CommonPart;
 }
 
 impl ConceptMaker<Concept> for Context {

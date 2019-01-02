@@ -19,7 +19,7 @@ use std::collections::HashSet;
 use writing::{MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, SetAsDefinitionOf};
 
 #[derive(Default)]
-pub struct ConcreteConcept {
+pub struct CommonPart {
 	/// Set of all indices of the concepts which have this concept as the lefthand of their definition
     lefthand_of: HashSet<usize>,
 	/// Set of all indices of the concepts which have this concept as the righthand of their definition
@@ -28,7 +28,7 @@ pub struct ConcreteConcept {
     reduces_from: HashSet<usize>,
 }
 
-impl GetDefinitionOf for ConcreteConcept {
+impl GetDefinitionOf for CommonPart {
     fn get_lefthand_of(&self) -> HashSet<usize> {
         self.lefthand_of.clone()
     }
@@ -37,13 +37,13 @@ impl GetDefinitionOf for ConcreteConcept {
     }
 }
 
-impl FindWhatReducesToIt for ConcreteConcept {
+impl FindWhatReducesToIt for CommonPart {
     fn find_what_reduces_to_it(&self) -> HashSet<usize> {
         self.reduces_from.clone()
     }
 }
 
-impl SetAsDefinitionOf for ConcreteConcept {
+impl SetAsDefinitionOf for CommonPart {
     fn add_as_lefthand_of(&mut self, index: usize) {
         self.lefthand_of.insert(index);
     }
@@ -52,13 +52,13 @@ impl SetAsDefinitionOf for ConcreteConcept {
     }
 }
 
-impl MakeReduceFrom for ConcreteConcept {
+impl MakeReduceFrom for CommonPart {
     fn make_reduce_from(&mut self, index: usize) {
         self.reduces_from.insert(index);
     }
 }
 
-impl RemoveAsDefinitionOf for ConcreteConcept {
+impl RemoveAsDefinitionOf for CommonPart {
     fn remove_as_lefthand_of(&mut self, index: usize) {
         self.lefthand_of.remove(&index);
     }
@@ -67,7 +67,7 @@ impl RemoveAsDefinitionOf for ConcreteConcept {
     }
 }
 
-impl NoLongerReducesFrom for ConcreteConcept {
+impl NoLongerReducesFrom for CommonPart {
     fn no_longer_reduces_from(&mut self, index: usize) {
         self.reduces_from.remove(&index);
     }

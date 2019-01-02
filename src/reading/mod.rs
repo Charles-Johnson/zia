@@ -156,7 +156,7 @@ where
 			},
 			_ => (lefthand.display_joint() + " " + &righthand.display_joint(), None),
 		};
-		return U::from_pair(syntax, lefthand, righthand);
+		U::from_pair(syntax, lefthand, righthand)
     }
 }
 
