@@ -88,7 +88,7 @@ where
         &self,
         concept: usize,
     ) -> Option<Rc<U>> {
-        match self.get_normal_form(concept) {
+        match self.read_concept(concept).get_reduction() {
             None => match self.read_concept(concept).get_definition() {
                 Some((left, right)) => {
                     let left_result = self.reduce_concept::<U>(left);
