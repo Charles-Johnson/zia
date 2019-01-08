@@ -17,7 +17,7 @@
 
 pub use errors::{ZiaError, ZiaResult};
 pub use reading::{
-    ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept,
+    ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept, FindDefinition
 };
 use reading::{Container, GetConceptOfLabel};
 pub trait Unlabeller<T>
@@ -90,12 +90,12 @@ where
 {
 }
 
-pub trait UpdateNormalForm<T>
+pub trait UpdateReduction<T>
 where
-    T: SetReduction + MakeReduceFrom + GetReduction,
-    Self: ConceptWriter<T> + GetNormalForm<T>,
+    T: SetReduction + MakeReduceFrom + GetReduction + GetDefinition + GetDefinitionOf,
+    Self: ConceptWriter<T> + GetNormalForm<T> + FindDefinition<T>,
 {
-    fn update_normal_form(&mut self, concept: usize, normal_form: usize) -> ZiaResult<()> {
+    fn update_reduction(&mut self, concept: usize, normal_form: usize) -> ZiaResult<()> {
         if let Some(n) = self.get_normal_form(normal_form) {
             if concept == n {
                 return Err(ZiaError::CyclicReduction);
@@ -106,16 +106,37 @@ where
                 return Err(ZiaError::RedundantReduction);
             }
         }
+		if let Some((left, right)) = self.read_concept(concept).get_definition() {
+			let lc = if let Some(l) = self.read_concept(left).get_reduction() {
+				l
+			} else {
+				left
+			};
+			let rc = if let Some(r) = self.read_concept(left).get_reduction() {
+				r
+			} else {
+				right
+			};
+			if let Some(dc) = self.find_definition(lc, rc) {
+				if dc == normal_form {
+					return Err(ZiaError::RedundantReduction)
+				} else if dc == concept {
+					()
+				}
+			} else {
+				return Err(ZiaError::MultipleReductionPaths)
+			};
+		}
         try!(self.write_concept(concept).make_reduce_to(normal_form));
         self.write_concept(normal_form).make_reduce_from(concept);
         Ok(())
     }
 }
 
-impl<S, T> UpdateNormalForm<T> for S
+impl<S, T> UpdateReduction<T> for S
 where
-    T: SetReduction + MakeReduceFrom + GetReduction,
-    S: ConceptWriter<T> + GetNormalForm<T>,
+    T: SetReduction + MakeReduceFrom + GetReduction + GetDefinition + GetDefinitionOf,
+    S: ConceptWriter<T> + GetNormalForm<T> + FindDefinition<T>,
 {
 }
 

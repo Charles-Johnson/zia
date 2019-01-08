@@ -22,7 +22,7 @@ use std::{fmt, rc::Rc};
 use writing::{
     DeleteReduction, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, InsertDefinition,
     MakeReduceFrom, MaybeConcept, NoLongerReducesFrom, RemoveReduction, SetAsDefinitionOf,
-    SetDefinition, SetReduction, UpdateNormalForm,
+    SetDefinition, SetReduction, UpdateReduction,
 };
 
 pub trait ExecuteReduction<T>
@@ -52,7 +52,7 @@ where
         } else {
             let syntax_concept = try!(self.concept_from_ast(syntax));
             let normal_form_concept = try!(self.concept_from_ast(normal_form));
-            try!(self.update_normal_form(syntax_concept, normal_form_concept));
+            try!(self.update_reduction(syntax_concept, normal_form_concept));
             Ok("".to_string())
         }
     }
@@ -184,13 +184,13 @@ where
         + MaybeString
         + From<Self::C>
         + From<Self::A>,
-    Self: StringMaker<T> + FindOrInsertDefinition<T> + UpdateNormalForm<T>,
+    Self: StringMaker<T> + FindOrInsertDefinition<T> + UpdateReduction<T>,
 {
     type C: Default;
     fn label(&mut self, concept: usize, string: &str) -> ZiaResult<()> {
         let definition = try!(self.find_or_insert_definition(LABEL, concept));
         let string_id = self.new_string(string);
-        self.update_normal_form(definition, string_id)
+        self.update_reduction(definition, string_id)
     }
     fn new_labelled_default(&mut self, string: &str) -> ZiaResult<usize> {
         let new_default = self.new_default::<Self::A>();
