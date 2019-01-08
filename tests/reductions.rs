@@ -35,14 +35,14 @@ fn nested_pairs_to_symbol() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let ((not true) (-> false))"), "");
     assert_eq!(cont.execute("let ((not false) (-> true))"), "");
-    assert_eq!(cont.execute("(not(not true))->"), "true");
+    assert_eq!(cont.execute("(not(not true))->"), "not false");
 }
 #[test]
 fn chain() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(cont.execute("let (b (-> c))"), "");
-    assert_eq!(cont.execute("a ->"), "c");
+    assert_eq!(cont.execute("a ->"), "b");
 }
 #[test]
 fn cycle() {
