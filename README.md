@@ -40,19 +40,13 @@ concept labelled by `b`.
 the command to print `b` because of the previous command but `c ->` prints `c` because no 
 reduction rule exists for `c`.
 
-Reduction rules chain together. For example if `let (d (-> e))` and `let (e (-> f))` are executed
-then executing `d ->` will print `f`.
-
-You can modify existing reduction rules. For example you can change the reduction rule for `e` by 
-`let (e (-> g))`; `e ->` will now print `g` and `d ->` also prints `g`. You could also execute
-`let (a (-> a))` and so `a ->` now prints `a`.
+You can modify existing reduction rules. For example you can change the reduction rule for `a` by 
+`let (a (-> c))`; `a ->` will now print `c`. You could also execute `let (a (-> a))` and so `a ->` 
+now prints `a`.
 
 The intepreter will let you know if reduction rule commands are redundant. For example 
-`let (h (-> h))` is redundant because all new concepts are by default their own normal form. Also 
-`let (e (-> g))` is redundant because it's already been explicitly specified. However 
-`let (d (-> g))` would not be redundant because this changes the rule from "The normal form of `d` 
-is the normal form of `e`" to "The normal form of `d` is the normal form of `g`" even though `d` 
-already reduces to `g`.
+`let (d (-> d))` is redundant because all new concepts are by default their own normal form. Also 
+`let (a (-> c))` is redundant because it's already been explicitly specified.
 
 Definition symbol: `:=`
 
