@@ -199,10 +199,12 @@ where
     }
     fn setup(&mut self) -> ZiaResult<()> {
         self.new_default::<Self::C>(); // for LABEL
-        let define_concept = self.new_default::<Self::C>(); // for DEFINE;
-        let reduction_concept = self.new_default::<Self::C>(); // for REDUCTION
-        try!(self.label(define_concept, ":=")); //two more ids occupied
-        self.label(reduction_concept, "->") //two more ids occupied
+        let define_concept = self.new_default::<Self::C>();
+        let reduction_concept = self.new_default::<Self::C>();
+        let let_concept = self.new_default::<Self::C>();
+        try!(self.label(define_concept, ":=")); 
+        try!(self.label(reduction_concept, "->"));
+		self.label(let_concept, "let")
     }
 }
 

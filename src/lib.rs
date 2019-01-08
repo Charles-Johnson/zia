@@ -49,7 +49,7 @@ pub use adding::ContextMaker;
 use adding::{ConceptMaker, Container, ExecuteReduction, FindOrInsertDefinition, Labeller};
 pub use ast::SyntaxTree;
 use concepts::{AbstractPart, Concept, CommonPart};
-use constants::{DEFINE, REDUCTION};
+use constants::{DEFINE, REDUCTION, LET};
 use context::Context as GenericContext;
 pub use errors::ZiaError;
 use errors::ZiaResult;
@@ -182,6 +182,13 @@ where
     }
     /// Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the normal form of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax. If the associated concept can't be reduced, `call_as_righthand` is called with the left and right syntax. 
     fn call_pair(&mut self, left: &Rc<Self::S>, right: &Rc<Self::S>) -> ZiaResult<String> {
+		if let Some(c) = left.get_concept() {
+			if c == LET {
+				if let Some((ref rightleft, ref rightright)) = right.get_expansion() {
+					return self.call_as_righthand(rightleft, rightright)
+				}
+			}
+		} 
         match right.get_concept() {
             Some(c) => match c {
                 REDUCTION => Ok(self.recursively_reduce(left).to_string()),
@@ -192,11 +199,11 @@ where
                         let ast = self.to_ast(r);
                         self.call_pair(left, &ast)
                     } else {
-                        self.call_as_righthand(left, right)
+                        Err(ZiaError::NotAProgram)
                     }
                 }
             },
-            None => self.call_as_righthand(left, right),
+            None => Err(ZiaError::NotAProgram),
         }
     }
 	/// If the abstract syntax tree can be expanded, then `call` is called with this expansion. If not then an `Err(ZiaError::NotAProgram)` is returned
