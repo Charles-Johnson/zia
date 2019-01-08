@@ -180,7 +180,7 @@ where
             }
         }
     }
-    /// Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the normal form of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax. If the associated concept can't be reduced, `call_as_righthand` is called with the left and right syntax. 
+    /// If the associated concept of the lefthand part of the syntax is LET then `call_as_righthand` is called with the left and right of the lefthand syntax. Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the reduction of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax.
     fn call_pair(&mut self, left: &Rc<Self::S>, right: &Rc<Self::S>) -> ZiaResult<String> {
 		if let Some(c) = left.get_concept() {
 			if c == LET {
@@ -191,7 +191,10 @@ where
 		} 
         match right.get_concept() {
             Some(c) => match c {
-                REDUCTION => Ok(self.recursively_reduce(left).to_string()),
+                REDUCTION => Ok((match self.reduce(left) {
+					None => left.clone(), 
+					Some(rleft) => rleft
+				}).to_string()),
                 DEFINE => Ok(self.expand(left).to_string()),
                 _ => {
                     let right_reduction = self.read_concept(c).get_reduction();
