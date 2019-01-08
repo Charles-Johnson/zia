@@ -21,35 +21,35 @@ use zia::{Context, ContextMaker, Execute, ZiaError};
 #[test]
 fn symbol_to_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(cont.execute("a ->"), "b");
 }
 #[test]
 fn pair_to_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("(not true) (-> false)"), "");
+    assert_eq!(cont.execute("let ((not true) (-> false))"), "");
     assert_eq!(cont.execute("(not true) ->"), "false");
 }
 #[test]
 fn nested_pairs_to_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("(not true) (-> false)"), "");
-    assert_eq!(cont.execute("(not false) (-> true)"), "");
+    assert_eq!(cont.execute("let ((not true) (-> false))"), "");
+    assert_eq!(cont.execute("let ((not false) (-> true))"), "");
     assert_eq!(cont.execute("(not(not true))->"), "true");
 }
 #[test]
 fn chain() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
-    assert_eq!(cont.execute("b (-> c)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
+    assert_eq!(cont.execute("let (b (-> c))"), "");
     assert_eq!(cont.execute("a ->"), "c");
 }
 #[test]
 fn cycle() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(
-        cont.execute("b (-> a)"),
+        cont.execute("let (b (-> a))"),
         ZiaError::CyclicReduction.to_string()
     );
     assert_eq!(cont.execute("b ->"), "b");
@@ -62,64 +62,64 @@ fn trivial_parentheses() {
 #[test]
 fn remove_reduction() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("(b c) (-> a)"), "");
-    assert_eq!(cont.execute("(b c) (-> (b c))"), "");
+    assert_eq!(cont.execute("let ((b c) (-> a))"), "");
+    assert_eq!(cont.execute("let ((b c) (-> (b c)))"), "");
     assert_eq!(cont.execute("(b c) ->"), "b c");
 }
 #[test]
 fn infinite_expansion() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("b (-> (a b))"),
+        cont.execute("let (b (-> (a b)))"),
         ZiaError::ExpandingReduction.to_string()
     );
 }
 #[test]
 fn broken_end_chain() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
-    assert_eq!(cont.execute("b (-> c)"), "");
-    assert_eq!(cont.execute("b (-> b)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
+    assert_eq!(cont.execute("let (b (-> c))"), "");
+    assert_eq!(cont.execute("let (b (-> b))"), "");
     assert_eq!(cont.execute("a ->"), "b");
 }
 #[test]
 fn broken_middle_chain() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
-    assert_eq!(cont.execute("b (-> c)"), "");
-    assert_eq!(cont.execute("c (-> d)"), "");
-    assert_eq!(cont.execute("b (-> b)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
+    assert_eq!(cont.execute("let (b (-> c))"), "");
+    assert_eq!(cont.execute("let (c (-> d))"), "");
+    assert_eq!(cont.execute("let (b (-> b))"), "");
     assert_eq!(cont.execute("a ->"), "b");
 }
 #[test]
 fn change_reduction_rule() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
-    assert_eq!(cont.execute("a (-> c)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
+    assert_eq!(cont.execute("let (a (-> c))"), "");
     assert_eq!(cont.execute("a ->"), "c");
 }
 #[test]
 fn leapfrog_reduction_rule() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
-    assert_eq!(cont.execute("b (-> c)"), "");
-    assert_eq!(cont.execute("a (-> c)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
+    assert_eq!(cont.execute("let (b (-> c))"), "");
+    assert_eq!(cont.execute("let (a (-> c))"), "");
 }
 #[test]
 fn redundancy() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (-> b)"), "");
+    assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(
-        cont.execute("a (-> b)"),
+        cont.execute("let (a (-> b))"),
         ZiaError::RedundantReduction.to_string()
     );
     assert_eq!(
-        cont.execute("b (-> b)"),
+        cont.execute("let (b (-> b))"),
         ZiaError::RedundantReduction.to_string()
     );
 }
 #[test]
 fn reducing_concrete() {
 	let mut cont = Context::new();
-	assert_eq!(cont.execute("-> (-> a)"), ZiaError::ConcreteReduction.to_string());
+	assert_eq!(cont.execute("let (-> (-> a))"), ZiaError::ConcreteReduction.to_string());
 }

@@ -25,42 +25,42 @@ fn fresh_symbol() {
 #[test]
 fn fresh_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("a :="), "b c");
 }
 #[test]
 fn fresh_nested_pairs() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b (c d)))"), "");
+    assert_eq!(cont.execute("let (a (:= (b (c d))))"), "");
     assert_eq!(cont.execute("a :="), "b (c d)");
 }
 #[test]
 fn defining_used_symbol_as_fresh_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("b (:= (d e))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (b (:= (d e)))"), "");
     assert_eq!(cont.execute("b :="), "d e");
 }
 #[test]
 fn defining_fresh_symbol_as_used_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= (b c))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (d (:= (b c)))"), "");
     assert_eq!(cont.execute("d :="), "b c");
 }
 #[test]
 fn old_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= (e f))"), "",);
-    assert_eq!(cont.execute("b (:= (e c))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (d (:= (e f)))"), "",);
+    assert_eq!(cont.execute("let (b (:= (e c)))"), "");
     assert_eq!(cont.execute("b :="), "e c");
 }
 #[test]
 fn pair_on_the_left() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("(a b) (:= c)"),
+        cont.execute("let ((a b) (:= c))"),
         ZiaError::BadDefinition.to_string()
     );
 }
@@ -68,33 +68,33 @@ fn pair_on_the_left() {
 fn fresh_refactor() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= b)"),
+        cont.execute("let (a (:= b))"),
         ZiaError::RedundantRefactor.to_string()
     );
 }
 #[test]
 fn refactor() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("d (:= b)"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (d (:= b))"), "");
     assert_eq!(cont.execute("a :="), "d c");
 }
 #[test]
 fn bad_refactor() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(
-        cont.execute("b (:= a)"),
+        cont.execute("let (b (:= a))"),
         ZiaError::DefinitionCollision.to_string()
     );
 }
 #[test]
 fn defining_used_symbol_as_used_pair() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("f (:= (d e))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (f (:= (d e)))"), "");
     assert_eq!(
-        cont.execute("d (:= (b c))"),
+        cont.execute("let (d (:= (b c)))"),
         ZiaError::DefinitionCollision.to_string()
     );
 }
@@ -102,7 +102,7 @@ fn defining_used_symbol_as_used_pair() {
 fn definition_loop() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= (a b))"),
+        cont.execute("let (a (:= (a b)))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
@@ -110,47 +110,47 @@ fn definition_loop() {
 fn nested_definition_loop() {
     let mut cont = Context::new();
     assert_eq!(
-        cont.execute("a (:= ((a b) b))"),
+        cont.execute("let (a (:= ((a b) b)))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
 #[test]
 fn chained_definitions_loop() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("c (:= (a b))"), "");
+    assert_eq!(cont.execute("let (c (:= (a b)))"), "");
     assert_eq!(
-        cont.execute("a (:= (c b))"),
+        cont.execute("let (a (:= (c b)))"),
         ZiaError::InfiniteDefinition.to_string()
     );
 }
 #[test]
 fn remove_definition() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("a (:= a)"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (a (:= a))"), "");
     assert_eq!(cont.execute("a :="), "a");
     assert_eq!(
-        cont.execute("a (:= b)"),
+        cont.execute("let (a (:= b))"),
         ZiaError::RedundantRefactor.to_string()
     );
 }
 #[test]
 fn redundantly_remove_definition() {
 	let mut cont = Context::new();
-	assert_eq!(cont.execute("a (:= (b c))"), "");
-	assert_eq!(cont.execute("b (:= b)"), ZiaError::RedundantDefinitionRemoval.to_string());
+	assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+	assert_eq!(cont.execute("let (b (:= b))"), ZiaError::RedundantDefinitionRemoval.to_string());
 }
 #[test]
 fn redundancy() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(
-        cont.execute("a (:= (b c))"),
+        cont.execute("let (a (:= (b c)))"),
         ZiaError::RedundantDefinition.to_string()
     );
 }
 #[test]
 fn setting_definition_of_concrete() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute(":= (:= (a b))"), ZiaError::SettingDefinitionOfConcrete.to_string());
+    assert_eq!(cont.execute("let (:= (:= (a b)))"), ZiaError::SettingDefinitionOfConcrete.to_string());
 }

@@ -21,19 +21,19 @@ use zia::{Context, ContextMaker, Execute, ZiaError};
 #[test]
 fn indirect_reduction() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a (:= (b c))"), "");
-    assert_eq!(cont.execute("b (-> d)"), "");
-    assert_eq!(cont.execute("c (-> e)"), "");
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(cont.execute("let (b (-> d))"), "");
+    assert_eq!(cont.execute("let (c (-> e))"), "");
     assert_eq!(cont.execute("a ->"), "d e");
-    assert_eq!(cont.execute("f (:= (d e))"), "");
+    assert_eq!(cont.execute("let (f (:= (d e)))"), "");
     assert_eq!(cont.execute("a ->"), "f");
 }
 #[test]
 fn sneeky_infinite_reduction_chain() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("c (-> a)"), "");
+    assert_eq!(cont.execute("let (c (-> a))"), "");
     assert_eq!(
-        cont.execute("a (:= (c b))"),
+        cont.execute("let (a (:= (c b)))"),
         ZiaError::ExpandingReduction.to_string()
     );
 }
