@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+use std::rc::Rc;
 
 pub trait DisplayJoint {
     fn display_joint(&self) -> String;
@@ -24,9 +25,9 @@ pub trait MaybeConcept {
 }
 
 pub trait Pair<U> {
-    fn from_pair((String, Option<usize>), &U, &U) -> Self;
+    fn from_pair((String, Option<usize>), &Rc<U>, &Rc<U>) -> Self;
 }
 
-pub trait MightExpand<T> {
-    fn get_expansion(&self) -> Option<(T, T)>;
+pub trait MightExpand<U> {
+    fn get_expansion(&self) -> Option<(Rc<U>, Rc<U>)>;
 }

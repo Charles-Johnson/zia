@@ -18,7 +18,7 @@
 use constants::LABEL;
 use errors::{ZiaError, ZiaResult};
 use reading::{FindDefinition, MaybeString, MightExpand};
-use std::fmt;
+use std::{fmt, rc::Rc};
 use writing::{
     DeleteReduction, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, InsertDefinition,
     MakeReduceFrom, MaybeConcept, NoLongerReducesFrom, RemoveReduction, SetAsDefinitionOf,
@@ -41,7 +41,7 @@ where
         + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
-    Self::S: Container,
+    Self::S: Container + PartialEq,
 {
     fn execute_reduction(&mut self, syntax: &Self::S, normal_form: &Self::S) -> ZiaResult<String> {
         if normal_form.contains(syntax) {
@@ -74,24 +74,24 @@ where
         + SetAsDefinitionOf
         + GetDefinition
         + MaybeString,
-    Self::S: Container,
+    Self::S: Container + PartialEq<Self::S>,
 {
 }
 
 pub trait Container
 where
-    Self: MightExpand<Self> + PartialEq + Sized,
+    Self: MightExpand<Self> + PartialEq<Rc<Self>> + Sized,
 {
     fn contains(&self, other: &Self) -> bool {
         if let Some((ref left, ref right)) = self.get_expansion() {
-            left == other || right == other || left.contains(other) || right.contains(other)
+            other == left || other == right || left.contains(other) || right.contains(other)
         } else {
             false
         }
     }
 }
 
-impl<T> Container for T where T: MightExpand<T> + PartialEq + Sized {}
+impl<T> Container for T where T: MightExpand<T> + PartialEq<Rc<T>> + Sized {}
 
 pub trait ConceptMaker<T>
 where

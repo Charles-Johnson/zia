@@ -20,6 +20,7 @@ use reading::{
     Combine, DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, Label,
     MaybeConcept, Pair
 };
+use std::rc::Rc;
 
 pub trait SyntaxConverter<T>
 where
@@ -29,7 +30,7 @@ where
     fn ast_from_expression<U: From<(String, Option<usize>)> + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         s: &str,
-    ) -> ZiaResult<U> {
+    ) -> ZiaResult<Rc<U>> {
         let tokens: Vec<String> = parse_line(s);
         match tokens.len() {
             0 => Err(ZiaError::EmptyParentheses),
@@ -42,19 +43,19 @@ where
         &self,
         left: &str,
         right: &str,
-    ) -> ZiaResult<U> {
-        let lefthand = try!(self.ast_from_token::<U>(left));
-        let righthand = try!(self.ast_from_token::<U>(right));
+    ) -> ZiaResult<Rc<U>> {
+        let lefthand = try!(self.ast_from_token(left));
+        let righthand = try!(self.ast_from_token(right));
         Ok(self.combine(&lefthand, &righthand))
     }
     fn ast_from_token<U: From<(String, Option<usize>)> + MaybeConcept + DisplayJoint + Pair<U>>(
         &self,
         t: &str,
-    ) -> ZiaResult<U> {
+    ) -> ZiaResult<Rc<U>> {
         if t.contains(' ') {
             self.ast_from_expression::<U>(t)
         } else {
-            Ok(self.ast_from_symbol::<U>(t))
+            Ok(Rc::new(self.ast_from_symbol::<U>(t)))
         }
     }
 }

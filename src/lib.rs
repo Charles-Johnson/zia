@@ -47,7 +47,7 @@ mod writing;
 
 pub use adding::ContextMaker;
 use adding::{ConceptMaker, Container, ExecuteReduction, FindOrInsertDefinition, Labeller};
-pub use ast::AbstractSyntaxTree;
+pub use ast::SyntaxTree;
 use concepts::{AbstractPart, Concept, CommonPart};
 use constants::{DEFINE, REDUCTION};
 use context::Context as GenericContext;
@@ -58,6 +58,7 @@ use reading::{
     GetReduction, MaybeConcept, MaybeString, MightExpand, Pair, SyntaxReader,
 };
 use removing::DefinitionDeleter;
+use std::rc::Rc;
 use translating::SyntaxConverter;
 use writing::{
     MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, RemoveDefinition, RemoveReduction,
@@ -87,7 +88,7 @@ where
         + GetDefinitionOf
         + GetReduction
         + FindWhatReducesToIt,
-    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
+    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint + PartialEq<Self::S>,
 {
     fn execute(&mut self, command: &str) -> String {
         let ast = match self.ast_from_expression(command) {
@@ -120,7 +121,7 @@ where
         + GetReduction
         + FindWhatReducesToIt,
     S: Call<T> + SyntaxConverter<T>,
-    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
+    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint + PartialEq<Self::S>,
 {
 }
 
@@ -136,7 +137,7 @@ impl Labeller<Concept> for Context {
 
 impl ConceptMaker<Concept> for Context {
 	/// New concepts are made from abstract syntax trees.
-    type S = AbstractSyntaxTree;
+    type S = SyntaxTree;
 }
 
 /// Calling a program expressed as abstract syntax to read or write contained concepts.  
@@ -159,10 +160,10 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
-    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
+    Self::S: Container + Pair<Self::S> + Clone + From<(String, Option<usize>)> + DisplayJoint + PartialEq<Self::S>,
 {
 	/// Tries to expand the abstract syntax tree. If that's possible, `call_pair` is called with the lefthand and righthand syntax parts. If not `try_expanding_then_call` is called on the tree. If a program cannot be found this way, 'try_reducing_then_call' is called on the tree.
-    fn call(&mut self, ast: &Self::S) -> ZiaResult<String> {
+    fn call(&mut self, ast: &Rc<Self::S>) -> ZiaResult<String> {
         match ast.get_expansion() {
             Some((ref left, ref right)) => self.call_pair(left, right),
             None => {
@@ -180,7 +181,7 @@ where
         }
     }
     /// Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the normal form of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax. If the associated concept can't be reduced, `call_as_righthand` is called with the left and right syntax. 
-    fn call_pair(&mut self, left: &Self::S, right: &Self::S) -> ZiaResult<String> {
+    fn call_pair(&mut self, left: &Rc<Self::S>, right: &Rc<Self::S>) -> ZiaResult<String> {
         match right.get_concept() {
             Some(c) => match c {
                 REDUCTION => Ok(self.recursively_reduce(left).to_string()),
@@ -199,7 +200,7 @@ where
         }
     }
 	/// If the abstract syntax tree can be expanded, then `call` is called with this expansion. If not then an `Err(ZiaError::NotAProgram)` is returned
-    fn try_expanding_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
+    fn try_expanding_then_call(&mut self, ast: &Rc<Self::S>) -> ZiaResult<String> {
         let expansion = &self.expand(ast);
         if expansion != ast {
             self.call(expansion)
@@ -208,7 +209,7 @@ where
         }
     }
 	/// If the abstract syntax tree can be reduced, then `call` is called with this reduction. If not then an `Err(ZiaError::NotAProgram)` is returned
-    fn try_reducing_then_call(&mut self, ast: &Self::S) -> ZiaResult<String> {
+    fn try_reducing_then_call(&mut self, ast: &Rc<Self::S>) -> ZiaResult<String> {
         let normal_form = &self.recursively_reduce(ast);
         if normal_form != ast {
             self.call(normal_form)
@@ -270,7 +271,7 @@ where
         + GetDefinition
         + GetDefinitionOf
         + MaybeString,
-    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint,
+    S::S: Container + Pair<S::S> + Clone + From<(String, Option<usize>)> + DisplayJoint + PartialEq<Self::S>,
 {
 }
 
@@ -367,8 +368,8 @@ where
     fn define_new_syntax(
         &mut self,
         syntax: String,
-        left: &Self::S,
-        right: &Self::S,
+        left: &Rc<Self::S>,
+        right: &Rc<Self::S>,
     ) -> ZiaResult<usize> {
         let definition_concept =
             if let (Some(l), Some(r)) = (left.get_concept(), right.get_concept()) {
