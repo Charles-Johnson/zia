@@ -49,6 +49,8 @@ pub enum ZiaError {
 	SettingDefinitionOfConcrete,
 	/// When trying to specify a reduction rule for a concrete concept.
 	ConcreteReduction,
+	/// When trying to specify a reduction rule for a concept whose components reduce to something else.
+	MultipleReductionPaths,
 }
 
 impl fmt::Display for ZiaError {
@@ -68,6 +70,7 @@ impl fmt::Display for ZiaError {
 			ZiaError::DefinitionCollision => "Cannot define a used symbol as another used symbol or expression.",
 			ZiaError::SettingDefinitionOfConcrete => "Cannot set a definition of a concrete concept",
 			ZiaError::ConcreteReduction => "Cannot reduce a concrete concept", 
+			ZiaError::MultipleReductionPaths => "Concept is already composed of concepts with their own reduction rules."
 	    })
     }
 }

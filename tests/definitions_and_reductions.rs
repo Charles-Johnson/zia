@@ -27,6 +27,7 @@ fn indirect_reduction() {
     assert_eq!(cont.execute("a ->"), "d e");
     assert_eq!(cont.execute("let (f (:= (d e)))"), "");
     assert_eq!(cont.execute("a ->"), "f");
+	assert_eq!(cont.execute("let (a (-> g))"), ZiaError::MultipleReductionPaths.to_string());
 }
 #[test]
 fn sneeky_infinite_reduction_chain() {
