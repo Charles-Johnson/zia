@@ -55,7 +55,8 @@ fn used_symbol_in_a_nested_pair_is_not_a_program() {
 fn symbol_whose_normal_form_is_a_program_is_a_program() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> (b :=)))"), "");
-    assert_eq!(cont.execute("a"), "b");
+    assert_eq!(cont.execute("a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(cont.execute("a ->"), "b");
 }
 #[test]
 fn symbol_whose_definition_is_a_program_is_a_program() {
@@ -67,5 +68,6 @@ fn symbol_whose_definition_is_a_program_is_a_program() {
 fn symbol_whose_normal_form_is_a_builtin_concept() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> :=))"), "");
-    assert_eq!(cont.execute("b a"), "b");
+    assert_eq!(cont.execute("b a"), ZiaError::NotAProgram.to_string());
+    assert_eq!(cont.execute("(b a) ->"), "b");
 }
