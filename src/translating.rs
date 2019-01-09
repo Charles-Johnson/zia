@@ -18,7 +18,7 @@
 use errors::{ZiaError, ZiaResult};
 use reading::{
     Combine, DisplayJoint, FindWhatReducesToIt, GetDefinition, GetDefinitionOf, Label,
-    MaybeConcept, Pair
+    MaybeConcept, Pair,
 };
 use std::rc::Rc;
 
@@ -27,7 +27,9 @@ where
     Self: SyntaxFinder<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + FindWhatReducesToIt,
 {
-    fn ast_from_expression<U: From<(String, Option<usize>)> + Pair<U> + MaybeConcept + DisplayJoint>(
+    fn ast_from_expression<
+        U: From<(String, Option<usize>)> + Pair<U> + MaybeConcept + DisplayJoint,
+    >(
         &self,
         s: &str,
     ) -> ZiaResult<Rc<U>> {

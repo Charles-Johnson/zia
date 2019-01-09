@@ -27,7 +27,10 @@ fn indirect_reduction() {
     assert_eq!(cont.execute("a ->"), "d e");
     assert_eq!(cont.execute("let (f (:= (d e)))"), "");
     assert_eq!(cont.execute("a ->"), "f");
-	assert_eq!(cont.execute("let (a (-> g))"), ZiaError::MultipleReductionPaths.to_string());
+    assert_eq!(
+        cont.execute("let (a (-> g))"),
+        ZiaError::MultipleReductionPaths.to_string()
+    );
 }
 #[test]
 fn sneeky_infinite_reduction_chain() {
@@ -40,8 +43,11 @@ fn sneeky_infinite_reduction_chain() {
 }
 #[test]
 fn reducing_nested_definition() {
-	let mut cont = Context::new();
-	assert_eq!(cont.execute("let (a (:= (b (c d))))"), "");
-	assert_eq!(cont.execute("let (c (-> e))"), "");
-	assert_eq!(cont.execute("let (a (-> f))"), ZiaError::MultipleReductionPaths.to_string());
+    let mut cont = Context::new();
+    assert_eq!(cont.execute("let (a (:= (b (c d))))"), "");
+    assert_eq!(cont.execute("let (c (-> e))"), "");
+    assert_eq!(
+        cont.execute("let (a (-> f))"),
+        ZiaError::MultipleReductionPaths.to_string()
+    );
 }

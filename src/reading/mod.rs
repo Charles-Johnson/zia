@@ -28,8 +28,8 @@ where
     Self: GetLabel<T> + Combine<T>,
     T: GetDefinitionOf + GetDefinition + GetReduction + MaybeString,
 {
-	/// Expands syntax by definition of its associated concept.
-	fn expand< 
+    /// Expands syntax by definition of its associated concept.
+    fn expand<
         U: MaybeConcept
             + MightExpand<U>
             + fmt::Display
@@ -56,9 +56,14 @@ where
             ast.clone()
         }
     }
-	/// Reduces the syntax as much as possible (returns the normal form syntax).
+    /// Reduces the syntax as much as possible (returns the normal form syntax).
     fn recursively_reduce<
-        U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
+        U: From<(String, Option<usize>)>
+            + MightExpand<U>
+            + Clone
+            + Pair<U>
+            + MaybeConcept
+            + DisplayJoint,
     >(
         &self,
         ast: &Rc<U>,
@@ -68,8 +73,15 @@ where
             None => ast.clone(),
         }
     }
-	/// Reduces the syntax by using the reduction rules of associated concepts.
-    fn reduce<U: From<(String, Option<usize>)> + MightExpand<U> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+    /// Reduces the syntax by using the reduction rules of associated concepts.
+    fn reduce<
+        U: From<(String, Option<usize>)>
+            + MightExpand<U>
+            + Clone
+            + Pair<U>
+            + MaybeConcept
+            + DisplayJoint,
+    >(
         &self,
         ast: &Rc<U>,
     ) -> Option<Rc<U>> {
@@ -83,8 +95,10 @@ where
             },
         }
     }
-	/// Returns the syntax for the reduction of a concept.
-    fn reduce_concept<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
+    /// Returns the syntax for the reduction of a concept.
+    fn reduce_concept<
+        U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint,
+    >(
         &self,
         concept: usize,
     ) -> Option<Rc<U>> {
@@ -105,7 +119,7 @@ where
             Some(n) => Some(self.to_ast::<U>(n)),
         }
     }
-	/// Returns the syntax for a concept.
+    /// Returns the syntax for a concept.
     fn to_ast<U: From<(String, Option<usize>)> + Clone + Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         concept: usize,
@@ -120,7 +134,7 @@ where
             },
         }
     }
-	/// Returns the updated branch of abstract syntax tree that may have had the left or right parts updated.
+    /// Returns the updated branch of abstract syntax tree that may have had the left or right parts updated.
     fn match_left_right<U: Pair<U> + MaybeConcept + DisplayJoint>(
         &self,
         left: Option<Rc<U>>,
@@ -137,26 +151,32 @@ where
             }
         }
     }
-	/// Returns the abstract syntax from two syntax parts, using the label and concept of the composition of associated concepts if it exists. 
+    /// Returns the abstract syntax from two syntax parts, using the label and concept of the composition of associated concepts if it exists.
     fn contract_pair<U: MaybeConcept + Pair<U> + DisplayJoint>(
         &self,
         lefthand: &Rc<U>,
         righthand: &Rc<U>,
     ) -> Rc<U> {
-		let syntax = match (lefthand.get_concept(), righthand.get_concept()) {
-			(Some(lc), Some(rc)) => {
-				let maydef = self.find_definition(lc, rc);
-				(match maydef {
-					Some(def) => match self.get_label(def) {
-						Some(a) => a,
-						None => lefthand.display_joint() + " " + &righthand.display_joint()
-					},
-					None => lefthand.display_joint() + " " + &righthand.display_joint(),
-				}, maydef)
-			},
-			_ => (lefthand.display_joint() + " " + &righthand.display_joint(), None),
-		};
-		Rc::new(U::from_pair(syntax, lefthand, righthand))
+        let syntax = match (lefthand.get_concept(), righthand.get_concept()) {
+            (Some(lc), Some(rc)) => {
+                let maydef = self.find_definition(lc, rc);
+                (
+                    match maydef {
+                        Some(def) => match self.get_label(def) {
+                            Some(a) => a,
+                            None => lefthand.display_joint() + " " + &righthand.display_joint(),
+                        },
+                        None => lefthand.display_joint() + " " + &righthand.display_joint(),
+                    },
+                    maydef,
+                )
+            }
+            _ => (
+                lefthand.display_joint() + " " + &righthand.display_joint(),
+                None,
+            ),
+        };
+        Rc::new(U::from_pair(syntax, lefthand, righthand))
     }
 }
 
@@ -228,7 +248,11 @@ where
     Self: FindDefinition<T>,
     T: GetDefinitionOf,
 {
-    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(&self, ast: &Rc<U>, other: &Rc<U>) -> Rc<U> {
+    fn combine<U: DisplayJoint + MaybeConcept + Pair<U> + Sized>(
+        &self,
+        ast: &Rc<U>,
+        other: &Rc<U>,
+    ) -> Rc<U> {
         let left_string = ast.display_joint();
         let right_string = other.display_joint();
         let definition = if let (Some(l), Some(r)) = (ast.get_concept(), other.get_concept()) {
@@ -236,7 +260,11 @@ where
         } else {
             None
         };
-        Rc::new(U::from_pair((left_string + " " + &right_string, definition), ast, other))
+        Rc::new(U::from_pair(
+            (left_string + " " + &right_string, definition),
+            ast,
+            other,
+        ))
     }
 }
 

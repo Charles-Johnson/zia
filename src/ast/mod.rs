@@ -21,43 +21,43 @@ use std::{fmt, rc::Rc};
 #[derive(Clone)]
 pub struct SyntaxTree {
     /// The root of this syntax tree, represented as a `String`.
-	syntax: String,
-	/// Index of the concept that the syntax may represent. 
+    syntax: String,
+    /// Index of the concept that the syntax may represent.
     concept: Option<usize>,
-	/// This syntax tree may expand to two syntax trees or not expand further.
+    /// This syntax tree may expand to two syntax trees or not expand further.
     expansion: Option<(Rc<SyntaxTree>, Rc<SyntaxTree>)>,
 }
 
 impl MaybeConcept for SyntaxTree {
-	/// Gets the possible concept from the inside type of the variant.
+    /// Gets the possible concept from the inside type of the variant.
     fn get_concept(&self) -> Option<usize> {
         self.concept
     }
 }
 
 impl PartialEq<SyntaxTree> for SyntaxTree {
-	/// `SyntaxTree`s are equal if the syntax they represent is the same.
+    /// `SyntaxTree`s are equal if the syntax they represent is the same.
     fn eq(&self, other: &SyntaxTree) -> bool {
         self.to_string() == other.to_string()
     }
 }
 
 impl PartialEq<Rc<SyntaxTree>> for SyntaxTree {
-	/// `SyntaxTree`s are equal if the syntax they represent is the same.
+    /// `SyntaxTree`s are equal if the syntax they represent is the same.
     fn eq(&self, other: &Rc<SyntaxTree>) -> bool {
         self.to_string() == other.to_string()
     }
 }
 
 impl MightExpand<SyntaxTree> for SyntaxTree {
-	/// An expression does have an expansion while a symbol does not.
+    /// An expression does have an expansion while a symbol does not.
     fn get_expansion(&self) -> Option<(Rc<SyntaxTree>, Rc<SyntaxTree>)> {
         self.expansion.clone()
     }
 }
 
 impl DisplayJoint for SyntaxTree {
-	/// An expression's syntax is encapsulated in parentheses when joined with other syntax whereas a symbol's syntax is not. 
+    /// An expression's syntax is encapsulated in parentheses when joined with other syntax whereas a symbol's syntax is not.
     fn display_joint(&self) -> String {
         match self.get_expansion() {
             Some(_) => "(".to_string() + &self.to_string() + ")",
@@ -67,34 +67,34 @@ impl DisplayJoint for SyntaxTree {
 }
 
 impl fmt::Display for SyntaxTree {
-	/// Displays the same as the inside of an `SyntaxTree` variant.
+    /// Displays the same as the inside of an `SyntaxTree` variant.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.syntax)
     }
 }
 
 impl Pair<SyntaxTree> for SyntaxTree {
-    /// Combines a pair of syntax trees into a `SyntaxTree` whilst specifying the overall syntax and maybe a concept. 
+    /// Combines a pair of syntax trees into a `SyntaxTree` whilst specifying the overall syntax and maybe a concept.
     fn from_pair(
         syntax: (String, Option<usize>),
         lefthand: &Rc<SyntaxTree>,
         righthand: &Rc<SyntaxTree>,
     ) -> SyntaxTree {
         SyntaxTree {
-			syntax: syntax.0,
-			concept: syntax.1,
-			expansion: Some((lefthand.clone(), righthand.clone())),	
-		}
+            syntax: syntax.0,
+            concept: syntax.1,
+            expansion: Some((lefthand.clone(), righthand.clone())),
+        }
     }
 }
 
 impl From<(String, Option<usize>)> for SyntaxTree {
-	/// Constructs a `Symbol` variant from the syntax string and a possible associated concept.  
+    /// Constructs a `Symbol` variant from the syntax string and a possible associated concept.  
     fn from(syntax: (String, Option<usize>)) -> SyntaxTree {
         SyntaxTree {
-			syntax: syntax.0,
-			concept: syntax.1,
-			expansion: None,	
-		}
+            syntax: syntax.0,
+            concept: syntax.1,
+            expansion: None,
+        }
     }
 }

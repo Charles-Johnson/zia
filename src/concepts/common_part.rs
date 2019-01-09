@@ -20,11 +20,11 @@ use writing::{MakeReduceFrom, NoLongerReducesFrom, RemoveAsDefinitionOf, SetAsDe
 
 #[derive(Default)]
 pub struct CommonPart {
-	/// Set of all indices of the concepts which have this concept as the lefthand of their definition
+    /// Set of all indices of the concepts which have this concept as the lefthand of their definition
     lefthand_of: HashSet<usize>,
-	/// Set of all indices of the concepts which have this concept as the righthand of their definition
+    /// Set of all indices of the concepts which have this concept as the righthand of their definition
     righthand_of: HashSet<usize>,
-	/// Set of all indices of the concepts which reduce to this concept.
+    /// Set of all indices of the concepts which reduce to this concept.
     reduces_from: HashSet<usize>,
 }
 

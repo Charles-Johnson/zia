@@ -17,7 +17,8 @@
 
 pub use errors::{ZiaError, ZiaResult};
 pub use reading::{
-    ConceptReader, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction, MaybeConcept, FindDefinition
+    ConceptReader, FindDefinition, GetDefinition, GetDefinitionOf, GetNormalForm, GetReduction,
+    MaybeConcept,
 };
 use reading::{Container, GetConceptOfLabel};
 pub trait Unlabeller<T>
@@ -25,7 +26,7 @@ where
     T: GetReduction + RemoveReduction + NoLongerReducesFrom + GetDefinition + GetDefinitionOf,
     Self: DeleteReduction<T> + GetConceptOfLabel<T>,
 {
-    fn unlabel(&mut self, concept: usize) -> ZiaResult<()>{
+    fn unlabel(&mut self, concept: usize) -> ZiaResult<()> {
         match self.get_concept_of_label(concept) {
             None => panic!("No label to remove"),
             Some(d) => self.delete_reduction(d),
@@ -58,7 +59,7 @@ where
             Some(n) => {
                 self.write_concept(n).no_longer_reduces_from(concept);
                 self.write_concept(concept).make_reduce_to_none();
-				Ok(())
+                Ok(())
             }
         }
     }
@@ -95,41 +96,46 @@ where
     T: SetReduction + MakeReduceFrom + GetReduction + GetDefinition + GetDefinitionOf,
     Self: ConceptWriter<T> + GetNormalForm<T> + FindDefinition<T>,
 {
-    fn update_reduction(&mut self, concept: usize, normal_form: usize) -> ZiaResult<()> {
-        if let Some(n) = self.get_normal_form(normal_form) {
+    fn update_reduction(&mut self, concept: usize, reduction: usize) -> ZiaResult<()> {
+        if let Some(n) = self.get_normal_form(reduction) {
             if concept == n {
                 return Err(ZiaError::CyclicReduction);
             }
         }
-        if let Some(n) = self.read_concept(concept).get_reduction() {
-            if n == normal_form {
+        if let Some(r) = self.read_concept(concept).get_reduction() {
+            if r == reduction {
                 return Err(ZiaError::RedundantReduction);
             }
         }
-		if let Some((left, right)) = self.read_concept(concept).get_definition() {
-			let lc = if let Some(l) = self.read_concept(left).get_reduction() {
-				l
-			} else {
-				left
-			};
-			let rc = if let Some(r) = self.read_concept(left).get_reduction() {
-				r
-			} else {
-				right
-			};
-			if let Some(dc) = self.find_definition(lc, rc) {
-				if dc == normal_form {
-					return Err(ZiaError::RedundantReduction)
-				} else if dc == concept {
-					()
-				}
-			} else {
-				return Err(ZiaError::MultipleReductionPaths)
-			};
-		}
-        try!(self.write_concept(concept).make_reduce_to(normal_form));
-        self.write_concept(normal_form).make_reduce_from(concept);
+        let r = try!(self.get_reduction_of_composition(concept));
+        if r == reduction {
+            return Err(ZiaError::RedundantReduction);
+        } else if r != concept {
+            return Err(ZiaError::MultipleReductionPaths);
+        }
+        try!(self.write_concept(concept).make_reduce_to(reduction));
+        self.write_concept(reduction).make_reduce_from(concept);
         Ok(())
+    }
+    fn get_reduction_of_composition(&self, concept: usize) -> ZiaResult<usize> {
+        if let Some((left, right)) = self.read_concept(concept).get_definition() {
+            let lc = if let Some(l) = self.read_concept(left).get_reduction() {
+                l
+            } else {
+                try!(self.get_reduction_of_composition(left))
+            };
+            let rc = if let Some(r) = self.read_concept(left).get_reduction() {
+                r
+            } else {
+                try!(self.get_reduction_of_composition(right))
+            };
+            match self.find_definition(lc, rc) {
+                Some(dc) => Ok(dc),
+                None => Err(ZiaError::MultipleReductionPaths),
+            }
+        } else {
+            Ok(concept)
+        }
     }
 }
 
@@ -156,7 +162,8 @@ where
         } else {
             try!(self.check_reductions(definition, lefthand));
             try!(self.check_reductions(definition, righthand));
-            try!(self.write_concept(definition)
+            try!(self
+                .write_concept(definition)
                 .set_definition(lefthand, righthand));
             self.write_concept(lefthand).add_as_lefthand_of(definition);
             self.write_concept(righthand)

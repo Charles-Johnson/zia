@@ -120,6 +120,9 @@ fn redundancy() {
 }
 #[test]
 fn reducing_concrete() {
-	let mut cont = Context::new();
-	assert_eq!(cont.execute("let (-> (-> a))"), ZiaError::ConcreteReduction.to_string());
+    let mut cont = Context::new();
+    assert_eq!(
+        cont.execute("let (-> (-> a))"),
+        ZiaError::ConcreteReduction.to_string()
+    );
 }

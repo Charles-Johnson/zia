@@ -202,9 +202,9 @@ where
         let define_concept = self.new_default::<Self::C>();
         let reduction_concept = self.new_default::<Self::C>();
         let let_concept = self.new_default::<Self::C>();
-        try!(self.label(define_concept, ":=")); 
+        try!(self.label(define_concept, ":="));
         try!(self.label(reduction_concept, "->"));
-		self.label(let_concept, "let")
+        self.label(let_concept, "let")
     }
 }
 

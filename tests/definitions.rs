@@ -136,9 +136,12 @@ fn remove_definition() {
 }
 #[test]
 fn redundantly_remove_definition() {
-	let mut cont = Context::new();
-	assert_eq!(cont.execute("let (a (:= (b c)))"), "");
-	assert_eq!(cont.execute("let (b (:= b))"), ZiaError::RedundantDefinitionRemoval.to_string());
+    let mut cont = Context::new();
+    assert_eq!(cont.execute("let (a (:= (b c)))"), "");
+    assert_eq!(
+        cont.execute("let (b (:= b))"),
+        ZiaError::RedundantDefinitionRemoval.to_string()
+    );
 }
 #[test]
 fn redundancy() {
@@ -152,5 +155,8 @@ fn redundancy() {
 #[test]
 fn setting_definition_of_concrete() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("let (:= (:= (a b)))"), ZiaError::SettingDefinitionOfConcrete.to_string());
+    assert_eq!(
+        cont.execute("let (:= (:= (a b)))"),
+        ZiaError::SettingDefinitionOfConcrete.to_string()
+    );
 }

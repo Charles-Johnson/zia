@@ -37,21 +37,21 @@ where
 {
     fn cleanly_delete_definition(&mut self, concept: usize) -> ZiaResult<()> {
         match self.read_concept(concept).get_definition() {
-			None => Err(ZiaError::RedundantDefinitionRemoval),
-			Some((left, right)) => {
-				self.delete_definition(concept, left, right);
-				try!(self.try_delete_concept(concept));
-	            try!(self.try_delete_concept(left));
-            	self.try_delete_concept(right)
-			},
-		}
+            None => Err(ZiaError::RedundantDefinitionRemoval),
+            Some((left, right)) => {
+                self.delete_definition(concept, left, right);
+                try!(self.try_delete_concept(concept));
+                try!(self.try_delete_concept(left));
+                self.try_delete_concept(right)
+            }
+        }
     }
     fn try_delete_concept(&mut self, concept: usize) -> ZiaResult<()> {
         if self.is_disconnected(concept) {
             try!(self.unlabel(concept));
             self.remove_concept(concept);
         }
-		Ok(())
+        Ok(())
     }
 }
 

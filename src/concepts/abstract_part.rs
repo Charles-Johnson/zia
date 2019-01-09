@@ -19,17 +19,16 @@ use errors::ZiaResult;
 use reading::{GetDefinition, GetReduction};
 use writing::{RemoveDefinition, RemoveReduction, SetDefinition, SetReduction};
 
-/// An abstract concept can reduce to other concepts and be defined as a composition of two other concepts. 
+/// An abstract concept can reduce to other concepts and be defined as a composition of two other concepts.
 pub struct AbstractPart {
-	/// The concept may be defined as a composition of two other concepts.
+    /// The concept may be defined as a composition of two other concepts.
     definition: Option<(usize, usize)>,
-	/// The concept may reduce to another concept.
+    /// The concept may reduce to another concept.
     reduces_to: Option<usize>,
 }
 
-impl Default for AbstractPart
-{
-	/// The default concept doesn't have a definition and doesn't further reduce.
+impl Default for AbstractPart {
+    /// The default concept doesn't have a definition and doesn't further reduce.
     fn default() -> AbstractPart {
         AbstractPart {
             definition: None,
@@ -47,7 +46,7 @@ impl GetDefinition for AbstractPart {
 impl SetDefinition for AbstractPart {
     fn set_definition(&mut self, lefthand: usize, righthand: usize) -> ZiaResult<()> {
         self.definition = Some((lefthand, righthand));
-		Ok(())
+        Ok(())
     }
 }
 
@@ -66,7 +65,7 @@ impl GetReduction for AbstractPart {
 impl SetReduction for AbstractPart {
     fn make_reduce_to(&mut self, concept: usize) -> ZiaResult<()> {
         self.reduces_to = Some(concept);
-		Ok(())
+        Ok(())
     }
 }
 
