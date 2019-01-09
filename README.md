@@ -37,16 +37,16 @@ Reduction symbol: `->`
 concept labelled by `b`.
 
 `->` is also used to print the symbol of the reduction of a concept. `a ->` represents 
-the command to print `b` because of the previous command but `c ->` prints `c` because no 
-reduction rule exists for `c`.
+the command to print `b` because of the previous command but `b ->` prints `b` because no 
+reduction rule exists for `b`.
 
 You can modify existing reduction rules. For example you can change the reduction rule for `a` by 
 `let (a (-> c))`; `a ->` will now print `c`. You could also execute `let (a (-> a))` and so `a ->` 
 now prints `a`.
 
-The intepreter will let you know if reduction rule commands are redundant. For example 
-`let (d (-> d))` is redundant because all new concepts are by default their own normal form. Also 
-`let (a (-> c))` is redundant because it's already been explicitly specified.
+The intepreter will let you know if reduction rule commands are redundant. `let (a (-> a))` is 
+redundant because `a` already reduces to itself. Executing `let (a (-> b))` twice will print an 
+error for the second time.
 
 Definition symbol: `:=`
 
@@ -58,15 +58,23 @@ Definition symbol: `:=`
 a b
 ```
 The command `c :=` then prints `a b`. The command `a :=` prints `a`. We can change the symbol of
-`b` to `h` using `let (b (:= h))`. `c :=` would then print `a h`.
+`b` to `e` using `let (e (:= b))`. `c :=` would then print `a e` and `a ->` would print `e`. 
+Because `a` reduces to `e`, `c ->` prints `e e`. If `let (c (-> f))` is executed, an error message 
+is printed explaining some of the components of `c` (`a` and `e`) reduce. This would break the 
+coherence between the reduction of a concept and its composition's reductions. Should `c` reduce 
+to `f` or `e e`? Maintaining this coherence is important for a consistent lazy reduction of syntax 
+trees.
 
-To prevent infinite recursion, commands like `let (i (:= (i j)))` are not accepted by the 
-interpreter nor are commands like `let (i (-> (i j)))`.
+To make sure concepts can be fully reduced, commands like `let (i (:= (i j)))` are not 
+accepted by the interpreter nor are commands like `let (i (-> (i j)))`. More subtley 
+`let (e (:= (a d)))` is not accepted because the reduction of `a d` is `e d` and so `e ->` prints
+`e d`, `(e d) ->` prints `(e d) d` etc. Successive reductions can always be applied. 
 
 API  
 
 The current implementation exposes the `Context` type that can be used in an interface such as 
-[IZia](https://github.com/Charles-Johnson/izia). Importing the following traits allows the corresponding methods to be called with `Context`.
+[IZia](https://github.com/Charles-Johnson/izia). Importing the following traits allows the 
+corresponding methods to be called with `Context`.
 
 ```
 trait ContextMaker<T> {
