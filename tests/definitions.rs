@@ -20,33 +20,33 @@ use zia::{Context, ContextMaker, Execute, ZiaError};
 #[test]
 fn fresh_symbol() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("a :="), "a");
+    assert_eq!(cont.execute("(label_of (a :=)) ->"), "a");
 }
 #[test]
 fn fresh_pair() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
-    assert_eq!(cont.execute("a :="), "b c");
+    assert_eq!(cont.execute("(label_of (a :=)) ->"), "b c");
 }
 #[test]
 fn fresh_nested_pairs() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b (c d))))"), "");
-    assert_eq!(cont.execute("a :="), "b (c d)");
+    assert_eq!(cont.execute("(label_of (a :=)) ->"), "b (c d)");
 }
 #[test]
 fn defining_used_symbol_as_fresh_pair() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (b (:= (d e)))"), "");
-    assert_eq!(cont.execute("b :="), "d e");
+    assert_eq!(cont.execute("(label_of (b :=)) ->"), "d e");
 }
 #[test]
 fn defining_fresh_symbol_as_used_pair() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (d (:= (b c)))"), "");
-    assert_eq!(cont.execute("d :="), "b c");
+    assert_eq!(cont.execute("(label_of (d :=)) ->"), "b c");
 }
 #[test]
 fn old_pair() {
@@ -54,7 +54,7 @@ fn old_pair() {
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (d (:= (e f)))"), "",);
     assert_eq!(cont.execute("let (b (:= (e c)))"), "");
-    assert_eq!(cont.execute("b :="), "e c");
+    assert_eq!(cont.execute("(label_of (b :=)) ->"), "e c");
 }
 #[test]
 fn pair_on_the_left() {
@@ -77,7 +77,7 @@ fn refactor() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (d (:= b))"), "");
-    assert_eq!(cont.execute("a :="), "d c");
+    assert_eq!(cont.execute("label_of (a :=)) ->"), "d c");
 }
 #[test]
 fn bad_refactor() {
@@ -128,7 +128,7 @@ fn remove_definition() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (a (:= a))"), "");
-    assert_eq!(cont.execute("a :="), "a");
+    assert_eq!(cont.execute("(label_of (a :=)) ->"), "a");
     assert_eq!(
         cont.execute("let (a (:= b))"),
         ZiaError::RedundantRefactor.to_string()

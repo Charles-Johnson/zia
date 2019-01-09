@@ -80,7 +80,7 @@ fn broken_end_chain() {
     assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(cont.execute("let (b (-> c))"), "");
     assert_eq!(cont.execute("let (b (-> b))"), "");
-    assert_eq!(cont.execute("a ->"), "b");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "b");
 }
 #[test]
 fn broken_middle_chain() {
@@ -89,14 +89,14 @@ fn broken_middle_chain() {
     assert_eq!(cont.execute("let (b (-> c))"), "");
     assert_eq!(cont.execute("let (c (-> d))"), "");
     assert_eq!(cont.execute("let (b (-> b))"), "");
-    assert_eq!(cont.execute("a ->"), "b");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "b");
 }
 #[test]
 fn change_reduction_rule() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(cont.execute("let (a (-> c))"), "");
-    assert_eq!(cont.execute("a ->"), "c");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "c");
 }
 #[test]
 fn leapfrog_reduction_rule() {

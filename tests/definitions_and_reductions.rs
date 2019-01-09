@@ -24,9 +24,9 @@ fn indirect_reduction() {
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (b (-> d))"), "");
     assert_eq!(cont.execute("let (c (-> e))"), "");
-    assert_eq!(cont.execute("a ->"), "d e");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "d e");
     assert_eq!(cont.execute("let (f (:= (d e)))"), "");
-    assert_eq!(cont.execute("a ->"), "f");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "f");
     assert_eq!(
         cont.execute("let (a (-> g))"),
         ZiaError::MultipleReductionPaths.to_string()
