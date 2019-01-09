@@ -22,27 +22,27 @@ use zia::{Context, ContextMaker, Execute, ZiaError};
 fn symbol_to_symbol() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> b))"), "");
-    assert_eq!(cont.execute("a ->"), "b");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "b");
 }
 #[test]
 fn pair_to_symbol() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let ((not true) (-> false))"), "");
-    assert_eq!(cont.execute("(not true) ->"), "false");
+    assert_eq!(cont.execute("(label_of ((not true) ->)) ->"), "false");
 }
 #[test]
 fn nested_pairs_to_symbol() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let ((not true) (-> false))"), "");
     assert_eq!(cont.execute("let ((not false) (-> true))"), "");
-    assert_eq!(cont.execute("(not(not true))->"), "not false");
+    assert_eq!(cont.execute("(label_of ((not(not true))->)) -> "), "not false");
 }
 #[test]
 fn chain() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (-> b))"), "");
     assert_eq!(cont.execute("let (b (-> c))"), "");
-    assert_eq!(cont.execute("a ->"), "b");
+    assert_eq!(cont.execute("(label_of (a ->)) ->"), "b");
 }
 #[test]
 fn cycle() {
@@ -52,19 +52,19 @@ fn cycle() {
         cont.execute("let (b (-> a))"),
         ZiaError::CyclicReduction.to_string()
     );
-    assert_eq!(cont.execute("b ->"), "b");
+    assert_eq!(cont.execute("(label_of (b ->))->"), "b");
 }
 #[test]
 fn trivial_parentheses() {
     let mut cont = Context::new();
-    assert_eq!(cont.execute("(a) ->"), "a");
+    assert_eq!(cont.execute("(label_of((a) ->))->"), "a");
 }
 #[test]
 fn remove_reduction() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let ((b c) (-> a))"), "");
     assert_eq!(cont.execute("let ((b c) (-> (b c)))"), "");
-    assert_eq!(cont.execute("(b c) ->"), "b c");
+    assert_eq!(cont.execute("(label_of((b c) ->))->"), "b c");
 }
 #[test]
 fn infinite_expansion() {

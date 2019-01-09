@@ -49,7 +49,7 @@ pub use adding::ContextMaker;
 use adding::{ConceptMaker, Container, ExecuteReduction, FindOrInsertDefinition, Labeller};
 pub use ast::SyntaxTree;
 use concepts::{AbstractPart, CommonPart, Concept};
-use constants::{DEFINE, LET, REDUCTION};
+use constants::{LABEL, DEFINE, LET, REDUCTION};
 use context::Context as GenericContext;
 pub use errors::ZiaError;
 use errors::ZiaResult;
@@ -177,8 +177,13 @@ where
         + DisplayJoint
         + PartialEq<Self::S>,
 {
-    /// Tries to expand the abstract syntax tree. If that's possible, `call_pair` is called with the lefthand and righthand syntax parts. If not `try_expanding_then_call` is called on the tree. If a program cannot be found this way, 'try_reducing_then_call' is called on the tree.
+    /// If the associated concept of the syntax is a string concept that that associated string is returned. If not, the function tries to expand the abstract syntax tree. If that's possible, `call_pair` is called with the lefthand and righthand syntax parts. If not `try_expanding_then_call` is called on the tree. If a program cannot be found this way, 'try_reducing_then_call' is called on the tree.
     fn call(&mut self, ast: &Rc<Self::S>) -> ZiaResult<String> {
+		if let Some(c) = ast.get_concept() {
+			if let Some(s) = self.read_concept(c).get_string() {
+				return Ok(s);
+			}
+		}
         match ast.get_expansion() {
             Some((ref left, ref right)) => self.call_pair(left, right),
             None => {
@@ -206,11 +211,37 @@ where
         }
         match right.get_concept() {
             Some(c) => match c {
-                REDUCTION => Ok((match self.reduce(left) {
-                    None => left.clone(),
-                    Some(rleft) => rleft,
-                })
-                .to_string()),
+                REDUCTION => {
+					if let Some((leftleft, leftright)) = left.get_expansion() {
+						if let Some(con) = leftleft.get_concept() {
+							if con == LABEL {
+								if let Some(lrcon) = leftright.get_concept() {
+									if let Some(labcon) = self.get_label(lrcon) {
+										return Ok(labcon);
+									}
+								}
+								if let Some((leftrightleft, leftrightright)) = leftright.get_expansion() {
+									if let Some(lrrcon) = leftrightright.get_concept() {
+										if lrrcon == REDUCTION {
+											return Ok((match self.reduce(&leftrightleft) {
+												None => leftrightleft,
+												Some(red) => red,
+											}).to_string());
+										}
+										if lrrcon == DEFINE {
+											return Ok(self.expand(&leftrightleft).to_string());
+										}
+									}
+								}
+							}
+						}
+					};
+					let reduced_syntax = match self.reduce(left) {
+                    	None => left.clone(),
+                    	Some(rleft) => rleft,
+                	};
+					self.call(&reduced_syntax)
+				},
                 DEFINE => Ok(self.expand(left).to_string()),
                 _ => {
                     let right_reduction = self.read_concept(c).get_reduction();

@@ -77,7 +77,7 @@ fn refactor() {
     let mut cont = Context::new();
     assert_eq!(cont.execute("let (a (:= (b c)))"), "");
     assert_eq!(cont.execute("let (d (:= b))"), "");
-    assert_eq!(cont.execute("label_of (a :=)) ->"), "d c");
+    assert_eq!(cont.execute("(label_of (a :=)) ->"), "d c");
 }
 #[test]
 fn bad_refactor() {
