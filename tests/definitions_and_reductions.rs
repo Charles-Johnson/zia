@@ -38,3 +38,10 @@ fn sneeky_infinite_reduction_chain() {
         ZiaError::ExpandingReduction.to_string()
     );
 }
+#[test]
+fn reducing_nested_definition() {
+	let mut cont = Context::new();
+	assert_eq!(cont.execute("let (a (:= (b (c d))))"), "");
+	assert_eq!(cont.execute("let (c (-> e))"), "");
+	assert_eq!(cont.execute("let (a (-> f))"), ZiaError::MultipleReductionPaths.to_string());
+}
