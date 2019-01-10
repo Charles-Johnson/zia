@@ -186,18 +186,7 @@ where
 		}
         match ast.get_expansion() {
             Some((ref left, ref right)) => self.call_pair(left, right),
-            None => {
-                match self.try_expanding_then_call(ast) {
-                    Ok(s) => return Ok(s),
-                    Err(e) => {
-                        if let ZiaError::NotAProgram = e {
-                        } else {
-                            return Err(e);
-                        }
-                    }
-                };
-                self.try_reducing_then_call(ast)
-            }
+            None => self.try_expanding_then_call(ast),
         }
     }
     /// If the associated concept of the lefthand part of the syntax is LET then `call_as_righthand` is called with the left and right of the lefthand syntax. Tries to get the concept associated with the righthand part of the syntax. If the associated concept is `->` then the reduction of the lefthand part of the syntax is displayed. If the associated concept is `:=` the lefthand part of the syntax is expanded in its definitions and displayed. If the associated concept reduces, `call_pair` is called again with the reduced righthand syntax.
@@ -215,24 +204,7 @@ where
 					if let Some((leftleft, leftright)) = left.get_expansion() {
 						if let Some(con) = leftleft.get_concept() {
 							if con == LABEL {
-								if let Some(lrcon) = leftright.get_concept() {
-									if let Some(labcon) = self.get_label(lrcon) {
-										return Ok(labcon);
-									}
-								}
-								if let Some((leftrightleft, leftrightright)) = leftright.get_expansion() {
-									if let Some(lrrcon) = leftrightright.get_concept() {
-										if lrrcon == REDUCTION {
-											return Ok((match self.reduce(&leftrightleft) {
-												None => leftrightleft,
-												Some(red) => red,
-											}).to_string());
-										}
-										if lrrcon == DEFINE {
-											return Ok(self.expand(&leftrightleft).to_string());
-										}
-									}
-								}
+								return self.reduce_label_of(&leftright);
 							}
 						}
 					};
@@ -242,20 +214,27 @@ where
                 	};
 					self.call(&reduced_syntax)
 				},
-                DEFINE => Ok(self.expand(left).to_string()),
-                _ => {
-                    let right_reduction = self.read_concept(c).get_reduction();
-                    if let Some(r) = right_reduction {
-                        let ast = self.to_ast(r);
-                        self.call_pair(left, &ast)
-                    } else {
-                        Err(ZiaError::NotAProgram)
-                    }
-                }
+                _ => Err(ZiaError::NotAProgram)
             },
             None => Err(ZiaError::NotAProgram),
         }
     }
+	fn reduce_label_of(&self, ast: &Rc<Self::S>) -> ZiaResult<String> {
+		if let Some((left, right)) = ast.get_expansion() {
+			if let Some(concept) = right.get_concept() {
+				if concept == REDUCTION {
+					return self.reduce_label_of(&match self.reduce(&left) {
+						None => left,
+						Some(reduction) => reduction,
+					});
+				}
+				if concept == DEFINE {
+					return Ok(self.expand(&left).to_string());
+				}
+			}
+		}
+		Ok(ast.to_string())
+	}
     /// If the abstract syntax tree can be expanded, then `call` is called with this expansion. If not then an `Err(ZiaError::NotAProgram)` is returned
     fn try_expanding_then_call(&mut self, ast: &Rc<Self::S>) -> ZiaResult<String> {
         let expansion = &self.expand(ast);
