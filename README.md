@@ -1,5 +1,7 @@
 # `zia`: Interpreter for the Zia programming language.
 
+**This repository is no longer updated. For the latest version, please go to this [workspace repository](https://github.com/Charles-Johnson/zia_programming) which contains this crate as a member**
+
 The Zia project aims to develop a programming language that can be used to program the itself. 
 Instead of storing the source code as plain text and editing the raw text (which can easily break 
 the program), the runtime environment of the interpreter (the `Context`) can be saved to disk and 
